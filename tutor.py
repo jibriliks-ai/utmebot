@@ -1,6 +1,7 @@
 """
 tutor.py — DeepSeek AI Tutor with thinking mode + gTTS voice.
-200% smart: uses reasoning_effort="high" and thinking mode.
+Model is hardcoded to deepseek-flash (no env override — prevents 400 errors).
+Thinking mode enabled for maximum intelligence.
 """
 import os
 import io
@@ -19,44 +20,43 @@ from telegram import InputFile
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 
-# "deepseek-flash" = fast + smart (recommended)
-# "deepseek-v4-pro" = even smarter but slower/costlier
-DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
+# HARDCODED — do NOT override via env var. Valid names: deepseek-flash, deepseek-v4-pro
+DEEPSEEK_MODEL = "deepseek-flash"
 
 if OPENAI_AVAILABLE and DEEPSEEK_API_KEY:
     _CLIENT = OpenAI(
         api_key=DEEPSEEK_API_KEY,
         base_url=DEEPSEEK_BASE_URL,
-        timeout=90.0,       # longer timeout for thinking mode
+        timeout=120.0,
         max_retries=2,
     )
-    print(f"[tutor] DeepSeek client ready (model={DEEPSEEK_MODEL})")
+    print(f"[tutor] DeepSeek client ready (model={DEEPSEEK_MODEL}, thinking=ON)")
 else:
     _CLIENT = None
     print("[tutor] WARNING: DeepSeek not configured — check DEEPSEEK_API_KEY")
 
 
-SYSTEM_PROMPT = """You are the UTME Success Coach AI Tutor — an expert JAMB tutor
-for Nigerian students. You explain questions the way a patient, brilliant
+SYSTEM_PROMPT = """You are the UTME Success Coach AI Tutor — an elite JAMB tutor
+for Nigerian students. You explain questions the way a brilliant, patient
 teacher would.
 
 STRICT OUTPUT FORMAT:
 1. What the question is asking (1 short sentence).
-2. Step-by-step solution (numbered steps, show calculations clearly).
+2. Step-by-step solution (numbered steps, show every calculation).
 3. Final answer (bold, unmistakable).
-4. One exam tip (optional, only if genuinely helpful).
+4. One exam tip (only if genuinely useful).
 
 RULES:
 - No greetings, no filler ("Sure!", "Great question!").
 - Never say you are an AI.
-- Stay strictly within the JAMB/UTME syllabus for the subject.
-- If the question is outside the UTME syllabus, reply exactly:
+- Stay strictly within the JAMB/UTME syllabus.
+- If the question is off-syllabus, reply exactly:
   "This question is outside the UTME syllabus."
 - Keep the explanation under 220 words.
-- Use simple English suitable for a Nigerian secondary school student.
-- Use correct subject terminology.
-- For Maths/Physics/Chemistry: show every step, don't skip.
-- For English/Literature: quote the relevant text when useful.
+- Simple English for a Nigerian secondary school student.
+- Correct subject terminology.
+- Maths/Physics/Chemistry: show every step, never skip.
+- English/Literature: quote the relevant text when useful.
 """
 
 
@@ -82,7 +82,6 @@ def ask_tutor(question_text: str, subject: str = "") -> str:
                     {"role": "user", "content": user_prompt},
                 ],
                 stream=False,
-                temperature=0.3,
                 reasoning_effort="high",
                 extra_body={"thinking": {"type": "enabled"}},
             )
@@ -106,7 +105,6 @@ def ask_tutor(question_text: str, subject: str = "") -> str:
 def make_voice(text: str):
     """Generate MP3 in memory, slower pace for assimilation."""
     try:
-        # Strip markdown symbols so the voice reads cleanly
         clean = (
             text.replace("*", "")
                 .replace("_", "")
@@ -131,7 +129,7 @@ def build_voice_inputfile(text: str):
 
 
 def ping():
-    """Health check — call this at startup to verify the key works."""
+    """Health check at startup."""
     if _CLIENT is None:
         return False, "no client"
     try:
