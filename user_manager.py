@@ -1,11 +1,9 @@
 """
 user_manager.py
-Handles user data, daily free-mock limits, and premium status.
-Uses SQLite so no external database is needed.
+Handles user data, daily free-mock limits, premium status, and mock history.
 """
 import sqlite3
 from datetime import datetime, timedelta
-from pathlib import Path
 
 DB_PATH = "users.db"
 
@@ -37,6 +35,15 @@ def init_db():
             referrer_id INTEGER,
             referred_id INTEGER UNIQUE,
             created_at TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS mock_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            score INTEGER,
+            total INTEGER,
+            taken_at TEXT
         )
     """)
     conn.commit()
@@ -114,14 +121,36 @@ def can_take_mock(user_id):
     return False, f"{hours}h {minutes}m"
 
 
-def record_mock_taken(user_id):
+def record_mock_taken(user_id, score=None, total=None):
     conn = _conn()
     conn.execute(
         "UPDATE users SET last_mock_time = ? WHERE user_id = ?",
         (datetime.now().isoformat(), user_id),
     )
+    if score is not None and total is not None:
+        conn.execute(
+            "INSERT INTO mock_history (user_id, score, total, taken_at) VALUES (?, ?, ?, ?)",
+            (user_id, score, total, datetime.now().isoformat()),
+        )
     conn.commit()
     conn.close()
+
+
+def get_mock_stats(user_id):
+    """Return (total_mocks, best_score, best_total, avg_percent)."""
+    conn = _conn()
+    c = conn.cursor()
+    c.execute("SELECT score, total FROM mock_history WHERE user_id = ? ORDER BY taken_at DESC", (user_id,))
+    rows = c.fetchall()
+    conn.close()
+    if not rows:
+        return 0, 0, 0, 0
+    total_mocks = len(rows)
+    best = max(rows, key=lambda r: (r["score"] / r["total"]) if r["total"] else 0)
+    best_score = best["score"]
+    best_total = best["total"]
+    avg = sum((r["score"] / r["total"] * 100) for r in rows if r["total"]) / total_mocks
+    return total_mocks, best_score, best_total, round(avg, 1)
 
 
 def record_referral(referrer_id, referred_id):
