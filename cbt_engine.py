@@ -1,7 +1,8 @@
 """
-cbt_engine.py — bulletproof loader v4.
-Handles both list-style and dict-style options. Searches recursively,
-handles any malformed input, prints exact diagnostics.
+cbt_engine.py — bulletproof loader v5.
+- Handles both list-style and dict-style options.
+- Derives subject/subject_key from filename when the record lacks it.
+- Uses id/option-aware fingerprint to avoid false duplicate skips.
 """
 import json, random, traceback
 from pathlib import Path
@@ -16,8 +17,14 @@ FOUND_FILES = []
 
 def _fp(q):
     try:
-        return (str(q.get("subject_key", "")).lower()
-                + "|" + str(q.get("question", "")).strip().lower()[:200])
+        subj = str(q.get("subject_key", "")).strip().lower()
+        id_ = str(q.get("id", "")).strip()
+        qtext = str(q.get("question", "")).strip().lower()[:150]
+        oa = str(q.get("option_a", "")).strip()[:40]
+        parts = [subj, qtext, oa]
+        if id_:
+            parts.insert(1, f"id:{id_}")
+        return "|".join(parts)
     except Exception:
         return ""
 
@@ -28,7 +35,6 @@ def _normalize(q):
     try:
         options = q.get("options")
 
-        # --- Build a flat list of option strings regardless of input shape ---
         opt_list = []
         if isinstance(options, list):
             opt_list = [str(o).strip() for o in options]
@@ -94,8 +100,22 @@ def _add(q):
     return True
 
 
+def _subject_from_filename(path):
+    """questions_commerce_1.json -> ('commerce', 'Commerce')"""
+    try:
+        stem = Path(path).stem
+        if stem.startswith("questions_"):
+            remainder = stem[len("questions_"):]
+            parts = remainder.rsplit("_", 1)
+            key = parts[0].lower()
+            name = key.replace("_", " ").title()
+            return key, name
+    except Exception:
+        pass
+    return "", ""
+
+
 def _load(path):
-    """Load a JSON file and return number of questions added."""
     try:
         raw = Path(path).read_text(encoding="utf-8")
     except Exception as e:
@@ -114,7 +134,6 @@ def _load(path):
         print(f"[cbt_engine]    starts with: {preview!r}")
         return 0
 
-    # Extract a list of items
     if isinstance(data, list):
         items = data
     elif isinstance(data, dict):
@@ -129,12 +148,12 @@ def _load(path):
             items = [data]
         else:
             print(f"[cbt_engine] {path} — dict without questions list")
-            print(f"[cbt_engine]    keys: {list(data.keys())[:10]}")
             return 0
     else:
         print(f"[cbt_engine] {path} — top-level is {type(data).__name__}, expected list")
-        print(f"[cbt_engine]    preview: {str(data)[:200]!r}")
         return 0
+
+    file_subject_key, file_subject_name = _subject_from_filename(path)
 
     n = 0
     skipped = 0
@@ -146,16 +165,23 @@ def _load(path):
             if norm is None:
                 skipped += 1
                 if len(first_skips) < 3:
-                    first_skips.append(f"non-dict item: {type(item).__name__} = {str(item)[:80]}")
+                    first_skips.append(f"non-dict item: {type(item).__name__}")
                 continue
+
+            if not norm.get("subject_key"):
+                norm["subject_key"] = file_subject_key
+            if not norm.get("subject"):
+                norm["subject"] = file_subject_name
+
             if _add(norm):
                 n += 1
             else:
                 skipped += 1
                 if len(first_skips) < 3:
                     first_skips.append(
-                        f"missing fields: q={str(norm.get('question',''))[:40]!r} "
-                        f"a={norm.get('option_a','')[:20]!r} "
+                        f"skipped: q={str(norm.get('question',''))[:40]!r} "
+                        f"oa={norm.get('option_a','')[:20]!r} "
+                        f"ob={norm.get('option_b','')[:20]!r} "
                         f"ans={norm.get('answer','')!r}"
                     )
         except Exception as e:
@@ -195,11 +221,6 @@ def _bootstrap():
 
         if not file_strs:
             print("[cbt_engine] no files matching questions_*.json found")
-            try:
-                top = sorted(p.name for p in cwd.iterdir())
-                print(f"[cbt_engine]    cwd contains: {top[:40]}")
-            except Exception:
-                pass
         else:
             print(f"[cbt_engine] found {len(file_strs)} file(s)")
 
