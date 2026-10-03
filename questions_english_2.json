@@ -6,12 +6,12 @@
     "year": 2023,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to PERTINACIOUS.",
-    "options": [
-      "Stubborn",
-      "Yielding",
-      "Soft",
-      "Weak"
-    ],
+    "options": {
+      "A": "Stubborn",
+      "B": "Yielding",
+      "C": "Soft",
+      "D": "Weak"
+    },
     "option_a": "Stubborn",
     "option_b": "Yielding",
     "option_c": "Soft",
@@ -30,12 +30,12 @@
     "year": 2022,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to PROPITIOUS.",
-    "options": [
-      "Favourable",
-      "Hostile",
-      "Gloomy",
-      "Silent"
-    ],
+    "options": {
+      "A": "Favourable",
+      "B": "Hostile",
+      "C": "Gloomy",
+      "D": "Silent"
+    },
     "option_a": "Favourable",
     "option_b": "Hostile",
     "option_c": "Gloomy",
@@ -54,12 +54,12 @@
     "year": 2021,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to MENDACIOUS.",
-    "options": [
-      "Untruthful",
-      "Truthful",
-      "Honest",
-      "Brave"
-    ],
+    "options": {
+      "A": "Untruthful",
+      "B": "Truthful",
+      "C": "Honest",
+      "D": "Brave"
+    },
     "option_a": "Untruthful",
     "option_b": "Truthful",
     "option_c": "Honest",
@@ -78,12 +78,12 @@
     "year": 2020,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to OBSTREPEROUS.",
-    "options": [
-      "Noisy",
-      "Calm",
-      "Quiet",
-      "Silent"
-    ],
+    "options": {
+      "A": "Noisy",
+      "B": "Calm",
+      "C": "Quiet",
+      "D": "Silent"
+    },
     "option_a": "Noisy",
     "option_b": "Calm",
     "option_c": "Quiet",
@@ -102,12 +102,12 @@
     "year": 2019,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to SOPORIFIC.",
-    "options": [
-      "Sleep-inducing",
-      "Invigorating",
-      "Exciting",
-      "Stimulating"
-    ],
+    "options": {
+      "A": "Sleep-inducing",
+      "B": "Invigorating",
+      "C": "Exciting",
+      "D": "Stimulating"
+    },
     "option_a": "Sleep-inducing",
     "option_b": "Invigorating",
     "option_c": "Exciting",
@@ -126,12 +126,12 @@
     "year": 2018,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to PUSILLANIMOUS.",
-    "options": [
-      "Cowardly",
-      "Brave",
-      "Bold",
-      "Courageous"
-    ],
+    "options": {
+      "A": "Cowardly",
+      "B": "Brave",
+      "C": "Bold",
+      "D": "Courageous"
+    },
     "option_a": "Cowardly",
     "option_b": "Brave",
     "option_c": "Bold",
@@ -150,12 +150,12 @@
     "year": 2017,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to RECONDITE.",
-    "options": [
-      "Obscure",
-      "Obvious",
-      "Plain",
-      "Simple"
-    ],
+    "options": {
+      "A": "Obscure",
+      "B": "Obvious",
+      "C": "Plain",
+      "D": "Simple"
+    },
     "option_a": "Obscure",
     "option_b": "Obvious",
     "option_c": "Plain",
@@ -174,12 +174,12 @@
     "year": 2016,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to SALUBRIOUS.",
-    "options": [
-      "Health-giving",
-      "Harmful",
-      "Poisonous",
-      "Dangerous"
-    ],
+    "options": {
+      "A": "Health-giving",
+      "B": "Harmful",
+      "C": "Poisonous",
+      "D": "Dangerous"
+    },
     "option_a": "Health-giving",
     "option_b": "Harmful",
     "option_c": "Poisonous",
@@ -198,12 +198,12 @@
     "year": 2015,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to VITUPERATIVE.",
-    "options": [
-      "Abusive",
-      "Kind",
-      "Gentle",
-      "Polite"
-    ],
+    "options": {
+      "A": "Abusive",
+      "B": "Kind",
+      "C": "Gentle",
+      "D": "Polite"
+    },
     "option_a": "Abusive",
     "option_b": "Kind",
     "option_c": "Gentle",
@@ -222,12 +222,12 @@
     "year": 2014,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to PUGNACIOUS.",
-    "options": [
-      "Fond of fighting",
-      "Peaceful",
-      "Friendly",
-      "Gentle"
-    ],
+    "options": {
+      "A": "Fond of fighting",
+      "B": "Peaceful",
+      "C": "Friendly",
+      "D": "Gentle"
+    },
     "option_a": "Fond of fighting",
     "option_b": "Peaceful",
     "option_c": "Friendly",
@@ -246,12 +246,12 @@
     "year": 2013,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to DESULTORY.",
-    "options": [
-      "Aimless",
-      "Purposeful",
-      "Focused",
-      "Determined"
-    ],
+    "options": {
+      "A": "Aimless",
+      "B": "Purposeful",
+      "C": "Focused",
+      "D": "Determined"
+    },
     "option_a": "Aimless",
     "option_b": "Purposeful",
     "option_c": "Focused",
@@ -270,12 +270,12 @@
     "year": 2012,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to LACHRYMOSE.",
-    "options": [
-      "Tearful",
-      "Cheerful",
-      "Joyful",
-      "Merry"
-    ],
+    "options": {
+      "A": "Tearful",
+      "B": "Cheerful",
+      "C": "Joyful",
+      "D": "Merry"
+    },
     "option_a": "Tearful",
     "option_b": "Cheerful",
     "option_c": "Joyful",
@@ -294,12 +294,12 @@
     "year": 2011,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to SONOROUS.",
-    "options": [
-      "Deep and resonant",
-      "Soft",
-      "Weak",
-      "Faint"
-    ],
+    "options": {
+      "A": "Deep and resonant",
+      "B": "Soft",
+      "C": "Weak",
+      "D": "Faint"
+    },
     "option_a": "Deep and resonant",
     "option_b": "Soft",
     "option_c": "Weak",
@@ -318,12 +318,12 @@
     "year": 2010,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to PARSIMONIOUS.",
-    "options": [
-      "Miserly",
-      "Generous",
-      "Wasteful",
-      "Open-handed"
-    ],
+    "options": {
+      "A": "Miserly",
+      "B": "Generous",
+      "C": "Wasteful",
+      "D": "Open-handed"
+    },
     "option_a": "Miserly",
     "option_b": "Generous",
     "option_c": "Wasteful",
@@ -342,12 +342,12 @@
     "year": 2009,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to EBULLIENT.",
-    "options": [
-      "Enthusiastic",
-      "Depressed",
-      "Sad",
-      "Gloomy"
-    ],
+    "options": {
+      "A": "Enthusiastic",
+      "B": "Depressed",
+      "C": "Sad",
+      "D": "Gloomy"
+    },
     "option_a": "Enthusiastic",
     "option_b": "Depressed",
     "option_c": "Sad",
@@ -366,12 +366,12 @@
     "year": 2008,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to INIMICAL.",
-    "options": [
-      "Harmful",
-      "Helpful",
-      "Friendly",
-      "Beneficial"
-    ],
+    "options": {
+      "A": "Harmful",
+      "B": "Helpful",
+      "C": "Friendly",
+      "D": "Beneficial"
+    },
     "option_a": "Harmful",
     "option_b": "Helpful",
     "option_c": "Friendly",
@@ -390,12 +390,12 @@
     "year": 2007,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to SPURIOUS.",
-    "options": [
-      "False",
-      "Genuine",
-      "Real",
-      "Authentic"
-    ],
+    "options": {
+      "A": "False",
+      "B": "Genuine",
+      "C": "Real",
+      "D": "Authentic"
+    },
     "option_a": "False",
     "option_b": "Genuine",
     "option_c": "Real",
@@ -414,12 +414,12 @@
     "year": 2006,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to TRUCULENT.",
-    "options": [
-      "Aggressive",
-      "Peaceful",
-      "Calm",
-      "Quiet"
-    ],
+    "options": {
+      "A": "Aggressive",
+      "B": "Peaceful",
+      "C": "Calm",
+      "D": "Quiet"
+    },
     "option_a": "Aggressive",
     "option_b": "Peaceful",
     "option_c": "Calm",
@@ -438,12 +438,12 @@
     "year": 2005,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to UBIQUITOUS.",
-    "options": [
-      "Present everywhere",
-      "Rare",
-      "Scarce",
-      "Absent"
-    ],
+    "options": {
+      "A": "Present everywhere",
+      "B": "Rare",
+      "C": "Scarce",
+      "D": "Absent"
+    },
     "option_a": "Present everywhere",
     "option_b": "Rare",
     "option_c": "Scarce",
@@ -462,12 +462,12 @@
     "year": 2004,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to VENAL.",
-    "options": [
-      "Open to bribery",
-      "Honest",
-      "Upright",
-      "Incorruptible"
-    ],
+    "options": {
+      "A": "Open to bribery",
+      "B": "Honest",
+      "C": "Upright",
+      "D": "Incorruptible"
+    },
     "option_a": "Open to bribery",
     "option_b": "Honest",
     "option_c": "Upright",
@@ -486,12 +486,12 @@
     "year": 2023,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to MAGNANIMOUS.",
-    "options": [
-      "Petty",
-      "Generous",
-      "Noble",
-      "Forgiving"
-    ],
+    "options": {
+      "A": "Petty",
+      "B": "Generous",
+      "C": "Noble",
+      "D": "Forgiving"
+    },
     "option_a": "Petty",
     "option_b": "Generous",
     "option_c": "Noble",
@@ -510,12 +510,12 @@
     "year": 2022,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to MITIGATE.",
-    "options": [
-      "Aggravate",
-      "Alleviate",
-      "Reduce",
-      "Ease"
-    ],
+    "options": {
+      "A": "Aggravate",
+      "B": "Alleviate",
+      "C": "Reduce",
+      "D": "Ease"
+    },
     "option_a": "Aggravate",
     "option_b": "Alleviate",
     "option_c": "Reduce",
@@ -534,12 +534,12 @@
     "year": 2021,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to PRODIGAL.",
-    "options": [
-      "Thrifty",
-      "Wasteful",
-      "Extravagant",
-      "Lavish"
-    ],
+    "options": {
+      "A": "Thrifty",
+      "B": "Wasteful",
+      "C": "Extravagant",
+      "D": "Lavish"
+    },
     "option_a": "Thrifty",
     "option_b": "Wasteful",
     "option_c": "Extravagant",
@@ -558,12 +558,12 @@
     "year": 2020,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to DEBILITATE.",
-    "options": [
-      "Strengthen",
-      "Weaken",
-      "Sap",
-      "Enfeeble"
-    ],
+    "options": {
+      "A": "Strengthen",
+      "B": "Weaken",
+      "C": "Sap",
+      "D": "Enfeeble"
+    },
     "option_a": "Strengthen",
     "option_b": "Weaken",
     "option_c": "Sap",
@@ -582,12 +582,12 @@
     "year": 2019,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to EXACERBATE.",
-    "options": [
-      "Soothe",
-      "Worsen",
-      "Inflame",
-      "Irritate"
-    ],
+    "options": {
+      "A": "Soothe",
+      "B": "Worsen",
+      "C": "Inflame",
+      "D": "Irritate"
+    },
     "option_a": "Soothe",
     "option_b": "Worsen",
     "option_c": "Inflame",
@@ -606,12 +606,12 @@
     "year": 2018,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to OBFUSCATE.",
-    "options": [
-      "Clarify",
-      "Confuse",
-      "Muddle",
-      "Cloud"
-    ],
+    "options": {
+      "A": "Clarify",
+      "B": "Confuse",
+      "C": "Muddle",
+      "D": "Cloud"
+    },
     "option_a": "Clarify",
     "option_b": "Confuse",
     "option_c": "Muddle",
@@ -630,12 +630,12 @@
     "year": 2017,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to PARSIMONY.",
-    "options": [
-      "Extravagance",
-      "Frugality",
-      "Thrift",
-      "Economy"
-    ],
+    "options": {
+      "A": "Extravagance",
+      "B": "Frugality",
+      "C": "Thrift",
+      "D": "Economy"
+    },
     "option_a": "Extravagance",
     "option_b": "Frugality",
     "option_c": "Thrift",
@@ -654,12 +654,12 @@
     "year": 2016,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to INSIPID.",
-    "options": [
-      "Flavourful",
-      "Tasteless",
-      "Bland",
-      "Dull"
-    ],
+    "options": {
+      "A": "Flavourful",
+      "B": "Tasteless",
+      "C": "Bland",
+      "D": "Dull"
+    },
     "option_a": "Flavourful",
     "option_b": "Tasteless",
     "option_c": "Bland",
@@ -678,12 +678,12 @@
     "year": 2015,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to PALLIATE.",
-    "options": [
-      "Aggravate",
-      "Soothe",
-      "Relieve",
-      "Ease"
-    ],
+    "options": {
+      "A": "Aggravate",
+      "B": "Soothe",
+      "C": "Relieve",
+      "D": "Ease"
+    },
     "option_a": "Aggravate",
     "option_b": "Soothe",
     "option_c": "Relieve",
@@ -702,12 +702,12 @@
     "year": 2014,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to LAUD.",
-    "options": [
-      "Criticise",
-      "Praise",
-      "Extol",
-      "Applaud"
-    ],
+    "options": {
+      "A": "Criticise",
+      "B": "Praise",
+      "C": "Extol",
+      "D": "Applaud"
+    },
     "option_a": "Criticise",
     "option_b": "Praise",
     "option_c": "Extol",
@@ -726,12 +726,12 @@
     "year": 2013,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to VILIFY.",
-    "options": [
-      "Praise",
-      "Defame",
-      "Slander",
-      "Malign"
-    ],
+    "options": {
+      "A": "Praise",
+      "B": "Defame",
+      "C": "Slander",
+      "D": "Malign"
+    },
     "option_a": "Praise",
     "option_b": "Defame",
     "option_c": "Slander",
@@ -750,12 +750,12 @@
     "year": 2012,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to AFFLUENT.",
-    "options": [
-      "Poor",
-      "Rich",
-      "Wealthy",
-      "Prosperous"
-    ],
+    "options": {
+      "A": "Poor",
+      "B": "Rich",
+      "C": "Wealthy",
+      "D": "Prosperous"
+    },
     "option_a": "Poor",
     "option_b": "Rich",
     "option_c": "Wealthy",
@@ -774,12 +774,12 @@
     "year": 2011,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to COPIOUS.",
-    "options": [
-      "Scanty",
-      "Abundant",
-      "Plentiful",
-      "Ample"
-    ],
+    "options": {
+      "A": "Scanty",
+      "B": "Abundant",
+      "C": "Plentiful",
+      "D": "Ample"
+    },
     "option_a": "Scanty",
     "option_b": "Abundant",
     "option_c": "Plentiful",
@@ -798,12 +798,12 @@
     "year": 2010,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to VOCIFEROUS.",
-    "options": [
-      "Silent",
-      "Loud",
-      "Noisy",
-      "Boisterous"
-    ],
+    "options": {
+      "A": "Silent",
+      "B": "Loud",
+      "C": "Noisy",
+      "D": "Boisterous"
+    },
     "option_a": "Silent",
     "option_b": "Loud",
     "option_c": "Noisy",
@@ -822,12 +822,12 @@
     "year": 2009,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to BELLIGERENT.",
-    "options": [
-      "Peaceful",
-      "Hostile",
-      "Warlike",
-      "Aggressive"
-    ],
+    "options": {
+      "A": "Peaceful",
+      "B": "Hostile",
+      "C": "Warlike",
+      "D": "Aggressive"
+    },
     "option_a": "Peaceful",
     "option_b": "Hostile",
     "option_c": "Warlike",
@@ -846,12 +846,12 @@
     "year": 2008,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to CUPIDITY.",
-    "options": [
-      "Generosity",
-      "Greed",
-      "Avarice",
-      "Covetousness"
-    ],
+    "options": {
+      "A": "Generosity",
+      "B": "Greed",
+      "C": "Avarice",
+      "D": "Covetousness"
+    },
     "option_a": "Generosity",
     "option_b": "Greed",
     "option_c": "Avarice",
@@ -870,12 +870,12 @@
     "year": 2007,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to PLACATE.",
-    "options": [
-      "Enrage",
-      "Pacify",
-      "Appease",
-      "Mollify"
-    ],
+    "options": {
+      "A": "Enrage",
+      "B": "Pacify",
+      "C": "Appease",
+      "D": "Mollify"
+    },
     "option_a": "Enrage",
     "option_b": "Pacify",
     "option_c": "Appease",
@@ -894,12 +894,12 @@
     "year": 2006,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to PHLEGMATIC.",
-    "options": [
-      "Excitable",
-      "Calm",
-      "Sluggish",
-      "Unemotional"
-    ],
+    "options": {
+      "A": "Excitable",
+      "B": "Calm",
+      "C": "Sluggish",
+      "D": "Unemotional"
+    },
     "option_a": "Excitable",
     "option_b": "Calm",
     "option_c": "Sluggish",
@@ -918,12 +918,12 @@
     "year": 2005,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to DISCERNING.",
-    "options": [
-      "Obtuse",
-      "Perceptive",
-      "Astute",
-      "Sharp"
-    ],
+    "options": {
+      "A": "Obtuse",
+      "B": "Perceptive",
+      "C": "Astute",
+      "D": "Sharp"
+    },
     "option_a": "Obtuse",
     "option_b": "Perceptive",
     "option_c": "Astute",
@@ -942,12 +942,12 @@
     "year": 2004,
     "topic": "Antonyms",
     "question": "Choose the option opposite in meaning to GRANDIOSE.",
-    "options": [
-      "Modest",
-      "Pretentious",
-      "Showy",
-      "Imposing"
-    ],
+    "options": {
+      "A": "Modest",
+      "B": "Pretentious",
+      "C": "Showy",
+      "D": "Imposing"
+    },
     "option_a": "Modest",
     "option_b": "Pretentious",
     "option_c": "Showy",
@@ -966,12 +966,12 @@
     "year": 2023,
     "topic": "Sentence Completion",
     "question": "The chairman ______ the meeting with a brief speech.",
-    "options": [
-      "opened",
-      "openned",
-      "openned up",
-      "open"
-    ],
+    "options": {
+      "A": "opened",
+      "B": "openned",
+      "C": "openned up",
+      "D": "open"
+    },
     "option_a": "opened",
     "option_b": "openned",
     "option_c": "openned up",
@@ -990,12 +990,12 @@
     "year": 2022,
     "topic": "Sentence Completion",
     "question": "He ______ to the party, but he was busy.",
-    "options": [
-      "would have come",
-      "will come",
-      "comes",
-      "came"
-    ],
+    "options": {
+      "A": "would have come",
+      "B": "will come",
+      "C": "comes",
+      "D": "came"
+    },
     "option_a": "would have come",
     "option_b": "will come",
     "option_c": "comes",
@@ -1014,12 +1014,12 @@
     "year": 2021,
     "topic": "Sentence Completion",
     "question": "The meeting was ______ until next week.",
-    "options": [
-      "postponed",
-      "postponned",
-      "postponed till",
-      "postpon"
-    ],
+    "options": {
+      "A": "postponed",
+      "B": "postponned",
+      "C": "postponed till",
+      "D": "postpon"
+    },
     "option_a": "postponed",
     "option_b": "postponned",
     "option_c": "postponed till",
@@ -1038,12 +1038,12 @@
     "year": 2020,
     "topic": "Sentence Completion",
     "question": "The committee will ______ the matter tomorrow.",
-    "options": [
-      "deliberate on",
-      "deliberate",
-      "deliberate about",
-      "deliberate for"
-    ],
+    "options": {
+      "A": "deliberate on",
+      "B": "deliberate",
+      "C": "deliberate about",
+      "D": "deliberate for"
+    },
     "option_a": "deliberate on",
     "option_b": "deliberate",
     "option_c": "deliberate about",
@@ -1062,12 +1062,12 @@
     "year": 2019,
     "topic": "Sentence Completion",
     "question": "She has a great ______ for classical music.",
-    "options": [
-      "penchant",
-      "pentant",
-      "penshant",
-      "pentation"
-    ],
+    "options": {
+      "A": "penchant",
+      "B": "pentant",
+      "C": "penshant",
+      "D": "pentation"
+    },
     "option_a": "penchant",
     "option_b": "pentant",
     "option_c": "penshant",
@@ -1086,12 +1086,12 @@
     "year": 2018,
     "topic": "Sentence Completion",
     "question": "The students were ______ to write the exam.",
-    "options": [
-      "permitted",
-      "permited",
-      "permitt",
-      "permition"
-    ],
+    "options": {
+      "A": "permitted",
+      "B": "permited",
+      "C": "permitt",
+      "D": "permition"
+    },
     "option_a": "permitted",
     "option_b": "permited",
     "option_c": "permitt",
@@ -1110,12 +1110,12 @@
     "year": 2017,
     "topic": "Sentence Completion",
     "question": "The two friends had a ______ disagreement.",
-    "options": [
-      "minor",
-      "miner",
-      "mine",
-      "minerel"
-    ],
+    "options": {
+      "A": "minor",
+      "B": "miner",
+      "C": "mine",
+      "D": "minerel"
+    },
     "option_a": "minor",
     "option_b": "miner",
     "option_c": "mine",
@@ -1134,12 +1134,12 @@
     "year": 2016,
     "topic": "Sentence Completion",
     "question": "The doctor prescribed a ______ for the infection.",
-    "options": [
-      "cure",
-      "cured",
-      "curing",
-      "cureall"
-    ],
+    "options": {
+      "A": "cure",
+      "B": "cured",
+      "C": "curing",
+      "D": "cureall"
+    },
     "option_a": "cure",
     "option_b": "cured",
     "option_c": "curing",
@@ -1158,12 +1158,12 @@
     "year": 2015,
     "topic": "Sentence Completion",
     "question": "We must ______ the two versions carefully before deciding.",
-    "options": [
-      "compare",
-      "compair",
-      "compere",
-      "compar"
-    ],
+    "options": {
+      "A": "compare",
+      "B": "compair",
+      "C": "compere",
+      "D": "compar"
+    },
     "option_a": "compare",
     "option_b": "compair",
     "option_c": "compere",
@@ -1182,12 +1182,12 @@
     "year": 2014,
     "topic": "Sentence Completion",
     "question": "The teacher asked the boys to ______ in a line.",
-    "options": [
-      "queue",
-      "cue",
-      "queue up",
-      "queueing"
-    ],
+    "options": {
+      "A": "queue",
+      "B": "cue",
+      "C": "queue up",
+      "D": "queueing"
+    },
     "option_a": "queue",
     "option_b": "cue",
     "option_c": "queue up",
@@ -1206,12 +1206,12 @@
     "year": 2013,
     "topic": "Sentence Completion",
     "question": "The lawyer ______ the case without delay.",
-    "options": [
-      "handled",
-      "handle",
-      "handles",
-      "handling"
-    ],
+    "options": {
+      "A": "handled",
+      "B": "handle",
+      "C": "handles",
+      "D": "handling"
+    },
     "option_a": "handled",
     "option_b": "handle",
     "option_c": "handles",
@@ -1230,12 +1230,12 @@
     "year": 2012,
     "topic": "Sentence Completion",
     "question": "Hardly had the bell rung ______ the students rushed out.",
-    "options": [
-      "when",
-      "than",
-      "then",
-      "that"
-    ],
+    "options": {
+      "A": "when",
+      "B": "than",
+      "C": "then",
+      "D": "that"
+    },
     "option_a": "when",
     "option_b": "than",
     "option_c": "then",
@@ -1254,12 +1254,12 @@
     "year": 2011,
     "topic": "Sentence Completion",
     "question": "No sooner had he sat down ______ he was called.",
-    "options": [
-      "than",
-      "when",
-      "then",
-      "that"
-    ],
+    "options": {
+      "A": "than",
+      "B": "when",
+      "C": "then",
+      "D": "that"
+    },
     "option_a": "than",
     "option_b": "when",
     "option_c": "then",
@@ -1278,12 +1278,12 @@
     "year": 2010,
     "topic": "Sentence Completion",
     "question": "Not only did he steal the money, ______ he lied about it.",
-    "options": [
-      "but also",
-      "also",
-      "and also",
-      "so also"
-    ],
+    "options": {
+      "A": "but also",
+      "B": "also",
+      "C": "and also",
+      "D": "so also"
+    },
     "option_a": "but also",
     "option_b": "also",
     "option_c": "and also",
@@ -1302,12 +1302,12 @@
     "year": 2009,
     "topic": "Sentence Completion",
     "question": "The teacher told the students to ______ the rules.",
-    "options": [
-      "comply with",
-      "comply to",
-      "comply for",
-      "comply at"
-    ],
+    "options": {
+      "A": "comply with",
+      "B": "comply to",
+      "C": "comply for",
+      "D": "comply at"
+    },
     "option_a": "comply with",
     "option_b": "comply to",
     "option_c": "comply for",
@@ -1326,12 +1326,12 @@
     "year": 2008,
     "topic": "Sentence Completion",
     "question": "He was ______ of the crime after the trial.",
-    "options": [
-      "acquitted",
-      "acquited",
-      "acqitted",
-      "acquit"
-    ],
+    "options": {
+      "A": "acquitted",
+      "B": "acquited",
+      "C": "acqitted",
+      "D": "acquit"
+    },
     "option_a": "acquitted",
     "option_b": "acquited",
     "option_c": "acqitted",
@@ -1350,12 +1350,12 @@
     "year": 2007,
     "topic": "Sentence Completion",
     "question": "The two countries agreed to ______ a treaty.",
-    "options": [
-      "conclude",
-      "include",
-      "exclude",
-      "occlude"
-    ],
+    "options": {
+      "A": "conclude",
+      "B": "include",
+      "C": "exclude",
+      "D": "occlude"
+    },
     "option_a": "conclude",
     "option_b": "include",
     "option_c": "exclude",
@@ -1374,12 +1374,12 @@
     "year": 2006,
     "topic": "Sentence Completion",
     "question": "The manager was ______ with the worker's performance.",
-    "options": [
-      "displeased",
-      "displease",
-      "displeasing",
-      "displeaseful"
-    ],
+    "options": {
+      "A": "displeased",
+      "B": "displease",
+      "C": "displeasing",
+      "D": "displeaseful"
+    },
     "option_a": "displeased",
     "option_b": "displease",
     "option_c": "displeasing",
@@ -1398,12 +1398,12 @@
     "year": 2005,
     "topic": "Sentence Completion",
     "question": "He ______ his breakfast before leaving for work.",
-    "options": [
-      "had eaten",
-      "has eaten",
-      "eat",
-      "eats"
-    ],
+    "options": {
+      "A": "had eaten",
+      "B": "has eaten",
+      "C": "eat",
+      "D": "eats"
+    },
     "option_a": "had eaten",
     "option_b": "has eaten",
     "option_c": "eat",
@@ -1422,12 +1422,12 @@
     "year": 2004,
     "topic": "Sentence Completion",
     "question": "The new policy will ______ a lot of changes.",
-    "options": [
-      "bring about",
-      "bring up",
-      "bring out",
-      "bring in"
-    ],
+    "options": {
+      "A": "bring about",
+      "B": "bring up",
+      "C": "bring out",
+      "D": "bring in"
+    },
     "option_a": "bring about",
     "option_b": "bring up",
     "option_c": "bring out",
@@ -1446,12 +1446,12 @@
     "year": 2023,
     "topic": "Grammar",
     "question": "The number of students in the class ______ increased.",
-    "options": [
-      "has",
-      "have",
-      "are",
-      "were"
-    ],
+    "options": {
+      "A": "has",
+      "B": "have",
+      "C": "are",
+      "D": "were"
+    },
     "option_a": "has",
     "option_b": "have",
     "option_c": "are",
@@ -1470,12 +1470,12 @@
     "year": 2022,
     "topic": "Grammar",
     "question": "A number of students ______ absent today.",
-    "options": [
-      "are",
-      "is",
-      "was",
-      "has been"
-    ],
+    "options": {
+      "A": "are",
+      "B": "is",
+      "C": "was",
+      "D": "has been"
+    },
     "option_a": "are",
     "option_b": "is",
     "option_c": "was",
@@ -1494,12 +1494,12 @@
     "year": 2021,
     "topic": "Grammar",
     "question": "Mathematics ______ my favourite subject.",
-    "options": [
-      "is",
-      "are",
-      "were",
-      "have"
-    ],
+    "options": {
+      "A": "is",
+      "B": "are",
+      "C": "were",
+      "D": "have"
+    },
     "option_a": "is",
     "option_b": "are",
     "option_c": "were",
@@ -1518,12 +1518,12 @@
     "year": 2020,
     "topic": "Grammar",
     "question": "Either John or his brothers ______ coming.",
-    "options": [
-      "are",
-      "is",
-      "was",
-      "has been"
-    ],
+    "options": {
+      "A": "are",
+      "B": "is",
+      "C": "was",
+      "D": "has been"
+    },
     "option_a": "are",
     "option_b": "is",
     "option_c": "was",
@@ -1542,12 +1542,12 @@
     "year": 2019,
     "topic": "Grammar",
     "question": "The scissors ______ on the table.",
-    "options": [
-      "are",
-      "is",
-      "was",
-      "has been"
-    ],
+    "options": {
+      "A": "are",
+      "B": "is",
+      "C": "was",
+      "D": "has been"
+    },
     "option_a": "are",
     "option_b": "is",
     "option_c": "was",
@@ -1566,12 +1566,12 @@
     "year": 2018,
     "topic": "Grammar",
     "question": "The furniture ______ expensive.",
-    "options": [
-      "is",
-      "are",
-      "were",
-      "have been"
-    ],
+    "options": {
+      "A": "is",
+      "B": "are",
+      "C": "were",
+      "D": "have been"
+    },
     "option_a": "is",
     "option_b": "are",
     "option_c": "were",
@@ -1590,12 +1590,12 @@
     "year": 2017,
     "topic": "Grammar",
     "question": "Fifty naira ______ not enough for lunch.",
-    "options": [
-      "is",
-      "are",
-      "were",
-      "have been"
-    ],
+    "options": {
+      "A": "is",
+      "B": "are",
+      "C": "were",
+      "D": "have been"
+    },
     "option_a": "is",
     "option_b": "are",
     "option_c": "were",
@@ -1614,12 +1614,12 @@
     "year": 2016,
     "topic": "Grammar",
     "question": "One of the boys ______ stolen my book.",
-    "options": [
-      "has",
-      "have",
-      "are",
-      "were"
-    ],
+    "options": {
+      "A": "has",
+      "B": "have",
+      "C": "are",
+      "D": "were"
+    },
     "option_a": "has",
     "option_b": "have",
     "option_c": "are",
@@ -1638,12 +1638,12 @@
     "year": 2015,
     "topic": "Grammar",
     "question": "Ten kilometres ______ a long distance.",
-    "options": [
-      "is",
-      "are",
-      "were",
-      "have been"
-    ],
+    "options": {
+      "A": "is",
+      "B": "are",
+      "C": "were",
+      "D": "have been"
+    },
     "option_a": "is",
     "option_b": "are",
     "option_c": "were",
@@ -1662,12 +1662,12 @@
     "year": 2014,
     "topic": "Grammar",
     "question": "The jury ______ reached a verdict.",
-    "options": [
-      "has",
-      "have",
-      "are",
-      "were"
-    ],
+    "options": {
+      "A": "has",
+      "B": "have",
+      "C": "are",
+      "D": "were"
+    },
     "option_a": "has",
     "option_b": "have",
     "option_c": "are",
@@ -1686,12 +1686,12 @@
     "year": 2013,
     "topic": "Grammar",
     "question": "He prefers tea ______ coffee.",
-    "options": [
-      "to",
-      "than",
-      "over",
-      "from"
-    ],
+    "options": {
+      "A": "to",
+      "B": "than",
+      "C": "over",
+      "D": "from"
+    },
     "option_a": "to",
     "option_b": "than",
     "option_c": "over",
@@ -1710,12 +1710,12 @@
     "year": 2012,
     "topic": "Grammar",
     "question": "I have been waiting ______ two hours.",
-    "options": [
-      "for",
-      "since",
-      "from",
-      "at"
-    ],
+    "options": {
+      "A": "for",
+      "B": "since",
+      "C": "from",
+      "D": "at"
+    },
     "option_a": "for",
     "option_b": "since",
     "option_c": "from",
@@ -1734,12 +1734,12 @@
     "year": 2011,
     "topic": "Grammar",
     "question": "He arrived ______ Lagos yesterday.",
-    "options": [
-      "in",
-      "at",
-      "to",
-      "from"
-    ],
+    "options": {
+      "A": "in",
+      "B": "at",
+      "C": "to",
+      "D": "from"
+    },
     "option_a": "in",
     "option_b": "at",
     "option_c": "to",
@@ -1758,12 +1758,12 @@
     "year": 2010,
     "topic": "Grammar",
     "question": "The book is ______ the table.",
-    "options": [
-      "on",
-      "in",
-      "at",
-      "by"
-    ],
+    "options": {
+      "A": "on",
+      "B": "in",
+      "C": "at",
+      "D": "by"
+    },
     "option_a": "on",
     "option_b": "in",
     "option_c": "at",
@@ -1782,12 +1782,12 @@
     "year": 2009,
     "topic": "Grammar",
     "question": "She is good ______ mathematics.",
-    "options": [
-      "at",
-      "in",
-      "on",
-      "with"
-    ],
+    "options": {
+      "A": "at",
+      "B": "in",
+      "C": "on",
+      "D": "with"
+    },
     "option_a": "at",
     "option_b": "in",
     "option_c": "on",
@@ -1806,12 +1806,12 @@
     "year": 2008,
     "topic": "Grammar",
     "question": "If it rains, we ______ stay at home.",
-    "options": [
-      "will",
-      "would",
-      "shall have",
-      "would have"
-    ],
+    "options": {
+      "A": "will",
+      "B": "would",
+      "C": "shall have",
+      "D": "would have"
+    },
     "option_a": "will",
     "option_b": "would",
     "option_c": "shall have",
@@ -1830,12 +1830,12 @@
     "year": 2007,
     "topic": "Grammar",
     "question": "He would have come if you ______ him.",
-    "options": [
-      "had invited",
-      "invited",
-      "has invited",
-      "invite"
-    ],
+    "options": {
+      "A": "had invited",
+      "B": "invited",
+      "C": "has invited",
+      "D": "invite"
+    },
     "option_a": "had invited",
     "option_b": "invited",
     "option_c": "has invited",
@@ -1854,12 +1854,12 @@
     "year": 2006,
     "topic": "Grammar",
     "question": "The teacher asked if I ______ my homework.",
-    "options": [
-      "had done",
-      "have done",
-      "did",
-      "do"
-    ],
+    "options": {
+      "A": "had done",
+      "B": "have done",
+      "C": "did",
+      "D": "do"
+    },
     "option_a": "had done",
     "option_b": "have done",
     "option_c": "did",
@@ -1878,12 +1878,12 @@
     "year": 2005,
     "topic": "Grammar",
     "question": "He said he ______ coming later.",
-    "options": [
-      "was",
-      "is",
-      "were",
-      "will be"
-    ],
+    "options": {
+      "A": "was",
+      "B": "is",
+      "C": "were",
+      "D": "will be"
+    },
     "option_a": "was",
     "option_b": "is",
     "option_c": "were",
@@ -1902,12 +1902,12 @@
     "year": 2004,
     "topic": "Grammar",
     "question": "She is the ______ of the two sisters.",
-    "options": [
-      "taller",
-      "tallest",
-      "tall",
-      "more tall"
-    ],
+    "options": {
+      "A": "taller",
+      "B": "tallest",
+      "C": "tall",
+      "D": "more tall"
+    },
     "option_a": "taller",
     "option_b": "tallest",
     "option_c": "tall",
@@ -1926,12 +1926,12 @@
     "year": 2023,
     "topic": "Idioms",
     "question": "The expression 'to blow one's own trumpet' means:",
-    "options": [
-      "To praise oneself",
-      "To play an instrument",
-      "To shout loudly",
-      "To be proud"
-    ],
+    "options": {
+      "A": "To praise oneself",
+      "B": "To play an instrument",
+      "C": "To shout loudly",
+      "D": "To be proud"
+    },
     "option_a": "To praise oneself",
     "option_b": "To play an instrument",
     "option_c": "To shout loudly",
@@ -1950,12 +1950,12 @@
     "year": 2022,
     "topic": "Idioms",
     "question": "The expression 'once in a blue moon' means:",
-    "options": [
-      "Very rarely",
-      "Very often",
-      "Every month",
-      "Never"
-    ],
+    "options": {
+      "A": "Very rarely",
+      "B": "Very often",
+      "C": "Every month",
+      "D": "Never"
+    },
     "option_a": "Very rarely",
     "option_b": "Very often",
     "option_c": "Every month",
@@ -1974,12 +1974,12 @@
     "year": 2021,
     "topic": "Idioms",
     "question": "The expression 'to kill two birds with one stone' means:",
-    "options": [
-      "To achieve two goals with one action",
-      "To be cruel to animals",
-      "To be clever",
-      "To hunt efficiently"
-    ],
+    "options": {
+      "A": "To achieve two goals with one action",
+      "B": "To be cruel to animals",
+      "C": "To be clever",
+      "D": "To hunt efficiently"
+    },
     "option_a": "To achieve two goals with one action",
     "option_b": "To be cruel to animals",
     "option_c": "To be clever",
@@ -1998,12 +1998,12 @@
     "year": 2020,
     "topic": "Idioms",
     "question": "The expression 'to be on cloud nine' means:",
-    "options": [
-      "To be very happy",
-      "To be in the sky",
-      "To be high",
-      "To be confused"
-    ],
+    "options": {
+      "A": "To be very happy",
+      "B": "To be in the sky",
+      "C": "To be high",
+      "D": "To be confused"
+    },
     "option_a": "To be very happy",
     "option_b": "To be in the sky",
     "option_c": "To be high",
@@ -2022,12 +2022,12 @@
     "year": 2019,
     "topic": "Idioms",
     "question": "The expression 'to hit the nail on the head' means:",
-    "options": [
-      "To identify the exact problem",
-      "To work as a carpenter",
-      "To hurt someone",
-      "To be aggressive"
-    ],
+    "options": {
+      "A": "To identify the exact problem",
+      "B": "To work as a carpenter",
+      "C": "To hurt someone",
+      "D": "To be aggressive"
+    },
     "option_a": "To identify the exact problem",
     "option_b": "To work as a carpenter",
     "option_c": "To hurt someone",
@@ -2046,12 +2046,12 @@
     "year": 2018,
     "topic": "Idioms",
     "question": "The expression 'to smell a rat' means:",
-    "options": [
-      "To suspect something is wrong",
-      "To detect a bad odour",
-      "To find a dead animal",
-      "To be sick"
-    ],
+    "options": {
+      "A": "To suspect something is wrong",
+      "B": "To detect a bad odour",
+      "C": "To find a dead animal",
+      "D": "To be sick"
+    },
     "option_a": "To suspect something is wrong",
     "option_b": "To detect a bad odour",
     "option_c": "To find a dead animal",
@@ -2070,12 +2070,12 @@
     "year": 2017,
     "topic": "Idioms",
     "question": "The expression 'to bury the hatchet' means:",
-    "options": [
-      "To make peace",
-      "To hide a weapon",
-      "To lose something",
-      "To dig a hole"
-    ],
+    "options": {
+      "A": "To make peace",
+      "B": "To hide a weapon",
+      "C": "To lose something",
+      "D": "To dig a hole"
+    },
     "option_a": "To make peace",
     "option_b": "To hide a weapon",
     "option_c": "To lose something",
@@ -2094,12 +2094,12 @@
     "year": 2016,
     "topic": "Idioms",
     "question": "The expression 'to add insult to injury' means:",
-    "options": [
-      "To make a bad situation worse",
-      "To hurt someone twice",
-      "To be insulting",
-      "To injure again"
-    ],
+    "options": {
+      "A": "To make a bad situation worse",
+      "B": "To hurt someone twice",
+      "C": "To be insulting",
+      "D": "To injure again"
+    },
     "option_a": "To make a bad situation worse",
     "option_b": "To hurt someone twice",
     "option_c": "To be insulting",
@@ -2118,12 +2118,12 @@
     "year": 2015,
     "topic": "Idioms",
     "question": "The expression 'to keep a straight face' means:",
-    "options": [
-      "To not smile or laugh",
-      "To look serious",
-      "To hide the face",
-      "To stare"
-    ],
+    "options": {
+      "A": "To not smile or laugh",
+      "B": "To look serious",
+      "C": "To hide the face",
+      "D": "To stare"
+    },
     "option_a": "To not smile or laugh",
     "option_b": "To look serious",
     "option_c": "To hide the face",
@@ -2142,12 +2142,12 @@
     "year": 2014,
     "topic": "Idioms",
     "question": "The expression 'a storm in a teacup' means:",
-    "options": [
-      "A lot of fuss about nothing",
-      "A rainstorm",
-      "A small cup",
-      "A large storm"
-    ],
+    "options": {
+      "A": "A lot of fuss about nothing",
+      "B": "A rainstorm",
+      "C": "A small cup",
+      "D": "A large storm"
+    },
     "option_a": "A lot of fuss about nothing",
     "option_b": "A rainstorm",
     "option_c": "A small cup",
@@ -2166,12 +2166,12 @@
     "year": 2023,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Receive",
-      "Recieve",
-      "Receeve",
-      "Receave"
-    ],
+    "options": {
+      "A": "Receive",
+      "B": "Recieve",
+      "C": "Receeve",
+      "D": "Receave"
+    },
     "option_a": "Receive",
     "option_b": "Recieve",
     "option_c": "Receeve",
@@ -2190,12 +2190,12 @@
     "year": 2022,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Believe",
-      "Bielieve",
-      "Beleive",
-      "Beleve"
-    ],
+    "options": {
+      "A": "Believe",
+      "B": "Bielieve",
+      "C": "Beleive",
+      "D": "Beleve"
+    },
     "option_a": "Believe",
     "option_b": "Bielieve",
     "option_c": "Beleive",
@@ -2214,12 +2214,12 @@
     "year": 2021,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Achieve",
-      "Acheive",
-      "Achive",
-      "Acheve"
-    ],
+    "options": {
+      "A": "Achieve",
+      "B": "Acheive",
+      "C": "Achive",
+      "D": "Acheve"
+    },
     "option_a": "Achieve",
     "option_b": "Acheive",
     "option_c": "Achive",
@@ -2238,12 +2238,12 @@
     "year": 2020,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Argument",
-      "Arguement",
-      "Argumment",
-      "Argumant"
-    ],
+    "options": {
+      "A": "Argument",
+      "B": "Arguement",
+      "C": "Argumment",
+      "D": "Argumant"
+    },
     "option_a": "Argument",
     "option_b": "Arguement",
     "option_c": "Argumment",
@@ -2262,12 +2262,12 @@
     "year": 2019,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Judgement",
-      "Judgment",
-      "Judge-ment",
-      "Judgemment"
-    ],
+    "options": {
+      "A": "Judgement",
+      "B": "Judgment",
+      "C": "Judge-ment",
+      "D": "Judgemment"
+    },
     "option_a": "Judgement",
     "option_b": "Judgment",
     "option_c": "Judge-ment",
@@ -2286,12 +2286,12 @@
     "year": 2018,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Ridiculous",
-      "Ridiculuous",
-      "Rediculous",
-      "Ridiculus"
-    ],
+    "options": {
+      "A": "Ridiculous",
+      "B": "Ridiculuous",
+      "C": "Rediculous",
+      "D": "Ridiculus"
+    },
     "option_a": "Ridiculous",
     "option_b": "Ridiculuous",
     "option_c": "Rediculous",
@@ -2310,12 +2310,12 @@
     "year": 2017,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Perseverance",
-      "Perseverence",
-      "Persaverance",
-      "Persevarence"
-    ],
+    "options": {
+      "A": "Perseverance",
+      "B": "Perseverence",
+      "C": "Persaverance",
+      "D": "Persevarence"
+    },
     "option_a": "Perseverance",
     "option_b": "Perseverence",
     "option_c": "Persaverance",
@@ -2334,12 +2334,12 @@
     "year": 2016,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Grammar",
-      "Grammer",
-      "Gramer",
-      "Gramar"
-    ],
+    "options": {
+      "A": "Grammar",
+      "B": "Grammer",
+      "C": "Gramer",
+      "D": "Gramar"
+    },
     "option_a": "Grammar",
     "option_b": "Grammer",
     "option_c": "Gramer",
@@ -2358,12 +2358,12 @@
     "year": 2015,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Parallel",
-      "Parrallel",
-      "Paralel",
-      "Parallell"
-    ],
+    "options": {
+      "A": "Parallel",
+      "B": "Parrallel",
+      "C": "Paralel",
+      "D": "Parallell"
+    },
     "option_a": "Parallel",
     "option_b": "Parrallel",
     "option_c": "Paralel",
@@ -2382,12 +2382,12 @@
     "year": 2014,
     "topic": "Lexis & Structure",
     "question": "Choose the correctly spelt word.",
-    "options": [
-      "Existence",
-      "Existance",
-      "Existense",
-      "Existanse"
-    ],
+    "options": {
+      "A": "Existence",
+      "B": "Existance",
+      "C": "Existense",
+      "D": "Existanse"
+    },
     "option_a": "Existence",
     "option_b": "Existance",
     "option_c": "Existense",
@@ -2406,12 +2406,12 @@
     "year": 2023,
     "topic": "Oral Forms",
     "question": "Which word has the same stress pattern as 'photograph'?",
-    "options": [
-      "Telephone",
-      "Computer",
-      "Believe",
-      "Recall"
-    ],
+    "options": {
+      "A": "Telephone",
+      "B": "Computer",
+      "C": "Believe",
+      "D": "Recall"
+    },
     "option_a": "Telephone",
     "option_b": "Computer",
     "option_c": "Believe",
@@ -2430,12 +2430,12 @@
     "year": 2022,
     "topic": "Oral Forms",
     "question": "Which word contains the diphthong /eɪ/?",
-    "options": [
-      "Gate",
-      "Get",
-      "Gut",
-      "Got"
-    ],
+    "options": {
+      "A": "Gate",
+      "B": "Get",
+      "C": "Gut",
+      "D": "Got"
+    },
     "option_a": "Gate",
     "option_b": "Get",
     "option_c": "Gut",
@@ -2454,12 +2454,12 @@
     "year": 2021,
     "topic": "Oral Forms",
     "question": "Which word has a silent 'k'?",
-    "options": [
-      "Knee",
-      "Kind",
-      "Kite",
-      "Kick"
-    ],
+    "options": {
+      "A": "Knee",
+      "B": "Kind",
+      "C": "Kite",
+      "D": "Kick"
+    },
     "option_a": "Knee",
     "option_b": "Kind",
     "option_c": "Kite",
@@ -2478,12 +2478,12 @@
     "year": 2020,
     "topic": "Oral Forms",
     "question": "Which word has a silent 'w'?",
-    "options": [
-      "Write",
-      "Wet",
-      "Wait",
-      "Wish"
-    ],
+    "options": {
+      "A": "Write",
+      "B": "Wet",
+      "C": "Wait",
+      "D": "Wish"
+    },
     "option_a": "Write",
     "option_b": "Wet",
     "option_c": "Wait",
@@ -2502,12 +2502,12 @@
     "year": 2019,
     "topic": "Oral Forms",
     "question": "Which word has a different vowel from the others?",
-    "options": [
-      "Boot",
-      "Food",
-      "Wood",
-      "Soon"
-    ],
+    "options": {
+      "A": "Boot",
+      "B": "Food",
+      "C": "Wood",
+      "D": "Soon"
+    },
     "option_a": "Boot",
     "option_b": "Food",
     "option_c": "Wood",
@@ -2526,12 +2526,12 @@
     "year": 2018,
     "topic": "Oral Forms",
     "question": "Which word contains the /ɔɪ/ diphthong?",
-    "options": [
-      "Boy",
-      "Bay",
-      "Bye",
-      "Boo"
-    ],
+    "options": {
+      "A": "Boy",
+      "B": "Bay",
+      "C": "Bye",
+      "D": "Boo"
+    },
     "option_a": "Boy",
     "option_b": "Bay",
     "option_c": "Bye",
@@ -2550,12 +2550,12 @@
     "year": 2017,
     "topic": "Oral Forms",
     "question": "Which word is stressed on the second syllable?",
-    "options": [
-      "Present (verb)",
-      "Present (noun)",
-      "Table",
-      "Teacher"
-    ],
+    "options": {
+      "A": "Present (verb)",
+      "B": "Present (noun)",
+      "C": "Table",
+      "D": "Teacher"
+    },
     "option_a": "Present (verb)",
     "option_b": "Present (noun)",
     "option_c": "Table",
@@ -2574,12 +2574,12 @@
     "year": 2016,
     "topic": "Oral Forms",
     "question": "Which word has a silent 'b'?",
-    "options": [
-      "Climb",
-      "Bubble",
-      "Baby",
-      "Bob"
-    ],
+    "options": {
+      "A": "Climb",
+      "B": "Bubble",
+      "C": "Baby",
+      "D": "Bob"
+    },
     "option_a": "Climb",
     "option_b": "Bubble",
     "option_c": "Baby",
@@ -2598,12 +2598,12 @@
     "year": 2015,
     "topic": "Oral Forms",
     "question": "Which word has the /θ/ sound at the start?",
-    "options": [
-      "Thin",
-      "This",
-      "Tin",
-      "Sin"
-    ],
+    "options": {
+      "A": "Thin",
+      "B": "This",
+      "C": "Tin",
+      "D": "Sin"
+    },
     "option_a": "Thin",
     "option_b": "This",
     "option_c": "Tin",
@@ -2622,12 +2622,12 @@
     "year": 2014,
     "topic": "Oral Forms",
     "question": "How many syllables does 'university' have?",
-    "options": [
-      "5",
-      "4",
-      "3",
-      "6"
-    ],
+    "options": {
+      "A": "5",
+      "B": "4",
+      "C": "3",
+      "D": "6"
+    },
     "option_a": "5",
     "option_b": "4",
     "option_c": "3",
@@ -2646,12 +2646,12 @@
     "year": 2023,
     "topic": "Comprehension",
     "question": "'You can lead a horse to water, but you cannot make it drink' means:",
-    "options": [
-      "You can offer help but cannot force acceptance",
-      "Horses are stubborn",
-      "Water is important",
-      "Leading is difficult"
-    ],
+    "options": {
+      "A": "You can offer help but cannot force acceptance",
+      "B": "Horses are stubborn",
+      "C": "Water is important",
+      "D": "Leading is difficult"
+    },
     "option_a": "You can offer help but cannot force acceptance",
     "option_b": "Horses are stubborn",
     "option_c": "Water is important",
@@ -2670,12 +2670,12 @@
     "year": 2022,
     "topic": "Comprehension",
     "question": "'A rolling stone gathers no moss' means:",
-    "options": [
-      "Someone who keeps moving gains no roots",
-      "Stones gather moss",
-      "Movement is bad",
-      "Moss grows on stones"
-    ],
+    "options": {
+      "A": "Someone who keeps moving gains no roots",
+      "B": "Stones gather moss",
+      "C": "Movement is bad",
+      "D": "Moss grows on stones"
+    },
     "option_a": "Someone who keeps moving gains no roots",
     "option_b": "Stones gather moss",
     "option_c": "Movement is bad",
@@ -2694,12 +2694,12 @@
     "year": 2021,
     "topic": "Comprehension",
     "question": "'Practice makes perfect' means:",
-    "options": [
-      "Repeated exercise improves skill",
-      "Perfect people practise",
-      "Practice is perfect",
-      "Perfection is impossible"
-    ],
+    "options": {
+      "A": "Repeated exercise improves skill",
+      "B": "Perfect people practise",
+      "C": "Practice is perfect",
+      "D": "Perfection is impossible"
+    },
     "option_a": "Repeated exercise improves skill",
     "option_b": "Perfect people practise",
     "option_c": "Practice is perfect",
@@ -2718,12 +2718,12 @@
     "year": 2020,
     "topic": "Comprehension",
     "question": "'The grass is always greener on the other side' suggests:",
-    "options": [
-      "We envy what others have",
-      "Grass grows well",
-      "Green is beautiful",
-      "Neighbours are lucky"
-    ],
+    "options": {
+      "A": "We envy what others have",
+      "B": "Grass grows well",
+      "C": "Green is beautiful",
+      "D": "Neighbours are lucky"
+    },
     "option_a": "We envy what others have",
     "option_b": "Grass grows well",
     "option_c": "Green is beautiful",
@@ -2742,12 +2742,12 @@
     "year": 2019,
     "topic": "Comprehension",
     "question": "'Too many cooks spoil the broth' means:",
-    "options": [
-      "Too many people can ruin a task",
-      "Cooks are careless",
-      "Broth is difficult",
-      "Many people help"
-    ],
+    "options": {
+      "A": "Too many people can ruin a task",
+      "B": "Cooks are careless",
+      "C": "Broth is difficult",
+      "D": "Many people help"
+    },
     "option_a": "Too many people can ruin a task",
     "option_b": "Cooks are careless",
     "option_c": "Broth is difficult",
@@ -2766,12 +2766,12 @@
     "year": 2018,
     "topic": "Comprehension",
     "question": "'Beggars cannot be choosers' means:",
-    "options": [
-      "Those in need must accept what is offered",
-      "Beggars are choosy",
-      "Choosers are beggars",
-      "Begging is wrong"
-    ],
+    "options": {
+      "A": "Those in need must accept what is offered",
+      "B": "Beggars are choosy",
+      "C": "Choosers are beggars",
+      "D": "Begging is wrong"
+    },
     "option_a": "Those in need must accept what is offered",
     "option_b": "Beggars are choosy",
     "option_c": "Choosers are beggars",
@@ -2790,12 +2790,12 @@
     "year": 2017,
     "topic": "Comprehension",
     "question": "'Actions speak louder than words' means:",
-    "options": [
-      "What you do matters more than what you say",
-      "Speaking is loud",
-      "Actions are noisy",
-      "Words are meaningless"
-    ],
+    "options": {
+      "A": "What you do matters more than what you say",
+      "B": "Speaking is loud",
+      "C": "Actions are noisy",
+      "D": "Words are meaningless"
+    },
     "option_a": "What you do matters more than what you say",
     "option_b": "Speaking is loud",
     "option_c": "Actions are noisy",
@@ -2814,12 +2814,12 @@
     "year": 2016,
     "topic": "Comprehension",
     "question": "'Every cloud has a silver lining' means:",
-    "options": [
-      "Every bad situation has some good aspect",
-      "Clouds contain silver",
-      "Silver is valuable",
-      "Bad weather brings luck"
-    ],
+    "options": {
+      "A": "Every bad situation has some good aspect",
+      "B": "Clouds contain silver",
+      "C": "Silver is valuable",
+      "D": "Bad weather brings luck"
+    },
     "option_a": "Every bad situation has some good aspect",
     "option_b": "Clouds contain silver",
     "option_c": "Silver is valuable",
@@ -2838,12 +2838,12 @@
     "year": 2015,
     "topic": "Comprehension",
     "question": "'A penny saved is a penny earned' means:",
-    "options": [
-      "Saving money equals earning",
-      "Pennies are valuable",
-      "Earning is easy",
-      "Saving is difficult"
-    ],
+    "options": {
+      "A": "Saving money equals earning",
+      "B": "Pennies are valuable",
+      "C": "Earning is easy",
+      "D": "Saving is difficult"
+    },
     "option_a": "Saving money equals earning",
     "option_b": "Pennies are valuable",
     "option_c": "Earning is easy",
@@ -2862,12 +2862,12 @@
     "year": 2014,
     "topic": "Comprehension",
     "question": "'Haste makes waste' means:",
-    "options": [
-      "Rushing causes mistakes",
-      "Fast work is bad",
-      "Waste is hastened",
-      "Patience is bad"
-    ],
+    "options": {
+      "A": "Rushing causes mistakes",
+      "B": "Fast work is bad",
+      "C": "Waste is hastened",
+      "D": "Patience is bad"
+    },
     "option_a": "Rushing causes mistakes",
     "option_b": "Fast work is bad",
     "option_c": "Waste is hastened",
@@ -2886,12 +2886,12 @@
     "year": 2023,
     "topic": "Register",
     "question": "In journalism, a 'byline' is:",
-    "options": [
-      "The author's name on an article",
-      "The end of a story",
-      "The headline",
-      "A column"
-    ],
+    "options": {
+      "A": "The author's name on an article",
+      "B": "The end of a story",
+      "C": "The headline",
+      "D": "A column"
+    },
     "option_a": "The author's name on an article",
     "option_b": "The end of a story",
     "option_c": "The headline",
@@ -2910,12 +2910,12 @@
     "year": 2022,
     "topic": "Register",
     "question": "In banking, 'collateral' refers to:",
-    "options": [
-      "Property pledged as security",
-      "A currency",
-      "Interest rate",
-      "A loan"
-    ],
+    "options": {
+      "A": "Property pledged as security",
+      "B": "A currency",
+      "C": "Interest rate",
+      "D": "A loan"
+    },
     "option_a": "Property pledged as security",
     "option_b": "A currency",
     "option_c": "Interest rate",
@@ -2934,12 +2934,12 @@
     "year": 2021,
     "topic": "Register",
     "question": "In law, an 'affidavit' is:",
-    "options": [
-      "A written sworn statement",
-      "A court order",
-      "A verdict",
-      "An appeal"
-    ],
+    "options": {
+      "A": "A written sworn statement",
+      "B": "A court order",
+      "C": "A verdict",
+      "D": "An appeal"
+    },
     "option_a": "A written sworn statement",
     "option_b": "A court order",
     "option_c": "A verdict",
@@ -2958,12 +2958,12 @@
     "year": 2020,
     "topic": "Register",
     "question": "In medicine, 'prognosis' means:",
-    "options": [
-      "Predicted outcome of a disease",
-      "Diagnosis",
-      "Treatment",
-      "Symptom"
-    ],
+    "options": {
+      "A": "Predicted outcome of a disease",
+      "B": "Diagnosis",
+      "C": "Treatment",
+      "D": "Symptom"
+    },
     "option_a": "Predicted outcome of a disease",
     "option_b": "Diagnosis",
     "option_c": "Treatment",
@@ -2982,12 +2982,12 @@
     "year": 2019,
     "topic": "Register",
     "question": "In football, 'offside' is:",
-    "options": [
-      "A positional infringement",
-      "A goal",
-      "A throw-in",
-      "A foul on the keeper"
-    ],
+    "options": {
+      "A": "A positional infringement",
+      "B": "A goal",
+      "C": "A throw-in",
+      "D": "A foul on the keeper"
+    },
     "option_a": "A positional infringement",
     "option_b": "A goal",
     "option_c": "A throw-in",
@@ -3006,12 +3006,12 @@
     "year": 2018,
     "topic": "Register",
     "question": "In politics, 'incumbent' means:",
-    "options": [
-      "Current office holder",
-      "Challenger",
-      "Voter",
-      "Observer"
-    ],
+    "options": {
+      "A": "Current office holder",
+      "B": "Challenger",
+      "C": "Voter",
+      "D": "Observer"
+    },
     "option_a": "Current office holder",
     "option_b": "Challenger",
     "option_c": "Voter",
@@ -3030,12 +3030,12 @@
     "year": 2017,
     "topic": "Register",
     "question": "In aviation, 'taxiing' means:",
-    "options": [
-      "Moving on the ground",
-      "Taking off",
-      "Landing",
-      "Parking"
-    ],
+    "options": {
+      "A": "Moving on the ground",
+      "B": "Taking off",
+      "C": "Landing",
+      "D": "Parking"
+    },
     "option_a": "Moving on the ground",
     "option_b": "Taking off",
     "option_c": "Landing",
@@ -3054,12 +3054,12 @@
     "year": 2016,
     "topic": "Register",
     "question": "In education, 'curriculum' means:",
-    "options": [
-      "Course of study",
-      "Textbook",
-      "Classroom",
-      "Exam"
-    ],
+    "options": {
+      "A": "Course of study",
+      "B": "Textbook",
+      "C": "Classroom",
+      "D": "Exam"
+    },
     "option_a": "Course of study",
     "option_b": "Textbook",
     "option_c": "Classroom",
@@ -3078,12 +3078,12 @@
     "year": 2015,
     "topic": "Register",
     "question": "In computing, 'boot' means:",
-    "options": [
-      "To start up a computer",
-      "To kick",
-      "A shoe",
-      "To shut down"
-    ],
+    "options": {
+      "A": "To start up a computer",
+      "B": "To kick",
+      "C": "A shoe",
+      "D": "To shut down"
+    },
     "option_a": "To start up a computer",
     "option_b": "To kick",
     "option_c": "A shoe",
@@ -3102,12 +3102,12 @@
     "year": 2014,
     "topic": "Register",
     "question": "In commerce, 'invoice' is:",
-    "options": [
-      "A bill for goods",
-      "A receipt",
-      "A contract",
-      "An order"
-    ],
+    "options": {
+      "A": "A bill for goods",
+      "B": "A receipt",
+      "C": "A contract",
+      "D": "An order"
+    },
     "option_a": "A bill for goods",
     "option_b": "A receipt",
     "option_c": "A contract",
@@ -3126,12 +3126,12 @@
     "year": 2023,
     "topic": "Grammar",
     "question": "He is used to ______ up early.",
-    "options": [
-      "getting",
-      "get",
-      "got",
-      "gets"
-    ],
+    "options": {
+      "A": "getting",
+      "B": "get",
+      "C": "got",
+      "D": "gets"
+    },
     "option_a": "getting",
     "option_b": "get",
     "option_c": "got",
@@ -3150,12 +3150,12 @@
     "year": 2022,
     "topic": "Grammar",
     "question": "He used to ______ up early.",
-    "options": [
-      "get",
-      "getting",
-      "got",
-      "gets"
-    ],
+    "options": {
+      "A": "get",
+      "B": "getting",
+      "C": "got",
+      "D": "gets"
+    },
     "option_a": "get",
     "option_b": "getting",
     "option_c": "got",
@@ -3174,12 +3174,12 @@
     "year": 2021,
     "topic": "Grammar",
     "question": "She was accused ______ lying.",
-    "options": [
-      "of",
-      "for",
-      "with",
-      "about"
-    ],
+    "options": {
+      "A": "of",
+      "B": "for",
+      "C": "with",
+      "D": "about"
+    },
     "option_a": "of",
     "option_b": "for",
     "option_c": "with",
@@ -3198,12 +3198,12 @@
     "year": 2020,
     "topic": "Grammar",
     "question": "The two siblings are identical ______ each other.",
-    "options": [
-      "to",
-      "with",
-      "for",
-      "at"
-    ],
+    "options": {
+      "A": "to",
+      "B": "with",
+      "C": "for",
+      "D": "at"
+    },
     "option_a": "to",
     "option_b": "with",
     "option_c": "for",
@@ -3222,12 +3222,12 @@
     "year": 2019,
     "topic": "Grammar",
     "question": "He is capable ______ doing the job.",
-    "options": [
-      "of",
-      "for",
-      "to",
-      "with"
-    ],
+    "options": {
+      "A": "of",
+      "B": "for",
+      "C": "to",
+      "D": "with"
+    },
     "option_a": "of",
     "option_b": "for",
     "option_c": "to",
@@ -3246,12 +3246,12 @@
     "year": 2018,
     "topic": "Grammar",
     "question": "The manager is responsible ______ the decision.",
-    "options": [
-      "for",
-      "of",
-      "to",
-      "with"
-    ],
+    "options": {
+      "A": "for",
+      "B": "of",
+      "C": "to",
+      "D": "with"
+    },
     "option_a": "for",
     "option_b": "of",
     "option_c": "to",
@@ -3270,12 +3270,12 @@
     "year": 2017,
     "topic": "Grammar",
     "question": "She is married ______ a doctor.",
-    "options": [
-      "to",
-      "with",
-      "for",
-      "by"
-    ],
+    "options": {
+      "A": "to",
+      "B": "with",
+      "C": "for",
+      "D": "by"
+    },
     "option_a": "to",
     "option_b": "with",
     "option_c": "for",
@@ -3294,12 +3294,12 @@
     "year": 2016,
     "topic": "Grammar",
     "question": "The team consists ______ eleven players.",
-    "options": [
-      "of",
-      "with",
-      "from",
-      "in"
-    ],
+    "options": {
+      "A": "of",
+      "B": "with",
+      "C": "from",
+      "D": "in"
+    },
     "option_a": "of",
     "option_b": "with",
     "option_c": "from",
@@ -3318,12 +3318,12 @@
     "year": 2015,
     "topic": "Grammar",
     "question": "He insisted ______ seeing the manager.",
-    "options": [
-      "on",
-      "in",
-      "at",
-      "for"
-    ],
+    "options": {
+      "A": "on",
+      "B": "in",
+      "C": "at",
+      "D": "for"
+    },
     "option_a": "on",
     "option_b": "in",
     "option_c": "at",
@@ -3342,12 +3342,12 @@
     "year": 2014,
     "topic": "Grammar",
     "question": "The new evidence will ______ the earlier verdict.",
-    "options": [
-      "overturn",
-      "turn over",
-      "over turn",
-      "turn up"
-    ],
+    "options": {
+      "A": "overturn",
+      "B": "turn over",
+      "C": "over turn",
+      "D": "turn up"
+    },
     "option_a": "overturn",
     "option_b": "turn over",
     "option_c": "over turn",
@@ -3366,12 +3366,12 @@
     "year": 2023,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to ASPERITY.",
-    "options": [
-      "Harshness",
-      "Kindness",
-      "Gentleness",
-      "Warmth"
-    ],
+    "options": {
+      "A": "Harshness",
+      "B": "Kindness",
+      "C": "Gentleness",
+      "D": "Warmth"
+    },
     "option_a": "Harshness",
     "option_b": "Kindness",
     "option_c": "Gentleness",
@@ -3390,12 +3390,12 @@
     "year": 2022,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to CORROBORATE.",
-    "options": [
-      "Confirm",
-      "Contradict",
-      "Deny",
-      "Refute"
-    ],
+    "options": {
+      "A": "Confirm",
+      "B": "Contradict",
+      "C": "Deny",
+      "D": "Refute"
+    },
     "option_a": "Confirm",
     "option_b": "Contradict",
     "option_c": "Deny",
@@ -3414,12 +3414,12 @@
     "year": 2021,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to ATTENUATE.",
-    "options": [
-      "Weaken",
-      "Strengthen",
-      "Fortify",
-      "Reinforce"
-    ],
+    "options": {
+      "A": "Weaken",
+      "B": "Strengthen",
+      "C": "Fortify",
+      "D": "Reinforce"
+    },
     "option_a": "Weaken",
     "option_b": "Strengthen",
     "option_c": "Fortify",
@@ -3438,12 +3438,12 @@
     "year": 2020,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to PROFLIGACY.",
-    "options": [
-      "Wastefulness",
-      "Thrift",
-      "Frugality",
-      "Economy"
-    ],
+    "options": {
+      "A": "Wastefulness",
+      "B": "Thrift",
+      "C": "Frugality",
+      "D": "Economy"
+    },
     "option_a": "Wastefulness",
     "option_b": "Thrift",
     "option_c": "Frugality",
@@ -3462,12 +3462,12 @@
     "year": 2019,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to REDOUBTABLE.",
-    "options": [
-      "Formidable",
-      "Weak",
-      "Insignificant",
-      "Trivial"
-    ],
+    "options": {
+      "A": "Formidable",
+      "B": "Weak",
+      "C": "Insignificant",
+      "D": "Trivial"
+    },
     "option_a": "Formidable",
     "option_b": "Weak",
     "option_c": "Insignificant",
@@ -3486,12 +3486,12 @@
     "year": 2018,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to ESOTERIC.",
-    "options": [
-      "Understood by few",
-      "Obvious",
-      "Common",
-      "Simple"
-    ],
+    "options": {
+      "A": "Understood by few",
+      "B": "Obvious",
+      "C": "Common",
+      "D": "Simple"
+    },
     "option_a": "Understood by few",
     "option_b": "Obvious",
     "option_c": "Common",
@@ -3510,12 +3510,12 @@
     "year": 2017,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to SUPERCILIOUS.",
-    "options": [
-      "Arrogant",
-      "Humble",
-      "Modest",
-      "Meek"
-    ],
+    "options": {
+      "A": "Arrogant",
+      "B": "Humble",
+      "C": "Modest",
+      "D": "Meek"
+    },
     "option_a": "Arrogant",
     "option_b": "Humble",
     "option_c": "Modest",
@@ -3534,12 +3534,12 @@
     "year": 2016,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to RAPACIOUS.",
-    "options": [
-      "Greedy",
-      "Generous",
-      "Kind",
-      "Charitable"
-    ],
+    "options": {
+      "A": "Greedy",
+      "B": "Generous",
+      "C": "Kind",
+      "D": "Charitable"
+    },
     "option_a": "Greedy",
     "option_b": "Generous",
     "option_c": "Kind",
@@ -3558,12 +3558,12 @@
     "year": 2015,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to LUGUBRIOUS.",
-    "options": [
-      "Mournful",
-      "Joyful",
-      "Cheerful",
-      "Happy"
-    ],
+    "options": {
+      "A": "Mournful",
+      "B": "Joyful",
+      "C": "Cheerful",
+      "D": "Happy"
+    },
     "option_a": "Mournful",
     "option_b": "Joyful",
     "option_c": "Cheerful",
@@ -3582,12 +3582,12 @@
     "year": 2014,
     "topic": "Synonyms",
     "question": "Choose the option nearest in meaning to PERFUNCTORY.",
-    "options": [
-      "Done without care",
-      "Done with care",
-      "Thorough",
-      "Detailed"
-    ],
+    "options": {
+      "A": "Done without care",
+      "B": "Done with care",
+      "C": "Thorough",
+      "D": "Detailed"
+    },
     "option_a": "Done without care",
     "option_b": "Done with care",
     "option_c": "Thorough",
