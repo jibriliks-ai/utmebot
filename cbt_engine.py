@@ -1,6 +1,7 @@
 """
-cbt_engine.py — bulletproof loader v3.
-Searches recursively, handles any malformed input, prints exact diagnostics.
+cbt_engine.py — bulletproof loader v4.
+Handles both list-style and dict-style options. Searches recursively,
+handles any malformed input, prints exact diagnostics.
 """
 import json, random, traceback
 from pathlib import Path
@@ -26,18 +27,31 @@ def _normalize(q):
         return None
     try:
         options = q.get("options")
-        if not isinstance(options, list):
-            options = []
+
+        # --- Build a flat list of option strings regardless of input shape ---
+        opt_list = []
+        if isinstance(options, list):
+            opt_list = [str(o).strip() for o in options]
+        elif isinstance(options, dict):
+            for L in ("A", "B", "C", "D", "E"):
+                v = options.get(L)
+                if v is None:
+                    v = options.get(L.lower())
+                if v is None:
+                    v = options.get(L.upper())
+                opt_list.append(str(v).strip() if v is not None else "")
+        else:
+            opt_list = []
 
         def pick(i, key):
             v = q.get(key)
             if v and str(v).strip():
                 return str(v).strip()
-            if i < len(options):
-                return str(options[i]).strip()
+            if i < len(opt_list):
+                return opt_list[i]
             return ""
 
-        ans = (q.get("answer_letter") or q.get("answer") or "")
+        ans = (q.get("answer_letter") or q.get("answer") or q.get("ans") or "")
         ans = str(ans).strip().upper()[:1]
 
         return {
@@ -164,7 +178,6 @@ def _bootstrap():
 
         skip_dirs = {"__pycache__", ".git", ".venv", "venv", "env", "node_modules"}
 
-        # Recursive search; convert to strings immediately to avoid Path/str issues
         file_strs = []
         try:
             for p in cwd.rglob("questions_*.json"):
