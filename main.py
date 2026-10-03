@@ -1,7 +1,6 @@
 """
 main.py — UTME Success Coach Bot
-Complete entry point. Wires together cbt_engine, user_manager, tutor,
-channel_scheduler, referrals, and payment.
+6-item menu, professional payment, 6s verdict delay.
 """
 import os
 import time
@@ -20,6 +19,7 @@ import cbt_engine
 from user_manager import (
     init_db, get_or_create_user, is_premium, set_premium,
     can_take_mock, record_mock_taken, record_referral, get_referral_count,
+    get_mock_stats,
 )
 from tutor import ask_tutor, build_voice_inputfile
 from referrals import referral_message, parse_referral_arg
@@ -32,17 +32,27 @@ from payment import (
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 PREMIUM_PRICE_NGN = 500
 FREE_MOCK_SIZE = 5
+VERDICT_DELAY_SECONDS = 6
 
 MENU, MOCK_A, TUTOR_ASK, AWAIT_TX_ID = range(4)
 
 
+# ---------------- keyboards ----------------
 def main_menu_keyboard():
+    """6-item menu: Mock, Tutor, Premium, Invite, Help, My Score."""
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Free Mock Exam", callback_data="menu_mock")],
-        [InlineKeyboardButton("🧠 Ask Tutor (Voice)", callback_data="menu_tutor")],
-        [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="menu_upgrade")],
-        [InlineKeyboardButton("🤝 Invite Friends", callback_data="menu_invite")],
-        [InlineKeyboardButton("📊 My Stats", callback_data="menu_stats")],
+        [
+            InlineKeyboardButton("📝 Mock Exam", callback_data="menu_mock"),
+            InlineKeyboardButton("🧠 Ask Tutor", callback_data="menu_tutor"),
+        ],
+        [
+            InlineKeyboardButton("💎 Premium", callback_data="menu_upgrade"),
+            InlineKeyboardButton("🤝 Invite Friends", callback_data="menu_invite"),
+        ],
+        [
+            InlineKeyboardButton("❓ Help", callback_data="menu_help"),
+            InlineKeyboardButton("📊 My Score", callback_data="menu_stats"),
+        ],
     ])
 
 
@@ -53,12 +63,13 @@ def back_to_menu():
 def upgrade_keyboard(link=None):
     rows = []
     if link:
-        rows.append([InlineKeyboardButton("💳 Pay ₦500 with Flutterwave", url=link)])
-    rows.append([InlineKeyboardButton("🔄 I've paid — Verify", callback_data="verify_payment")])
+        rows.append([InlineKeyboardButton("💳 Pay ₦500 Securely", url=link)])
+    rows.append([InlineKeyboardButton("🔄 I've Paid — Verify Now", callback_data="verify_payment")])
     rows.append([InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")])
     return InlineKeyboardMarkup(rows)
 
 
+# ---------------- /start ----------------
 async def cmd_start(update, context):
     user = update.effective_user
     uid = user.id
@@ -87,12 +98,13 @@ async def cmd_start(update, context):
         "• 🧠 AI Tutor with voice explanations\n"
         "• 📖 Past questions across all subjects\n"
         "• 🤝 Invite friends to earn rewards\n\n"
-        "Choose an option below to begin 👇"
+        "Choose an option below 👇"
     )
     await update.message.reply_text(text, parse_mode="Markdown", reply_markup=main_menu_keyboard())
     return MENU
 
 
+# ---------------- menu dispatcher ----------------
 async def menu_callback(update, context):
     q = update.callback_query
     await q.answer()
@@ -163,19 +175,50 @@ async def menu_callback(update, context):
         await q.edit_message_text(msg, parse_mode="Markdown", reply_markup=back_to_menu())
         return MENU
 
+    if data == "menu_help":
+        text = (
+            "❓ *Help & Support*\n\n"
+            "Need assistance? We're here to help!\n\n"
+            "📩 *Chat with us on Telegram:* @UTMESUCCESS\n\n"
+            "You can also reach us for:\n"
+            "• Payment issues\n"
+            "• Premium activation\n"
+            "• Bug reports\n"
+            "• Feature requests\n\n"
+            "Tap the button below to open a chat 👇"
+        )
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("💬 Chat with @UTMESUCCESS", url="https://t.me/UTMESUCCESS")],
+            [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
+        ])
+        await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
+        return MENU
+
     if data == "menu_stats":
         premium = is_premium(uid)
+        total_mocks, best_score, best_total, avg = get_mock_stats(uid)
+        if total_mocks == 0:
+            stats_text = "You haven't taken any mock yet. Tap *Mock Exam* to start!"
+        else:
+            best_pct = round((best_score / best_total * 100), 1) if best_total else 0
+            stats_text = (
+                f"📝 Mocks taken: *{total_mocks}*\n"
+                f"🏆 Best score: *{best_score}/{best_total}* ({best_pct}%)\n"
+                f"📈 Average: *{avg}%*"
+            )
         text = (
-            f"📊 *Your Stats*\n\n"
+            f"📊 *Your Scorecard*\n\n"
             f"Status: {'💎 Premium' if premium else '🆓 Free'}\n"
-            f"Referrals: *{get_referral_count(uid)}*\n"
-            f"Questions available: *{len(cbt_engine.ALL_QS)}*\n"
-            f"Subjects loaded: *{len(cbt_engine.LOCAL_DATABANK)}*"
+            f"Referrals: *{get_referral_count(uid)}*\n\n"
+            f"{stats_text}\n\n"
+            f"📚 Questions in databank: *{len(cbt_engine.ALL_QS)}*\n"
+            f"📖 Subjects available: *{len(cbt_engine.LOCAL_DATABANK)}*"
         )
         await q.edit_message_text(text, parse_mode="Markdown", reply_markup=back_to_menu())
         return MENU
 
 
+# ---------------- mock flow ----------------
 async def send_next_mock_question(update, context, via="callback"):
     mock = context.user_data.get("mock")
     if not mock:
@@ -233,7 +276,10 @@ async def mock_answer(update, context):
         await q.edit_message_text(text)
 
     mock["index"] += 1
-    await asyncio.sleep(1.2)
+
+    # 6-second pause so the student can read the verdict + explanation
+    await asyncio.sleep(VERDICT_DELAY_SECONDS)
+
     return await send_next_mock_question(update, context, via="callback")
 
 
@@ -242,12 +288,22 @@ async def finish_mock(update, context, via="callback"):
     score = mock.get("score", 0)
     total = len(mock.get("questions", [])) or 1
     uid = update.effective_user.id if update.effective_user else update.callback_query.from_user.id
-    record_mock_taken(uid)
+    record_mock_taken(uid, score=score, total=total)
+
+    pct = round(score / total * 100)
+    if pct >= 80:
+        verdict = "🔥 Excellent! You're on fire."
+    elif pct >= 60:
+        verdict = "🌟 Good job! Keep pushing."
+    elif pct >= 40:
+        verdict = "💪 Fair. A bit more practice and you'll ace it."
+    else:
+        verdict = "📚 Keep studying — every attempt makes you sharper."
 
     text = (
         f"🎯 *Mock Complete!*\n\n"
-        f"Score: *{score}/{total}*\n\n"
-        f"{'Great job! 🌟' if score >= total * 0.6 else 'Keep practising! 💪'}\n\n"
+        f"Score: *{score}/{total}* ({pct}%)\n\n"
+        f"{verdict}\n\n"
         "💎 Want unlimited mocks and all subjects? Upgrade to Premium.\n"
         "🧠 Need explanations? Tap Ask Tutor."
     )
@@ -264,6 +320,7 @@ async def finish_mock(update, context, via="callback"):
     return MENU
 
 
+# ---------------- tutor ----------------
 async def tutor_ask(update, context):
     text = (update.message.text or "").strip()
     if len(text) < 5:
@@ -298,12 +355,13 @@ async def cancel(update, context):
     return MENU
 
 
+# ---------------- upgrade / payment ----------------
 async def show_upgrade(update, context):
     uid = update.effective_user.id if update.effective_user else update.callback_query.from_user.id
     link, tx_ref = create_payment_link(uid, amount_ngn=PREMIUM_PRICE_NGN)
 
     if not link:
-        text = "⚠️ Payment link is unavailable right now. Please try again shortly."
+        text = "⚠️ Payment link is temporarily unavailable. Please try again in a moment."
         kb = back_to_menu()
     else:
         text = (
@@ -312,8 +370,10 @@ async def show_upgrade(update, context):
             "✅ All subjects unlocked\n"
             "✅ Unlimited AI Tutor with voice\n"
             "✅ No daily limits\n"
-            "✅ Priority access to new features\n\n"
-            "Tap below to pay securely via Flutterwave 👇"
+            "✅ Priority support\n\n"
+            "🔒 *Secure payment via Flutterwave*\n"
+            "Cards • Bank Transfer • USSD\n\n"
+            "Tap the button below to pay 👇"
         )
         kb = upgrade_keyboard(link)
 
@@ -356,7 +416,7 @@ async def receive_tx_id(update, context):
 
     await update.message.reply_text(
         "❌ Couldn't verify that transaction. Please check the ID and try again, "
-        "or contact support if you were debited."
+        "or contact support at @UTMESUCCESS if you were debited."
     )
     return AWAIT_TX_ID
 
@@ -368,6 +428,7 @@ async def unknown(update, context):
     return MENU
 
 
+# ---------------- Flask webhook ----------------
 flask_app = Flask(__name__)
 
 
@@ -395,7 +456,7 @@ def flutterwave_webhook():
         return jsonify({"status": "unauthorized"}), 401
     data = request.get_json(silent=True) or {}
     if data.get("event") == "charge.completed" and data.get("data", {}).get("status") == "successful":
-        uid = extract_user_id_from_meta(data)
+        uid = extract_user_id_from_meta(data.get("data", {}))
         if uid:
             set_premium(uid, days=30)
             print(f"[webhook] premium activated for {uid}")
@@ -407,6 +468,7 @@ def run_flask():
     flask_app.run(host="0.0.0.0", port=port)
 
 
+# ---------------- main ----------------
 def main():
     init_db()
     threading.Thread(target=run_flask, daemon=True).start()
