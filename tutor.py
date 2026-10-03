@@ -1,27 +1,29 @@
 """
 tutor.py
-AI Tutor using Google Gemini + gTTS voice output.
-Get a free API key at https://aistudio.google.com/apikey
+AI Tutor using DeepSeek API + gTTS voice output.
+DeepSeek is OpenAI-compatible — we use the OpenAI SDK pointed at DeepSeek.
+Get a key at https://platform.deepseek.com/api_keys
 """
 import os
 import io
 
 try:
-    import google.generativeai as genai
-    GENAI_AVAILABLE = True
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
 except ImportError:
-    GENAI_AVAILABLE = False
+    OPENAI_AVAILABLE = False
 
 from gtts import gTTS
 from telegram import InputFile
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+DEEPSEEK_MODEL = "deepseek-flash"
 
-if GENAI_AVAILABLE and GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    _MODEL = genai.GenerativeModel("gemini-1.5-flash")
+if OPENAI_AVAILABLE and DEEPSEEK_API_KEY:
+    _CLIENT = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
 else:
-    _MODEL = None
+    _CLIENT = None
 
 
 SYSTEM_PROMPT = """You are an expert UTME (JAMB) tutor for Nigerian students.
@@ -42,21 +44,30 @@ Rules:
 
 
 def ask_tutor(question_text: str, subject: str = "") -> str:
-    if _MODEL is None:
+    if _CLIENT is None:
         return (
             "The AI Tutor is not configured yet. "
-            "Ask the admin to set the GEMINI_API_KEY environment variable."
+            "Ask the admin to set the DEEPSEEK_API_KEY environment variable."
         )
-    prompt = SYSTEM_PROMPT
+    prompt = question_text
     if subject:
-        prompt += f"\nSubject: {subject}\n"
-    prompt += f"\nStudent's question:\n{question_text}\n\nYour explanation:"
+        prompt = f"Subject: {subject}\n\n{prompt}"
+
     try:
-        response = _MODEL.generate_content(prompt)
-        text = (response.text or "").strip()
+        response = _CLIENT.chat.completions.create(
+            model=DEEPSEEK_MODEL,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt},
+            ],
+            stream=False,
+            temperature=0.3,
+        )
+        text = (response.choices[0].message.content or "").strip()
         return text or "I couldn't generate an explanation. Try rephrasing."
     except Exception as e:
-        return f"Sorry, the tutor hit an error: {e}"
+        print(f"[tutor] DeepSeek error: {e}")
+        return f"Sorry, the tutor hit an error. Please try again in a moment."
 
 
 def make_voice(text: str):
