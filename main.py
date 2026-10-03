@@ -2,7 +2,7 @@
 main.py — UTME Success Coach Bot
 Persistent 6-item menu, Top Scorer banner, 180Q paid mock,
 DeepSeek tutor, Flutterwave checkout, 6s verdict delay,
-viral invite share buttons.
+viral invite share buttons, /testchannel diagnostics.
 """
 import os
 import time
@@ -29,7 +29,7 @@ from user_manager import (
 )
 from tutor import ask_tutor, build_voice_inputfile, ping as tutor_ping
 from referrals import referral_message, parse_referral_arg, build_referral_link
-from channel_scheduler import register_jobs
+from channel_scheduler import register_jobs, post_to_channel, CHANNEL_ID
 from payment import (
     PLANS, get_plan, create_payment_link, verify_transaction,
     verify_webhook_signature, extract_user_id_from_meta,
@@ -142,7 +142,7 @@ async def cmd_start(update, context):
     return MENU
 
 
-# ---------- helpers ----------
+# ---------- helper ----------
 async def _send(update, text, reply_markup=None, parse_mode="Markdown"):
     try:
         if update.callback_query:
@@ -277,7 +277,6 @@ async def do_upgrade(update, context, uid):
 
 
 async def do_invite(update, context, uid):
-    """Invite friends page with viral share buttons."""
     bot_username = context.bot.username
     link = build_referral_link(bot_username, uid)
     count = get_referral_count(uid)
@@ -302,24 +301,12 @@ async def do_invite(update, context, uid):
 
     kb = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton(
-                "📲 Share on WhatsApp",
-                url=f"https://wa.me/?text={share_text}",
-            ),
-            InlineKeyboardButton(
-                "🐦 Share on X",
-                url=f"https://twitter.com/intent/tweet?text={share_text}",
-            ),
+            InlineKeyboardButton("📲 Share on WhatsApp", url=f"https://wa.me/?text={share_text}"),
+            InlineKeyboardButton("🐦 Share on X", url=f"https://twitter.com/intent/tweet?text={share_text}"),
         ],
         [
-            InlineKeyboardButton(
-                "📘 Share on Facebook",
-                url=f"https://www.facebook.com/sharer/sharer.php?u={quote(link)}",
-            ),
-            InlineKeyboardButton(
-                "💬 Share on Telegram",
-                switch_inline_query=f"🎓 Join me on UTME Success Coach!\n\n{link}",
-            ),
+            InlineKeyboardButton("📘 Share on Facebook", url=f"https://www.facebook.com/sharer/sharer.php?u={quote(link)}"),
+            InlineKeyboardButton("💬 Share on Telegram", switch_inline_query=f"🎓 Join me on UTME Success Coach!\n\n{link}"),
         ],
         [InlineKeyboardButton("📋 Copy Link", callback_data="copy_link")],
         [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
@@ -668,6 +655,54 @@ async def unknown(update, context):
     return MENU
 
 
+# ---------- /testchannel diagnostics ----------
+async def test_channel(update, context):
+    """Send a test post to the channel and report any error."""
+    if not CHANNEL_ID:
+        await update.message.reply_text(
+            "❌ *CHANNEL_ID* is not set in Render → Environment.\n\n"
+            "Add it as: `-1004217702826` (note the `-100` prefix).",
+            parse_mode="Markdown",
+        )
+        return
+
+    await update.message.reply_text("⏳ Sending test post to channel…")
+
+    try:
+        await post_to_channel(context)
+        await update.message.reply_text(
+            f"✅ *Test post sent successfully!*\n\n"
+            f"Channel ID: `{CHANNEL_ID}`\n"
+            f"Open your channel — you should see a post within a few seconds.",
+            parse_mode="Markdown",
+        )
+    except Exception as e:
+        err = f"{type(e).__name__}: {e}"
+        await update.message.reply_text(
+            f"❌ *Failed to post to channel.*\n\n"
+            f"Error: `{err}`\n\n"
+            f"Common fixes:\n"
+            f"• Bot must be an admin in the channel\n"
+            f"• Bot needs *Post Messages* permission\n"
+            f"• CHANNEL_ID must be `-1004217702826` (with `-100` prefix)",
+            parse_mode="Markdown",
+        )
+
+
+async def check_channel_config(update, context):
+    """Report current channel config."""
+    bot_username = context.bot.username or "(unknown)"
+    text = (
+        f"⚙️ *Channel Configuration*\n\n"
+        f"BOT_LINK: `{BOT_LINK}`\n"
+        f"CHANNEL_ID: `{CHANNEL_ID or 'NOT SET'}`\n"
+        f"BASE_URL: `{BASE_URL}`\n"
+        f"Bot username: `@{bot_username}`\n\n"
+        f"_Use /testchannel to fire a test post._"
+    )
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+
 # ---------- Flask ----------
 flask_app = Flask(__name__)
 
@@ -757,6 +792,11 @@ def main():
     else:
         print(f"[startup] DeepSeek tutor NOT working: {msg}")
 
+    if CHANNEL_ID:
+        print(f"[startup] CHANNEL_ID set: {CHANNEL_ID}")
+    else:
+        print("[startup] WARNING: CHANNEL_ID not set — channel posts will be skipped")
+
     threading.Thread(target=run_flask, daemon=True).start()
 
     app = Application.builder().token(BOT_TOKEN).build()
@@ -797,6 +837,10 @@ def main():
     )
     app.add_handler(conv)
     app.add_handler(CommandHandler("menu", cancel))
+
+    # diagnostics / admin commands
+    app.add_handler(CommandHandler("testchannel", test_channel))
+    app.add_handler(CommandHandler("checkchannel", check_channel_config))
 
     register_jobs(app.job_queue)
 
