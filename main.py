@@ -1,6 +1,7 @@
 """
 main.py — UTME Success Coach Bot
-Persistent 6-item reply menu, DeepSeek tutor, dual pricing, 6s delay.
+Persistent 6-item menu, Top Scorer banner, 180Q paid mock,
+DeepSeek tutor, Flutterwave checkout, 6s verdict delay.
 """
 import os
 import time
@@ -22,9 +23,9 @@ import cbt_engine
 from user_manager import (
     init_db, get_or_create_user, is_premium, set_premium,
     can_take_mock, record_mock_taken, record_referral, get_referral_count,
-    get_mock_stats,
+    get_mock_stats, record_top_score, get_top_scorer, get_top_scorers,
 )
-from tutor import ask_tutor, build_voice_inputfile
+from tutor import ask_tutor, build_voice_inputfile, ping as tutor_ping
 from referrals import referral_message, parse_referral_arg
 from channel_scheduler import register_jobs
 from payment import (
@@ -37,12 +38,12 @@ from checkout_ui import checkout_page, success_page, pending_page, error_page
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 BOT_LINK = os.getenv("BOT_LINK", "https://t.me/UTMESUCCESS")
 FREE_MOCK_SIZE = 5
+PAID_MOCK_SIZE = 180
 VERDICT_DELAY_SECONDS = 6
 BASE_URL = os.getenv("BASE_URL", "https://utmebot.onrender.com")
 
 MENU, MOCK_A, TUTOR_ASK, AWAIT_TX_ID = range(4)
 
-# ---------- persistent reply keyboard (shows under the message bar) ----------
 MENU_BUTTONS = {
     "📝 Mock Exam": "menu_mock",
     "🧠 Ask Tutor": "menu_tutor",
@@ -53,6 +54,7 @@ MENU_BUTTONS = {
 }
 
 
+# ---------- keyboards ----------
 def persistent_menu_keyboard():
     keyboard = [
         [KeyboardButton("📝 Mock Exam"), KeyboardButton("🧠 Ask Tutor")],
@@ -60,28 +62,19 @@ def persistent_menu_keyboard():
         [KeyboardButton("❓ Help"), KeyboardButton("📊 My Score")],
     ]
     return ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True,
-        is_persistent=True,
+        keyboard, resize_keyboard=True, is_persistent=True,
         input_field_placeholder="Choose an option…",
     )
 
 
-# ---------- inline keyboards ----------
 def main_menu_inline():
     return InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("📝 Mock Exam", callback_data="menu_mock"),
-            InlineKeyboardButton("🧠 Ask Tutor", callback_data="menu_tutor"),
-        ],
-        [
-            InlineKeyboardButton("💎 Premium", callback_data="menu_upgrade"),
-            InlineKeyboardButton("🤝 Invite Friends", callback_data="menu_invite"),
-        ],
-        [
-            InlineKeyboardButton("❓ Help", callback_data="menu_help"),
-            InlineKeyboardButton("📊 My Score", callback_data="menu_stats"),
-        ],
+        [InlineKeyboardButton("📝 Mock Exam", callback_data="menu_mock"),
+         InlineKeyboardButton("🧠 Ask Tutor", callback_data="menu_tutor")],
+        [InlineKeyboardButton("💎 Premium", callback_data="menu_upgrade"),
+         InlineKeyboardButton("🤝 Invite Friends", callback_data="menu_invite")],
+        [InlineKeyboardButton("❓ Help", callback_data="menu_help"),
+         InlineKeyboardButton("📊 My Score", callback_data="menu_stats")],
     ])
 
 
@@ -97,11 +90,25 @@ def plan_selection_keyboard():
     ])
 
 
+# ---------- TOP SCORER banner ----------
+def top_scorer_banner():
+    """Return a short string showing the current top scorer, or None."""
+    top = get_top_scorer()
+    if not top:
+        return None
+    pct = round((top["score"] / top["total"]) * 100) if top["total"] else 0
+    return (
+        f"🏆 *TOP SCORER CHALLENGE*\n"
+        f"👑 {top['display_name']} — *{top['score']}/{top['total']}* ({pct}%)\n"
+        f"_Can you beat this score? Take the paid mock and find out._"
+    )
+
+
 # ---------- /start ----------
 async def cmd_start(update, context):
     user = update.effective_user
     uid = user.id
-    get_or_create_user(uid, user.username)
+    get_or_create_user(uid, user.username, user.first_name)
 
     referrer = parse_referral_arg(context.args)
     if referrer:
@@ -124,27 +131,65 @@ async def cmd_start(update, context):
         "📚 *UTME Success Coach* — your personal JAMB prep bot.\n\n"
         "• 📝 Free daily mock exam (5 questions)\n"
         "• 🧠 AI Tutor with voice explanations\n"
-        "• 📖 Past questions across all subjects\n"
+        "• 🏆 Top Scorer Challenge (paid mock)\n"
         "• 🤝 Invite friends to earn rewards\n\n"
         "Use the menu below 👇"
     )
     await update.message.reply_text(
-        text,
-        parse_mode="Markdown",
-        reply_markup=persistent_menu_keyboard(),
+        text, parse_mode="Markdown", reply_markup=persistent_menu_keyboard(),
     )
     return MENU
 
 
-# ---------- core menu actions (shared by inline + reply keyboard) ----------
-async def do_mock(update, context, uid, via="message"):
+# ---------- menu actions ----------
+async def _send(update, text, reply_markup=None, parse_mode="Markdown"):
+    try:
+        if update.callback_query:
+            await update.callback_query.edit_message_text(
+                text, parse_mode=parse_mode, reply_markup=reply_markup,
+            )
+        else:
+            await update.message.reply_text(
+                text, parse_mode=parse_mode, reply_markup=reply_markup,
+            )
+    except Exception:
+        if update.callback_query:
+            await update.callback_query.edit_message_text(text, reply_markup=reply_markup)
+        else:
+            await update.message.reply_text(text, reply_markup=reply_markup)
+
+
+async def do_mock(update, context, uid):
+    premium = is_premium(uid)
     allowed, wait = can_take_mock(uid)
+
+    # ---- PREMIUM: 180-question paid mock with Top Scorer banner ----
+    if premium:
+        banner = top_scorer_banner()
+        text = "💎 *Paid Mock — 180 Questions*\n\n"
+        text += "This is the full UTME simulation. Your score will be recorded "
+        text += "and compared with other students.\n\n"
+        if banner:
+            text += banner + "\n\n"
+        else:
+            text += "🏆 *Be the first top scorer!*\n\n"
+        text += f"📝 *{PAID_MOCK_SIZE} questions · All subjects · Timed*\n\n"
+        text += "_Tap below to begin._"
+
+        kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton("▶️ Start 180-Question Mock", callback_data="start_paid_mock")],
+            [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
+        ])
+        await _send(update, text, kb)
+        return MENU
+
+    # ---- FREE user: 5-question mock with 24h limit ----
     if not allowed:
         text = (
             f"⏳ *You've used your free daily mock!*\n\n"
             f"Next free mock in *{wait}*.\n\n"
             "💎 Upgrade to Premium for *unlimited mocks*, all subjects, "
-            "and unlimited AI Tutor with voice."
+            "and the *Top Scorer Challenge* (180 questions)."
         )
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("💎 Upgrade Now", callback_data="menu_upgrade")],
@@ -153,20 +198,52 @@ async def do_mock(update, context, uid, via="message"):
         await _send(update, text, kb)
         return MENU
 
-    n = FREE_MOCK_SIZE
     try:
         pool = cbt_engine.ALL_QS or []
-        if len(pool) < n:
+        if len(pool) < FREE_MOCK_SIZE:
             await _send(update, "Databank is empty. Try again later.")
             return MENU
-        qs = random.sample(pool, n)
+        qs = random.sample(pool, FREE_MOCK_SIZE)
     except Exception as e:
         await _send(update, f"Could not start mock: {e}")
         return MENU
 
-    context.user_data["mock"] = {"index": 0, "score": 0, "questions": qs}
+    context.user_data["mock"] = {
+        "index": 0, "score": 0, "questions": qs, "type": "free",
+    }
     await _send(update, "📝 *Loading your free mock...*")
     return await send_next_mock_question(update, context, via="message")
+
+
+async def start_paid_mock(update, context):
+    q = update.callback_query
+    await q.answer()
+    uid = q.from_user.id
+
+    if not is_premium(uid):
+        await q.edit_message_text(
+            "💎 This is a Premium feature.\n\nUpgrade to unlock the full "
+            "180-question mock and the Top Scorer Challenge.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("💎 Upgrade", callback_data="menu_upgrade")],
+                [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
+            ]),
+        )
+        return MENU
+
+    pool = cbt_engine.ALL_QS or []
+    if len(pool) < PAID_MOCK_SIZE:
+        await q.edit_message_text(
+            f"Only {len(pool)} questions available — need {PAID_MOCK_SIZE}."
+        )
+        return MENU
+
+    qs = random.sample(pool, PAID_MOCK_SIZE)
+    context.user_data["mock"] = {
+        "index": 0, "score": 0, "questions": qs, "type": "paid",
+    }
+    await q.edit_message_text("📝 *Starting your 180-question mock...*", parse_mode="Markdown")
+    return await send_next_mock_question(update, context, via="callback")
 
 
 async def do_tutor(update, context, uid):
@@ -186,7 +263,7 @@ async def do_upgrade(update, context, uid):
     if is_premium(uid):
         text = (
             "💎 *You're already Premium!*\n\n"
-            "You have unlimited access to mocks, all subjects, and the AI Tutor.\n\n"
+            "You have unlimited access — including the 180-question Top Scorer mock.\n\n"
             "Thanks for supporting UTME Success Coach 🙏"
         )
         kb = back_to_menu()
@@ -244,11 +321,25 @@ async def do_stats(update, context, uid):
             f"🏆 Best score: *{best_score}/{best_total}* ({best_pct}%)\n"
             f"📈 Average: *{avg}%*"
         )
+
+    # Top Scorer leaderboard
+    leaders = get_top_scorers(limit=5)
+    if leaders:
+        lines = ["\n\n🏆 *Top Scorer Leaderboard*"]
+        medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+        for i, row in enumerate(leaders):
+            pct = round((row["score"] / row["total"]) * 100) if row["total"] else 0
+            lines.append(f"{medals[i]} {row['display_name']} — {row['score']}/{row['total']} ({pct}%)")
+        leaderboard = "\n".join(lines)
+    else:
+        leaderboard = "\n\n🏆 *No top scorers yet — be the first!*"
+
     text = (
         f"📊 *Your Scorecard*\n\n"
         f"Status: {'💎 Premium' if premium else '🆓 Free'}\n"
         f"Referrals: *{get_referral_count(uid)}*\n\n"
-        f"{stats_text}\n\n"
+        f"{stats_text}"
+        f"{leaderboard}\n\n"
         f"📚 Questions in databank: *{len(cbt_engine.ALL_QS)}*\n"
         f"📖 Subjects available: *{len(cbt_engine.LOCAL_DATABANK)}*"
     )
@@ -256,26 +347,6 @@ async def do_stats(update, context, uid):
     return MENU
 
 
-# helper: send or edit based on context
-async def _send(update, text, reply_markup=None, parse_mode="Markdown"):
-    try:
-        if update.callback_query:
-            await update.callback_query.edit_message_text(
-                text, parse_mode=parse_mode, reply_markup=reply_markup
-            )
-        else:
-            await update.message.reply_text(
-                text, parse_mode=parse_mode, reply_markup=reply_markup
-            )
-    except Exception:
-        # fallback without markdown
-        if update.callback_query:
-            await update.callback_query.edit_message_text(text, reply_markup=reply_markup)
-        else:
-            await update.message.reply_text(text, reply_markup=reply_markup)
-
-
-# ---------- dispatchers ----------
 ACTION_MAP = {
     "menu_mock": do_mock,
     "menu_tutor": do_tutor,
@@ -297,8 +368,7 @@ async def menu_callback(update, context):
         status = "💎 Premium" if premium else "🆓 Free"
         await q.edit_message_text(
             f"*Main Menu* — Status: {status}\n\nUse the menu below 👇",
-            parse_mode="Markdown",
-            reply_markup=main_menu_inline(),
+            parse_mode="Markdown", reply_markup=main_menu_inline(),
         )
         return MENU
 
@@ -309,18 +379,15 @@ async def menu_callback(update, context):
 
 
 async def handle_menu_text(update, context):
-    """Handle taps on the persistent reply keyboard."""
     text = (update.message.text or "").strip()
     data = MENU_BUTTONS.get(text)
     if not data:
         return None
-    uid = update.effective_user.id
-    get_or_create_user(uid, update.effective_user.username)
-
-    # menu_back: show main menu
+    user = update.effective_user
+    get_or_create_user(user.id, user.username, user.first_name)
     action = ACTION_MAP.get(data)
     if action:
-        return await action(update, context, uid)
+        return await action(update, context, user.id)
     return MENU
 
 
@@ -333,7 +400,6 @@ async def select_plan(update, context):
     if not plan:
         await q.edit_message_text("Unknown plan. Please try again.")
         return MENU
-
     checkout_url = f"{BASE_URL}/checkout?uid={uid}&plan={plan_id}"
     text = (
         f"🎯 *{plan['label']} Plan — ₦{plan['amount']:,}*\n\n"
@@ -364,16 +430,13 @@ async def verify_payment_entry(update, context):
 
 
 async def receive_tx_id(update, context):
-    # If user tapped a menu button instead, route to menu
     txt = (update.message.text or "").strip()
     if txt in MENU_BUTTONS:
         return await handle_menu_text(update, context)
-
     uid = update.effective_user.id
     if not txt.isdigit():
         await update.message.reply_text("❌ Please send the transaction ID as a number.")
         return AWAIT_TX_ID
-
     ok, data = verify_transaction(txt)
     if ok:
         plan_id = extract_plan_id_from_meta(data)
@@ -382,12 +445,12 @@ async def receive_tx_id(update, context):
         plan = get_plan(plan_id) or {"label": "Premium"}
         await update.message.reply_text(
             f"✅ *Payment confirmed! {plan['label']} Premium is now active.*\n\n"
-            f"Enjoy unlimited access for {days} days 🎉",
+            f"Enjoy unlimited access for {days} days 🎉\n"
+            f"Includes the 180-question Top Scorer mock!",
             parse_mode="Markdown",
             reply_markup=persistent_menu_keyboard(),
         )
         return MENU
-
     await update.message.reply_text(
         "❌ Couldn't verify that transaction. Please check the ID and try again, "
         "or contact support at @UTMESUCCESS if you were debited."
@@ -400,14 +463,22 @@ async def send_next_mock_question(update, context, via="callback"):
     mock = context.user_data.get("mock")
     if not mock:
         return MENU
-
     idx = mock["index"]
     total = len(mock["questions"])
     if idx >= total:
         return await finish_mock(update, context, via=via)
 
     qd = mock["questions"][idx]
-    text = cbt_engine.format_question(qd, idx + 1, total)
+    mock_type = mock.get("type", "free")
+
+    # Show Top Scorer banner on the FIRST question of a paid mock
+    prefix = ""
+    if mock_type == "paid" and idx == 0:
+        banner = top_scorer_banner()
+        if banner:
+            prefix = banner + "\n\n" + "━" * 20 + "\n\n"
+
+    text = prefix + cbt_engine.format_question(qd, idx + 1, total)
 
     buttons = []
     for L in ("A", "B", "C", "D", "E"):
@@ -417,9 +488,9 @@ async def send_next_mock_question(update, context, via="callback"):
     kb = InlineKeyboardMarkup(rows)
 
     if via == "callback" and update.callback_query:
-        await update.callback_query.edit_message_text(text, reply_markup=kb)
+        await update.callback_query.edit_message_text(text, reply_markup=kb, parse_mode="Markdown")
     else:
-        await update.message.reply_text(text, reply_markup=kb)
+        await update.message.reply_text(text, reply_markup=kb, parse_mode="Markdown")
     return MOCK_A
 
 
@@ -429,29 +500,23 @@ async def mock_answer(update, context):
     data = q.data or ""
     if not data.startswith("ans_"):
         return MOCK_A
-
     chosen = data.replace("ans_", "")
     mock = context.user_data.get("mock")
     if not mock:
         return MENU
-
     current = mock["questions"][mock["index"]]
     correct = str(current.get("answer", "")).upper()[:1]
-
     if chosen == correct:
         mock["score"] += 1
         feedback = "✅ *Correct!*"
     else:
         feedback = f"❌ *Wrong.* Correct answer: *{correct}*"
-
     expl = current.get("explanation", "")
     text = feedback + (f"\n\n_{expl}_" if expl else "")
-
     try:
         await q.edit_message_text(text, parse_mode="Markdown")
     except Exception:
         await q.edit_message_text(text)
-
     mock["index"] += 1
     await asyncio.sleep(VERDICT_DELAY_SECONDS)
     return await send_next_mock_question(update, context, via="callback")
@@ -461,8 +526,28 @@ async def finish_mock(update, context, via="callback"):
     mock = context.user_data.get("mock") or {}
     score = mock.get("score", 0)
     total = len(mock.get("questions", [])) or 1
+    mock_type = mock.get("type", "free")
     uid = update.effective_user.id if update.effective_user else update.callback_query.from_user.id
-    record_mock_taken(uid, score=score, total=total)
+
+    record_mock_taken(uid, score=score, total=total, mock_type=mock_type)
+
+    # Record top score if paid mock
+    top_msg = ""
+    if mock_type == "paid":
+        user = get_or_create_user(uid)
+        display = user.get("first_name") or user.get("username") or f"User{uid}"
+        was_record = record_top_score(uid, display, score, total)
+        top = get_top_scorer()
+        if top:
+            pct = round((top["score"] / top["total"]) * 100) if top["total"] else 0
+            if was_record:
+                top_msg = f"\n\n👑 *NEW TOP SCORER!* You're now #1: *{score}/{total}* ({pct}%)."
+            else:
+                top_msg = (
+                    f"\n\n🏆 *Current Top Scorer:* {top['display_name']} — "
+                    f"*{top['score']}/{top['total']}* ({pct}%)\n"
+                    f"Can you beat that? Try again!"
+                )
 
     pct = round(score / total * 100)
     if pct >= 80:
@@ -477,12 +562,12 @@ async def finish_mock(update, context, via="callback"):
     text = (
         f"🎯 *Mock Complete!*\n\n"
         f"Score: *{score}/{total}* ({pct}%)\n\n"
-        f"{verdict}\n\n"
-        "💎 Want unlimited mocks? Upgrade to Premium.\n"
+        f"{verdict}{top_msg}\n\n"
+        "💎 Want more? Upgrade for unlimited mocks.\n"
         "🧠 Need explanations? Tap Ask Tutor."
     )
     kb = InlineKeyboardMarkup([
-        [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="menu_upgrade")],
+        [InlineKeyboardButton("💎 Upgrade", callback_data="menu_upgrade")],
         [InlineKeyboardButton("🧠 Ask Tutor", callback_data="menu_tutor")],
         [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
     ])
@@ -497,17 +582,20 @@ async def finish_mock(update, context, via="callback"):
 # ---------- tutor ----------
 async def tutor_ask(update, context):
     txt = (update.message.text or "").strip()
-
-    # If the user taps a persistent menu button mid-tutor, route to menu
     if txt in MENU_BUTTONS:
         return await handle_menu_text(update, context)
-
     if len(txt) < 5:
         await update.message.reply_text("Please type your full question.")
         return TUTOR_ASK
 
-    await update.message.reply_text("🧠 Thinking...")
+    thinking_msg = await update.message.reply_text("🧠 Thinking...")
     explanation = ask_tutor(txt)
+
+    try:
+        await thinking_msg.delete()
+    except Exception:
+        pass
+
     await update.message.reply_text(explanation)
 
     voice = build_voice_inputfile(explanation)
@@ -573,7 +661,6 @@ def checkout_pay():
     plan = get_plan(plan_id)
     if not plan or uid <= 0:
         return error_page("Invalid plan or user.")
-
     link, tx_ref = create_payment_link(uid, plan_id)
     if not link:
         return error_page(
@@ -624,20 +711,18 @@ def run_flask():
 # ---------- main ----------
 def main():
     init_db()
+
+    # Verify DeepSeek at startup
+    ok, msg = tutor_ping()
+    if ok:
+        print(f"[startup] DeepSeek tutor OK: {msg}")
+    else:
+        print(f"[startup] DeepSeek tutor NOT working: {msg}")
+
     threading.Thread(target=run_flask, daemon=True).start()
 
     app = Application.builder().token(BOT_TOKEN).build()
 
-    # Text handler for the persistent reply keyboard buttons
-    menu_text_handler = MessageHandler(
-        filters.TEXT & filters.Regex(
-            "^(" + "|".join([b.replace("📝 ", "").replace("🧠 ", "").replace("💎 ", "")
-                             .replace("🤝 ", "").replace("❓ ", "").replace("📊 ", "")
-                             for b in MENU_BUTTONS]) + ")$"
-        ),
-        handle_menu_text,
-    )
-    # Simpler: regex on the full button text including emoji
     menu_text_handler = MessageHandler(
         filters.TEXT & filters.Regex(
             "^(" + "|".join([b.replace("+", r"\+") for b in MENU_BUTTONS]) + ")$"
@@ -651,6 +736,7 @@ def main():
             MENU: [
                 CallbackQueryHandler(menu_callback, pattern="^menu_"),
                 CallbackQueryHandler(select_plan, pattern="^plan_"),
+                CallbackQueryHandler(start_paid_mock, pattern="^start_paid_mock$"),
                 CallbackQueryHandler(verify_payment_entry, pattern="^verify_payment$"),
                 menu_text_handler,
             ],
