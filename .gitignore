@@ -1,0 +1,145 @@
+# ============================================================
+# .gitignore — Python Telegram bot / Render deployment
+# ============================================================
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+*.mo
+*.pot
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+instance/
+.webassets-cache
+
+# ---------- Virtual environments ----------
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.python-version
+
+# ---------- Poetry / Pipenv ----------
+poetry.lock
+Pipfile.lock
+.python-version
+
+# ---------- Environment / secrets ----------
+.env
+.env.*
+!.env.example
+*.env
+secrets.json
+config.json
+credentials.json
+*.pem
+*.key
+token.txt
+api_keys.txt
+.envrc
+.flaskenv
+
+# ---------- IDE / editors ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.spyderproject
+.spyproject
+.ropeproject
+
+# ---------- OS junk ----------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ---------- Logs / temp ----------
+*.log
+logs/
+tmp/
+temp/
+.cache/
+*.bak
+*.tmp
+*.orig
+*.rej
+
+# ---------- Test / coverage ----------
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+
+# ---------- Render / Heroku ----------
+Procfile.local
+render.yaml.local
+
+# ---------- Local scripts (one-time helpers) ----------
+fix.py
+fix2.py
+fix3.py
+fix4.py
+normalize_questions.py
+repair_questions_json.py
+repair_all_truncated_json.py
+
+# ============================================================
+# IMPORTANT: Do NOT ignore your question data.
+# The lines below are commented out on purpose — keep the
+# questions_*.json files tracked in the repo.
+# ============================================================
+# questions_*.json
+# *.json
