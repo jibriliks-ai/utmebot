@@ -33,10 +33,9 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 PREMIUM_PRICE_NGN = 500
 FREE_MOCK_SIZE = 5
 
-# ---------------- conversation states ----------------
 MENU, MOCK_A, TUTOR_ASK, AWAIT_TX_ID = range(4)
 
-# ---------------- keyboards ----------------
+
 def main_menu_keyboard():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📝 Free Mock Exam", callback_data="menu_mock")],
@@ -60,7 +59,6 @@ def upgrade_keyboard(link=None):
     return InlineKeyboardMarkup(rows)
 
 
-# ---------------- /start ----------------
 async def cmd_start(update, context):
     user = update.effective_user
     uid = user.id
@@ -95,7 +93,6 @@ async def cmd_start(update, context):
     return MENU
 
 
-# ---------------- menu dispatcher ----------------
 async def menu_callback(update, context):
     q = update.callback_query
     await q.answer()
@@ -179,7 +176,6 @@ async def menu_callback(update, context):
         return MENU
 
 
-# ---------------- mock flow ----------------
 async def send_next_mock_question(update, context, via="callback"):
     mock = context.user_data.get("mock")
     if not mock:
@@ -245,7 +241,8 @@ async def finish_mock(update, context, via="callback"):
     mock = context.user_data.get("mock") or {}
     score = mock.get("score", 0)
     total = len(mock.get("questions", [])) or 1
-    record_mock_taken(update.effective_user.id if update.effective_user else update.callback_query.from_user.id)
+    uid = update.effective_user.id if update.effective_user else update.callback_query.from_user.id
+    record_mock_taken(uid)
 
     text = (
         f"🎯 *Mock Complete!*\n\n"
@@ -267,7 +264,6 @@ async def finish_mock(update, context, via="callback"):
     return MENU
 
 
-# ---------------- tutor ----------------
 async def tutor_ask(update, context):
     text = (update.message.text or "").strip()
     if len(text) < 5:
@@ -302,7 +298,6 @@ async def cancel(update, context):
     return MENU
 
 
-# ---------------- upgrade / payment ----------------
 async def show_upgrade(update, context):
     uid = update.effective_user.id if update.effective_user else update.callback_query.from_user.id
     link, tx_ref = create_payment_link(uid, amount_ngn=PREMIUM_PRICE_NGN)
@@ -366,7 +361,6 @@ async def receive_tx_id(update, context):
     return AWAIT_TX_ID
 
 
-# ---------------- fallback ----------------
 async def unknown(update, context):
     await update.message.reply_text(
         "Use the menu below 👇", reply_markup=main_menu_keyboard()
@@ -374,7 +368,6 @@ async def unknown(update, context):
     return MENU
 
 
-# ---------------- Flask webhook ----------------
 flask_app = Flask(__name__)
 
 
@@ -414,7 +407,6 @@ def run_flask():
     flask_app.run(host="0.0.0.0", port=port)
 
 
-# ---------------- main ----------------
 def main():
     init_db()
     threading.Thread(target=run_flask, daemon=True).start()
