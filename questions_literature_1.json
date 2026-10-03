@@ -1,0 +1,5102 @@
+[
+  {
+    "id": 1,
+    "topic": "Drama",
+    "subtopic": "Types of Drama",
+    "question": "A play that ends in the downfall or death of the protagonist is classified as:",
+    "options": {
+      "A": "Comedy",
+      "B": "Tragedy",
+      "C": "Farce",
+      "D": "Melodrama"
+    },
+    "answer": "B",
+    "explanation": "Tragedy is a dramatic genre that portrays the downfall of a noble protagonist, often ending in death or disaster.",
+    "q": "A play that ends in the downfall or death of the protagonist is classified as:",
+    "a": "Tragedy",
+    "ans": "B"
+  },
+  {
+    "id": 2,
+    "topic": "Drama",
+    "subtopic": "Types of Drama",
+    "question": "A dramatic work that is humorous in tone and typically has a happy ending is called:",
+    "options": {
+      "A": "Tragedy",
+      "B": "Comedy",
+      "C": "Opera",
+      "D": "Melodrama"
+    },
+    "answer": "B",
+    "explanation": "Comedy is a dramatic genre designed to amuse the audience and usually ends happily.",
+    "q": "A dramatic work that is humorous in tone and typically has a happy ending is called:",
+    "a": "Comedy",
+    "ans": "B"
+  },
+  {
+    "id": 3,
+    "topic": "Drama",
+    "subtopic": "Types of Drama",
+    "question": "A play that combines both tragic and comic elements is known as:",
+    "options": {
+      "A": "Farce",
+      "B": "Tragicomedy",
+      "C": "Melodrama",
+      "D": "Opera"
+    },
+    "answer": "B",
+    "explanation": "Tragicomedy blends tragic and comic elements, often with a serious theme but a happy or ambiguous ending.",
+    "q": "A play that combines both tragic and comic elements is known as:",
+    "a": "Tragicomedy",
+    "ans": "B"
+  },
+  {
+    "id": 4,
+    "topic": "Drama",
+    "subtopic": "Types of Drama",
+    "question": "A dramatic work characterised by exaggerated emotions, sensational events, and stereotyped characters is:",
+    "options": {
+      "A": "Farce",
+      "B": "Melodrama",
+      "C": "Tragedy",
+      "D": "Comedy"
+    },
+    "answer": "B",
+    "explanation": "Melodrama relies on exaggerated plot and characters, with clear distinctions between heroes and villains.",
+    "q": "A dramatic work characterised by exaggerated emotions, sensational events, and stereotyped characters is:",
+    "a": "Melodrama",
+    "ans": "B"
+  },
+  {
+    "id": 5,
+    "topic": "Drama",
+    "subtopic": "Types of Drama",
+    "question": "A type of comedy that uses highly improbable situations, physical humour, and crude characterisation is:",
+    "options": {
+      "A": "Farce",
+      "B": "Tragicomedy",
+      "C": "Melodrama",
+      "D": "Opera"
+    },
+    "answer": "A",
+    "explanation": "Farce is a subgenre of comedy that aims to entertain through improbable situations, buffoonery, and physical humour.",
+    "q": "A type of comedy that uses highly improbable situations, physical humour, and crude characterisation is:",
+    "a": "Farce",
+    "ans": "A"
+  },
+  {
+    "id": 6,
+    "topic": "Drama",
+    "subtopic": "Dramatic Techniques",
+    "question": "A speech delivered by a character alone on stage, revealing his innermost thoughts, is called:",
+    "options": {
+      "A": "Dialogue",
+      "B": "Soliloquy",
+      "C": "Aside",
+      "D": "Monologue"
+    },
+    "answer": "B",
+    "explanation": "A soliloquy is a dramatic device where a character speaks his thoughts aloud while alone on stage.",
+    "q": "A speech delivered by a character alone on stage, revealing his innermost thoughts, is called:",
+    "a": "Soliloquy",
+    "ans": "B"
+  },
+  {
+    "id": 7,
+    "topic": "Drama",
+    "subtopic": "Dramatic Techniques",
+    "question": "A remark made by a character intended to be heard by the audience but not by other characters on stage is an:",
+    "options": {
+      "A": "Soliloquy",
+      "B": "Aside",
+      "C": "Dialogue",
+      "D": "Monologue"
+    },
+    "answer": "B",
+    "explanation": "An aside is a short comment made by a character to the audience, not meant to be heard by other characters.",
+    "q": "A remark made by a character intended to be heard by the audience but not by other characters on stage is an:",
+    "a": "Aside",
+    "ans": "B"
+  },
+  {
+    "id": 8,
+    "topic": "Drama",
+    "subtopic": "Dramatic Techniques",
+    "question": "The use of flashback in drama allows the playwright to:",
+    "options": {
+      "A": "Foreshadow future events",
+      "B": "Present events that happened earlier",
+      "C": "Introduce comic relief",
+      "D": "Create suspense"
+    },
+    "answer": "B",
+    "explanation": "Flashback is a technique that interrupts the chronological narrative to show events that occurred before the current time.",
+    "q": "The use of flashback in drama allows the playwright to:",
+    "a": "Present events that happened earlier",
+    "ans": "B"
+  },
+  {
+    "id": 9,
+    "topic": "Drama",
+    "subtopic": "Dramatic Techniques",
+    "question": "The written instructions in a play that tell actors how to move, speak, or behave are called:",
+    "options": {
+      "A": "Dialogue",
+      "B": "Stage directions",
+      "C": "Soliloquy",
+      "D": "Asides"
+    },
+    "answer": "B",
+    "explanation": "Stage directions are the playwright's instructions concerning staging, movement, and character behaviour.",
+    "q": "The written instructions in a play that tell actors how to move, speak, or behave are called:",
+    "a": "Stage directions",
+    "ans": "B"
+  },
+  {
+    "id": 10,
+    "topic": "Drama",
+    "subtopic": "Dramatic Techniques",
+    "question": "The technique of giving the audience hints about events that will happen later in the play is:",
+    "options": {
+      "A": "Flashback",
+      "B": "Foreshadowing",
+      "C": "Suspense",
+      "D": "Aside"
+    },
+    "answer": "B",
+    "explanation": "Foreshadowing is a device that provides clues or hints about future events in the narrative.",
+    "q": "The technique of giving the audience hints about events that will happen later in the play is:",
+    "a": "Foreshadowing",
+    "ans": "B"
+  },
+  {
+    "id": 11,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "In Shakespeare's Antony and Cleopatra, Antony's neglect of his duties in Rome is primarily due to:",
+    "options": {
+      "A": "His love for Cleopatra",
+      "B": "His fear of Octavius Caesar",
+      "C": "His desire for wealth",
+      "D": "His hatred for Rome"
+    },
+    "answer": "A",
+    "explanation": "Antony's infatuation with Cleopatra causes him to neglect his political and military responsibilities in Rome.",
+    "q": "In Shakespeare's Antony and Cleopatra, Antony's neglect of his duties in Rome is primarily due to:",
+    "a": "His love for Cleopatra",
+    "ans": "A"
+  },
+  {
+    "id": 12,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "Octavius Caesar in Antony and Cleopatra is portrayed as:",
+    "options": {
+      "A": "A romantic and impulsive leader",
+      "B": "A calculating and politically shrewd ruler",
+      "C": "A weak and indecisive ruler",
+      "D": "A loyal friend to Antony"
+    },
+    "answer": "B",
+    "explanation": "Octavius Caesar is depicted as a cold, calculating politician who uses Antony's weaknesses to his advantage.",
+    "q": "Octavius Caesar in Antony and Cleopatra is portrayed as:",
+    "a": "A calculating and politically shrewd ruler",
+    "ans": "B"
+  },
+  {
+    "id": 13,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The central conflict in Antony and Cleopatra is between:",
+    "options": {
+      "A": "Love and duty",
+      "B": "Wealth and poverty",
+      "C": "Youth and old age",
+      "D": "War and peace"
+    },
+    "answer": "A",
+    "explanation": "The play explores the tension between Antony's personal love for Cleopatra and his public duty to Rome.",
+    "q": "The central conflict in Antony and Cleopatra is between:",
+    "a": "Love and duty",
+    "ans": "A"
+  },
+  {
+    "id": 14,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "Cleopatra's character in Shakespeare's play can best be described as:",
+    "options": {
+      "A": "Submissive and passive",
+      "B": "Manipulative and theatrical",
+      "C": "Simple and naive",
+      "D": "Cold and unfeeling"
+    },
+    "answer": "B",
+    "explanation": "Cleopatra is complex, manipulative, and theatrical, using her charm and drama to influence Antony.",
+    "q": "Cleopatra's character in Shakespeare's play can best be described as:",
+    "a": "Manipulative and theatrical",
+    "ans": "B"
+  },
+  {
+    "id": 15,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The battle of Actium in Antony and Cleopatra results in:",
+    "options": {
+      "A": "Antony's victory over Caesar",
+      "B": "Antony's defeat and retreat",
+      "C": "Cleopatra's capture",
+      "D": "A peace treaty"
+    },
+    "answer": "B",
+    "explanation": "At Actium, Antony is defeated when Cleopatra's ships flee, and he follows her, leading to his downfall.",
+    "q": "The battle of Actium in Antony and Cleopatra results in:",
+    "a": "Antony's defeat and retreat",
+    "ans": "B"
+  },
+  {
+    "id": 16,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "In Efua Sutherland's The Marriage of Anansewa, Ananse's main motivation is:",
+    "options": {
+      "A": "To find true love for his daughter",
+      "B": "To gain financial and social advancement",
+      "C": "To unite two warring tribes",
+      "D": "To become a chief"
+    },
+    "answer": "B",
+    "explanation": "Ananse uses his daughter Anansewa as bait to extract money from several suitors, seeking financial gain.",
+    "q": "In Efua Sutherland's The Marriage of Anansewa, Ananse's main motivation is:",
+    "a": "To gain financial and social advancement",
+    "ans": "B"
+  },
+  {
+    "id": 17,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The Marriage of Anansewa is best classified as a:",
+    "options": {
+      "A": "Tragedy",
+      "B": "Comedy",
+      "C": "Melodrama",
+      "D": "Farce"
+    },
+    "answer": "B",
+    "explanation": "The play is a comedy that uses humour and satire to critique social customs and human greed.",
+    "q": "The Marriage of Anansewa is best classified as a:",
+    "a": "Comedy",
+    "ans": "B"
+  },
+  {
+    "id": 18,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "Anansewa's role in the play is largely that of:",
+    "options": {
+      "A": "A manipulative schemer",
+      "B": "A pawn in her father's schemes",
+      "C": "A strong-willed rebel",
+      "D": "A wise counsellor"
+    },
+    "answer": "B",
+    "explanation": "Anansewa is largely passive and used by her father as a pawn in his financial schemes.",
+    "q": "Anansewa's role in the play is largely that of:",
+    "a": "A pawn in her father's schemes",
+    "ans": "B"
+  },
+  {
+    "id": 19,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The character of the Chief of the Mines in The Marriage of Anansewa represents:",
+    "options": {
+      "A": "The voice of reason",
+      "B": "The corrupting influence of wealth",
+      "C": "The traditional values of the community",
+      "D": "The younger generation"
+    },
+    "answer": "B",
+    "explanation": "The Chief of the Mines represents the corrupting influence of wealth and the objectification of women.",
+    "q": "The character of the Chief of the Mines in The Marriage of Anansewa represents:",
+    "a": "The corrupting influence of wealth",
+    "ans": "B"
+  },
+  {
+    "id": 20,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The use of the 'Mboguo' in The Marriage of Anansewa is an example of:",
+    "options": {
+      "A": "Comic relief",
+      "B": "African oral tradition",
+      "C": "Flashback",
+      "D": "Soliloquy"
+    },
+    "answer": "B",
+    "explanation": "The Mboguo (traditional songs and dances) is an element of African oral tradition incorporated into the play.",
+    "q": "The use of the 'Mboguo' in The Marriage of Anansewa is an example of:",
+    "a": "African oral tradition",
+    "ans": "B"
+  },
+  {
+    "id": 21,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "In J.B. Priestley's An Inspector Calls, Inspector Goole's main function is to:",
+    "options": {
+      "A": "Arrest the culprit",
+      "B": "Expose the social responsibility of each character",
+      "C": "Collect evidence for a court case",
+      "D": "Protect the Birling family"
+    },
+    "answer": "B",
+    "explanation": "Inspector Goole serves as a moral catalyst, exposing each character's role in Eva Smith's death and their social responsibility.",
+    "q": "In J.B. Priestley's An Inspector Calls, Inspector Goole's main function is to:",
+    "a": "Expose the social responsibility of each character",
+    "ans": "B"
+  },
+  {
+    "id": 22,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The central theme of An Inspector Calls is:",
+    "options": {
+      "A": "Romantic love",
+      "B": "Social responsibility and class",
+      "C": "Political ambition",
+      "D": "Religious faith"
+    },
+    "answer": "B",
+    "explanation": "The play explores themes of social responsibility, class inequality, and the consequences of individual actions on others.",
+    "q": "The central theme of An Inspector Calls is:",
+    "a": "Social responsibility and class",
+    "ans": "B"
+  },
+  {
+    "id": 23,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "Mr. Birling's character in An Inspector Calls represents:",
+    "options": {
+      "A": "The socialist ideal",
+      "B": "Capitalist greed and complacency",
+      "C": "The working class",
+      "D": "The younger generation"
+    },
+    "answer": "B",
+    "explanation": "Mr. Birling embodies capitalist greed, complacency, and a lack of social responsibility.",
+    "q": "Mr. Birling's character in An Inspector Calls represents:",
+    "a": "Capitalist greed and complacency",
+    "ans": "B"
+  },
+  {
+    "id": 24,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The ending of An Inspector Calls is significant because it:",
+    "options": {
+      "A": "Resolves all conflicts",
+      "B": "Leaves the audience questioning their own responsibility",
+      "C": "Punishes the guilty",
+      "D": "Celebrates the Birling family"
+    },
+    "answer": "B",
+    "explanation": "The ambiguous ending challenges the audience to reflect on their own social responsibility.",
+    "q": "The ending of An Inspector Calls is significant because it:",
+    "a": "Leaves the audience questioning their own responsibility",
+    "ans": "B"
+  },
+  {
+    "id": 25,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "In Robert Bolt's A Man for All Seasons, Sir Thomas More's conflict is primarily with:",
+    "options": {
+      "A": "His family",
+      "B": "King Henry VIII",
+      "C": "The Pope",
+      "D": "The common people"
+    },
+    "answer": "B",
+    "explanation": "More's refusal to support Henry VIII's divorce and remarriage leads to his conflict with the King.",
+    "q": "In Robert Bolt's A Man for All Seasons, Sir Thomas More's conflict is primarily with:",
+    "a": "King Henry VIII",
+    "ans": "B"
+  },
+  {
+    "id": 26,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "Sir Thomas More's character is defined by his commitment to:",
+    "options": {
+      "A": "Political power",
+      "B": "Personal conscience and integrity",
+      "C": "Wealth and luxury",
+      "D": "Family loyalty"
+    },
+    "answer": "B",
+    "explanation": "More's unwavering commitment to his conscience and moral integrity is the central focus of the play.",
+    "q": "Sir Thomas More's character is defined by his commitment to:",
+    "a": "Personal conscience and integrity",
+    "ans": "B"
+  },
+  {
+    "id": 27,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "The Common Man in A Man for All Seasons serves as:",
+    "options": {
+      "A": "A comic foil and narrator",
+      "B": "A villain",
+      "C": "A tragic hero",
+      "D": "A romantic interest"
+    },
+    "answer": "A",
+    "explanation": "The Common Man acts as a narrator and plays various minor roles, providing commentary and comic relief.",
+    "q": "The Common Man in A Man for All Seasons serves as:",
+    "a": "A comic foil and narrator",
+    "ans": "A"
+  },
+  {
+    "id": 28,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "The title 'A Man for All Seasons' suggests that Sir Thomas More is:",
+    "options": {
+      "A": "A man of many talents",
+      "B": "A man of unwavering principle",
+      "C": "A seasonal worker",
+      "D": "A man who changes with the times"
+    },
+    "answer": "B",
+    "explanation": "The title refers to More's steadfast adherence to his principles regardless of the circumstances.",
+    "q": "The title 'A Man for All Seasons' suggests that Sir Thomas More is:",
+    "a": "A man of unwavering principle",
+    "ans": "B"
+  },
+  {
+    "id": 29,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Once Upon an Elephant",
+    "question": "In Bosede Ademilua-Afolayan's Once Upon an Elephant, the elephant is used as:",
+    "options": {
+      "A": "A comic character",
+      "B": "A symbol of political power and corruption",
+      "C": "A love interest",
+      "D": "A historical figure"
+    },
+    "answer": "B",
+    "explanation": "The elephant symbolises political power, corruption, and the abuse of authority in the play.",
+    "q": "In Bosede Ademilua-Afolayan's Once Upon an Elephant, the elephant is used as:",
+    "a": "A symbol of political power and corruption",
+    "ans": "B"
+  },
+  {
+    "id": 30,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Once Upon an Elephant",
+    "question": "A major theme in Once Upon an Elephant is:",
+    "options": {
+      "A": "Environmental conservation",
+      "B": "Political corruption and misrule",
+      "C": "Romantic love",
+      "D": "Religious conflict"
+    },
+    "answer": "B",
+    "explanation": "The play critiques political corruption, misrule, and the suffering of the masses in contemporary Nigeria.",
+    "q": "A major theme in Once Upon an Elephant is:",
+    "a": "Political corruption and misrule",
+    "ans": "B"
+  },
+  {
+    "id": 31,
+    "topic": "Prose",
+    "subtopic": "Types of Prose",
+    "question": "A long prose narrative that tells a story of human experience is called a:",
+    "options": {
+      "A": "Novel",
+      "B": "Novella",
+      "C": "Short story",
+      "D": "Biography"
+    },
+    "answer": "A",
+    "explanation": "A novel is an extended fictional prose narrative that explores characters, plot, and themes in depth.",
+    "q": "A long prose narrative that tells a story of human experience is called a:",
+    "a": "Novel",
+    "ans": "A"
+  },
+  {
+    "id": 32,
+    "topic": "Prose",
+    "subtopic": "Types of Prose",
+    "question": "A brief work of fiction that typically focuses on a single incident or character is a:",
+    "options": {
+      "A": "Novel",
+      "B": "Novella",
+      "C": "Short story",
+      "D": "Memoir"
+    },
+    "answer": "C",
+    "explanation": "A short story is a brief fictional narrative that usually focuses on a single event or character.",
+    "q": "A brief work of fiction that typically focuses on a single incident or character is a:",
+    "a": "Short story",
+    "ans": "C"
+  },
+  {
+    "id": 33,
+    "topic": "Prose",
+    "subtopic": "Types of Prose",
+    "question": "An account of a person's life written by that person is called:",
+    "options": {
+      "A": "Biography",
+      "B": "Autobiography",
+      "C": "Memoir",
+      "D": "Faction"
+    },
+    "answer": "B",
+    "explanation": "An autobiography is a self-written account of the author's own life.",
+    "q": "An account of a person's life written by that person is called:",
+    "a": "Autobiography",
+    "ans": "B"
+  },
+  {
+    "id": 34,
+    "topic": "Prose",
+    "subtopic": "Types of Prose",
+    "question": "A prose narrative that combines factual and fictional elements is called:",
+    "options": {
+      "A": "Faction",
+      "B": "Biography",
+      "C": "Autobiography",
+      "D": "Memoir"
+    },
+    "answer": "A",
+    "explanation": "Faction is a genre that blends factual reporting with fictional narrative techniques.",
+    "q": "A prose narrative that combines factual and fictional elements is called:",
+    "a": "Faction",
+    "ans": "A"
+  },
+  {
+    "id": 35,
+    "topic": "Prose",
+    "subtopic": "Narrative Techniques",
+    "question": "A narrative in which the narrator knows everything about all characters and events is told from the:",
+    "options": {
+      "A": "First-person point of view",
+      "B": "Third-person omniscient point of view",
+      "C": "Second-person point of view",
+      "D": "Limited omniscient point of view"
+    },
+    "answer": "B",
+    "explanation": "The omniscient third-person narrator has complete knowledge of all characters' thoughts and actions.",
+    "q": "A narrative in which the narrator knows everything about all characters and events is told from the:",
+    "a": "Third-person omniscient point of view",
+    "ans": "B"
+  },
+  {
+    "id": 36,
+    "topic": "Prose",
+    "subtopic": "Narrative Techniques",
+    "question": "A narrative told from the perspective of 'I' is using the:",
+    "options": {
+      "A": "First-person point of view",
+      "B": "Third-person point of view",
+      "C": "Omniscient point of view",
+      "D": "Second-person point of view"
+    },
+    "answer": "A",
+    "explanation": "The first-person point of view uses 'I' or 'we' and provides a subjective perspective.",
+    "q": "A narrative told from the perspective of 'I' is using the:",
+    "a": "First-person point of view",
+    "ans": "A"
+  },
+  {
+    "id": 37,
+    "topic": "Prose",
+    "subtopic": "Narrative Techniques",
+    "question": "A character who contrasts with another character to highlight their qualities is called a:",
+    "options": {
+      "A": "Round character",
+      "B": "Foil",
+      "C": "Flat character",
+      "D": "Protagonist"
+    },
+    "answer": "B",
+    "explanation": "A foil is a character whose traits contrast with those of another character, highlighting the latter's qualities.",
+    "q": "A character who contrasts with another character to highlight their qualities is called a:",
+    "a": "Foil",
+    "ans": "B"
+  },
+  {
+    "id": 38,
+    "topic": "Prose",
+    "subtopic": "Narrative Techniques",
+    "question": "A character who remains unchanged throughout a literary work is a:",
+    "options": {
+      "A": "Round character",
+      "B": "Dynamic character",
+      "C": "Flat character",
+      "D": "Complex character"
+    },
+    "answer": "C",
+    "explanation": "A flat (static) character does not undergo significant change or development throughout the narrative.",
+    "q": "A character who remains unchanged throughout a literary work is a:",
+    "a": "Flat character",
+    "ans": "C"
+  },
+  {
+    "id": 39,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "In Pede Hollist's So the Path Does Not Die, the protagonist Finaba's journey is primarily one of:",
+    "options": {
+      "A": "Physical adventure",
+      "B": "Self-discovery and cultural identity",
+      "C": "Romantic pursuit",
+      "D": "Political ambition"
+    },
+    "answer": "B",
+    "explanation": "Finaba's journey explores themes of self-discovery, cultural identity, and the tension between tradition and modernity.",
+    "q": "In Pede Hollist's So the Path Does Not Die, the protagonist Finaba's journey is primarily one of:",
+    "a": "Self-discovery and cultural identity",
+    "ans": "B"
+  },
+  {
+    "id": 40,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "A major theme in So the Path Does Not Die is:",
+    "options": {
+      "A": "The conflict between tradition and modernity",
+      "B": "The joys of urban life",
+      "C": "The benefits of colonialism",
+      "D": "The superiority of Western education"
+    },
+    "answer": "A",
+    "explanation": "The novel explores the conflict between traditional African values and modern Western influences.",
+    "q": "A major theme in So the Path Does Not Die is:",
+    "a": "The conflict between tradition and modernity",
+    "ans": "A"
+  },
+  {
+    "id": 41,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "Finaba's relationship with her grandmother represents:",
+    "options": {
+      "A": "Generational conflict",
+      "B": "Cultural continuity and guidance",
+      "C": "Romantic love",
+      "D": "Political alliance"
+    },
+    "answer": "B",
+    "explanation": "Finaba's grandmother serves as a link to her cultural roots and provides guidance throughout her journey.",
+    "q": "Finaba's relationship with her grandmother represents:",
+    "a": "Cultural continuity and guidance",
+    "ans": "B"
+  },
+  {
+    "id": 42,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "The title 'So the Path Does Not Die' suggests:",
+    "options": {
+      "A": "The inevitability of death",
+      "B": "The importance of preserving cultural heritage",
+      "C": "The futility of life",
+      "D": "The dangers of travel"
+    },
+    "answer": "B",
+    "explanation": "The title emphasises the importance of maintaining cultural traditions and ancestral paths.",
+    "q": "The title 'So the Path Does Not Die' suggests:",
+    "a": "The importance of preserving cultural heritage",
+    "ans": "B"
+  },
+  {
+    "id": 43,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "In Elma Shaw's Redemption Road, the central theme is:",
+    "options": {
+      "A": "Romantic love",
+      "B": "Post-war trauma and redemption",
+      "C": "Political ambition",
+      "D": "Religious conversion"
+    },
+    "answer": "B",
+    "explanation": "The novel deals with the aftermath of the Liberian civil war, exploring themes of trauma, loss, and redemption.",
+    "q": "In Elma Shaw's Redemption Road, the central theme is:",
+    "a": "Post-war trauma and redemption",
+    "ans": "B"
+  },
+  {
+    "id": 44,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "The protagonist in Redemption Road is:",
+    "options": {
+      "A": "Bendu",
+      "B": "Finaba",
+      "C": "Scout",
+      "D": "Atticus"
+    },
+    "answer": "A",
+    "explanation": "Bendu is the central character whose journey through post-war Liberia forms the narrative's core.",
+    "q": "The protagonist in Redemption Road is:",
+    "a": "Bendu",
+    "ans": "A"
+  },
+  {
+    "id": 45,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "A major narrative technique used in Redemption Road is:",
+    "options": {
+      "A": "Flashback",
+      "B": "Stream of consciousness",
+      "C": "Epistolary",
+      "D": "Omniscient narration"
+    },
+    "answer": "A",
+    "explanation": "Flashback is used extensively to reveal Bendu's past and the events of the war.",
+    "q": "A major narrative technique used in Redemption Road is:",
+    "a": "Flashback",
+    "ans": "A"
+  },
+  {
+    "id": 46,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "In Harper Lee's To Kill a Mockingbird, Atticus Finch defends:",
+    "options": {
+      "A": "Boo Radley",
+      "B": "Tom Robinson",
+      "C": "Bob Ewell",
+      "D": "Mayella Ewell"
+    },
+    "answer": "B",
+    "explanation": "Atticus Finch defends Tom Robinson, a black man falsely accused of raping a white woman.",
+    "q": "In Harper Lee's To Kill a Mockingbird, Atticus Finch defends:",
+    "a": "Tom Robinson",
+    "ans": "B"
+  },
+  {
+    "id": 47,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "The mockingbird in To Kill a Mockingbird symbolises:",
+    "options": {
+      "A": "Justice and equality",
+      "B": "Innocence and vulnerability",
+      "C": "Racial hatred",
+      "D": "The American Dream"
+    },
+    "answer": "B",
+    "explanation": "The mockingbird symbolises innocence and the need to protect the vulnerable, particularly Tom Robinson and Boo Radley.",
+    "q": "The mockingbird in To Kill a Mockingbird symbolises:",
+    "a": "Innocence and vulnerability",
+    "ans": "B"
+  },
+  {
+    "id": 48,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "The narrator of To Kill a Mockingbird is:",
+    "options": {
+      "A": "Atticus Finch",
+      "B": "Jem Finch",
+      "C": "Scout Finch",
+      "D": "Calpurnia"
+    },
+    "answer": "C",
+    "explanation": "Scout Finch, the young daughter of Atticus, narrates the story as an adult looking back on her childhood.",
+    "q": "The narrator of To Kill a Mockingbird is:",
+    "a": "Scout Finch",
+    "ans": "C"
+  },
+  {
+    "id": 49,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "A central theme of To Kill a Mockingbird is:",
+    "options": {
+      "A": "Racial injustice and prejudice",
+      "B": "Romantic love",
+      "C": "Political ambition",
+      "D": "Religious faith"
+    },
+    "answer": "A",
+    "explanation": "The novel powerfully explores racial injustice, prejudice, and the loss of innocence in the American South.",
+    "q": "A central theme of To Kill a Mockingbird is:",
+    "a": "Racial injustice and prejudice",
+    "ans": "A"
+  },
+  {
+    "id": 50,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "In Susanne Bellefeuille's Path of Lucas, the protagonist Lucas faces the challenge of:",
+    "options": {
+      "A": "Political oppression",
+      "B": "A disability and personal tragedy",
+      "C": "Racial discrimination",
+      "D": "Religious persecution"
+    },
+    "answer": "B",
+    "explanation": "Lucas faces the challenges of a disability and the tragic loss of his wife, exploring themes of resilience and love.",
+    "q": "In Susanne Bellefeuille's Path of Lucas, the protagonist Lucas faces the challenge of:",
+    "a": "A disability and personal tragedy",
+    "ans": "B"
+  },
+  {
+    "id": 51,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "A major theme in Path of Lucas is:",
+    "options": {
+      "A": "The power of love and resilience",
+      "B": "The futility of human endeavour",
+      "C": "The corruption of power",
+      "D": "The dangers of technology"
+    },
+    "answer": "A",
+    "explanation": "The novel explores the power of love, resilience in the face of adversity, and the strength of the human spirit.",
+    "q": "A major theme in Path of Lucas is:",
+    "a": "The power of love and resilience",
+    "ans": "A"
+  },
+  {
+    "id": 52,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "The narrative perspective in Path of Lucas is:",
+    "options": {
+      "A": "First-person",
+      "B": "Third-person",
+      "C": "Second-person",
+      "D": "Stream of consciousness"
+    },
+    "answer": "B",
+    "explanation": "The novel is narrated in the third person, following Lucas's perspective and experiences.",
+    "q": "The narrative perspective in Path of Lucas is:",
+    "a": "Third-person",
+    "ans": "B"
+  },
+  {
+    "id": 53,
+    "topic": "Poetry",
+    "subtopic": "Types of Poetry",
+    "question": "A poem of fourteen lines, usually written in iambic pentameter, is called a:",
+    "options": {
+      "A": "Sonnet",
+      "B": "Ode",
+      "C": "Elegy",
+      "D": "Ballad"
+    },
+    "answer": "A",
+    "explanation": "A sonnet is a fourteen-line poem, typically written in iambic pentameter, with a specific rhyme scheme.",
+    "q": "A poem of fourteen lines, usually written in iambic pentameter, is called a:",
+    "a": "Sonnet",
+    "ans": "A"
+  },
+  {
+    "id": 54,
+    "topic": "Poetry",
+    "subtopic": "Types of Poetry",
+    "question": "A poem that mourns the death of a person or laments a loss is an:",
+    "options": {
+      "A": "Ode",
+      "B": "Elegy",
+      "C": "Epic",
+      "D": "Panegyric"
+    },
+    "answer": "B",
+    "explanation": "An elegy is a mournful poem, typically a lament for the dead.",
+    "q": "A poem that mourns the death of a person or laments a loss is an:",
+    "a": "Elegy",
+    "ans": "B"
+  },
+  {
+    "id": 55,
+    "topic": "Poetry",
+    "subtopic": "Types of Poetry",
+    "question": "A long narrative poem celebrating the deeds of a hero is an:",
+    "options": {
+      "A": "Ode",
+      "B": "Elegy",
+      "C": "Epic",
+      "D": "Ballad"
+    },
+    "answer": "C",
+    "explanation": "An epic is a lengthy narrative poem that recounts the adventures and deeds of a legendary or historical hero.",
+    "q": "A long narrative poem celebrating the deeds of a hero is an:",
+    "a": "Epic",
+    "ans": "C"
+  },
+  {
+    "id": 56,
+    "topic": "Poetry",
+    "subtopic": "Types of Poetry",
+    "question": "A poem of praise, often addressed to a person or object, is a:",
+    "options": {
+      "A": "Panegyric",
+      "B": "Elegy",
+      "C": "Satire",
+      "D": "Ballad"
+    },
+    "answer": "A",
+    "explanation": "A panegyric is a formal public speech or written verse in high praise of something or someone.",
+    "q": "A poem of praise, often addressed to a person or object, is a:",
+    "a": "Panegyric",
+    "ans": "A"
+  },
+  {
+    "id": 57,
+    "topic": "Poetry",
+    "subtopic": "Poetic Devices",
+    "question": "The repetition of initial consonant sounds in a line of poetry is called:",
+    "options": {
+      "A": "Assonance",
+      "B": "Alliteration",
+      "C": "Onomatopoeia",
+      "D": "Rhyme"
+    },
+    "answer": "B",
+    "explanation": "Alliteration is the repetition of initial consonant sounds in closely connected words.",
+    "q": "The repetition of initial consonant sounds in a line of poetry is called:",
+    "a": "Alliteration",
+    "ans": "B"
+  },
+  {
+    "id": 58,
+    "topic": "Poetry",
+    "subtopic": "Poetic Devices",
+    "question": "The repetition of vowel sounds within words in a line of poetry is:",
+    "options": {
+      "A": "Alliteration",
+      "B": "Assonance",
+      "C": "Consonance",
+      "D": "Onomatopoeia"
+    },
+    "answer": "B",
+    "explanation": "Assonance is the repetition of vowel sounds within nearby words.",
+    "q": "The repetition of vowel sounds within words in a line of poetry is:",
+    "a": "Assonance",
+    "ans": "B"
+  },
+  {
+    "id": 59,
+    "topic": "Poetry",
+    "subtopic": "Poetic Devices",
+    "question": "A word that imitates the sound it represents, such as 'buzz' or 'hiss', is an example of:",
+    "options": {
+      "A": "Onomatopoeia",
+      "B": "Alliteration",
+      "C": "Assonance",
+      "D": "Personification"
+    },
+    "answer": "A",
+    "explanation": "Onomatopoeia is the use of words that imitate the sounds they describe.",
+    "q": "A word that imitates the sound it represents, such as 'buzz' or 'hiss', is an example of:",
+    "a": "Onomatopoeia",
+    "ans": "A"
+  },
+  {
+    "id": 60,
+    "topic": "Poetry",
+    "subtopic": "Poetic Devices",
+    "question": "Giving human qualities to inanimate objects or abstract ideas is called:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Hyperbole"
+    },
+    "answer": "C",
+    "explanation": "Personification attributes human characteristics to non-human entities or abstract concepts.",
+    "q": "Giving human qualities to inanimate objects or abstract ideas is called:",
+    "a": "Personification",
+    "ans": "C"
+  },
+  {
+    "id": 61,
+    "topic": "Poetry",
+    "subtopic": "Poetic Devices",
+    "question": "A comparison between two unlike things using 'like' or 'as' is a:",
+    "options": {
+      "A": "Metaphor",
+      "B": "Simile",
+      "C": "Personification",
+      "D": "Hyperbole"
+    },
+    "answer": "B",
+    "explanation": "A simile is a figure of speech that compares two different things using 'like' or 'as'.",
+    "q": "A comparison between two unlike things using 'like' or 'as' is a:",
+    "a": "Simile",
+    "ans": "B"
+  },
+  {
+    "id": 62,
+    "topic": "Poetry",
+    "subtopic": "Poetic Devices",
+    "question": "An indirect comparison between two unlike things without using 'like' or 'as' is a:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Metonymy"
+    },
+    "answer": "B",
+    "explanation": "A metaphor is a figure of speech that makes an implicit comparison between two unlike things.",
+    "q": "An indirect comparison between two unlike things without using 'like' or 'as' is a:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 63,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "In Gabriel Okara's Once Upon a Time, the poet laments:",
+    "options": {
+      "A": "The loss of childhood innocence and sincerity",
+      "B": "The beauty of modern city life",
+      "C": "The joys of parenthood",
+      "D": "The wonders of technology"
+    },
+    "answer": "A",
+    "explanation": "The poem laments the loss of innocence and sincerity in adulthood, as people learn to wear 'many faces'.",
+    "q": "In Gabriel Okara's Once Upon a Time, the poet laments:",
+    "a": "The loss of childhood innocence and sincerity",
+    "ans": "A"
+  },
+  {
+    "id": 64,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "The phrase 'many faces like dresses' in Once Upon a Time is an example of:",
+    "options": {
+      "A": "Metaphor",
+      "B": "Simile",
+      "C": "Personification",
+      "D": "Hyperbole"
+    },
+    "answer": "B",
+    "explanation": "The phrase uses 'like' to compare the many faces people wear to dresses, making it a simile.",
+    "q": "The phrase 'many faces like dresses' in Once Upon a Time is an example of:",
+    "a": "Simile",
+    "ans": "B"
+  },
+  {
+    "id": 65,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "The central theme of Once Upon a Time is:",
+    "options": {
+      "A": "The loss of innocence and authenticity in adult life",
+      "B": "The beauty of nature",
+      "C": "The pain of unrequited love",
+      "D": "The horrors of war"
+    },
+    "answer": "A",
+    "explanation": "The poem explores the theme of lost innocence and the artificiality of adult social interactions.",
+    "q": "The central theme of Once Upon a Time is:",
+    "a": "The loss of innocence and authenticity in adult life",
+    "ans": "A"
+  },
+  {
+    "id": 66,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "In Elizabeth Kamara's New Tongue, the 'new tongue' symbolises:",
+    "options": {
+      "A": "The acquisition of a new language and cultural identity",
+      "B": "A physical illness",
+      "C": "A romantic relationship",
+      "D": "A political ideology"
+    },
+    "answer": "A",
+    "explanation": "The 'new tongue' symbolises the poet's adoption of a new language and the cultural identity that comes with it.",
+    "q": "In Elizabeth Kamara's New Tongue, the 'new tongue' symbolises:",
+    "a": "The acquisition of a new language and cultural identity",
+    "ans": "A"
+  },
+  {
+    "id": 67,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "A major theme in New Tongue is:",
+    "options": {
+      "A": "Cultural displacement and assimilation",
+      "B": "The joys of travel",
+      "C": "The beauty of nature",
+      "D": "The pain of losing a loved one"
+    },
+    "answer": "A",
+    "explanation": "The poem explores themes of cultural displacement, assimilation, and the loss of one's mother tongue.",
+    "q": "A major theme in New Tongue is:",
+    "a": "Cultural displacement and assimilation",
+    "ans": "A"
+  },
+  {
+    "id": 68,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "In Wole Soyinka's Night, the dominant mood is:",
+    "options": {
+      "A": "Joyful celebration",
+      "B": "Mystery and foreboding",
+      "C": "Romantic love",
+      "D": "Patriotic fervour"
+    },
+    "answer": "B",
+    "explanation": "The poem creates a mood of mystery, foreboding, and spiritual uncertainty through its imagery and tone.",
+    "q": "In Wole Soyinka's Night, the dominant mood is:",
+    "a": "Mystery and foreboding",
+    "ans": "B"
+  },
+  {
+    "id": 69,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "The imagery in Soyinka's Night is primarily:",
+    "options": {
+      "A": "Pastoral and serene",
+      "B": "Dark and ominous",
+      "C": "Bright and cheerful",
+      "D": "Romantic and sentimental"
+    },
+    "answer": "B",
+    "explanation": "The poem uses dark, ominous imagery to convey a sense of mystery and spiritual unease.",
+    "q": "The imagery in Soyinka's Night is primarily:",
+    "a": "Dark and ominous",
+    "ans": "B"
+  },
+  {
+    "id": 70,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "In Niyi Osundare's Not My Business, the poet criticises:",
+    "options": {
+      "A": "Apathy and indifference to oppression",
+      "B": "The beauty of nature",
+      "C": "The joys of community life",
+      "D": "The importance of hard work"
+    },
+    "answer": "A",
+    "explanation": "The poem criticises the attitude of indifference and apathy towards the suffering of others under oppressive regimes.",
+    "q": "In Niyi Osundare's Not My Business, the poet criticises:",
+    "a": "Apathy and indifference to oppression",
+    "ans": "A"
+  },
+  {
+    "id": 71,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "The refrain 'not my business' in Osundare's poem is used to:",
+    "options": {
+      "A": "Emphasise the narrator's indifference",
+      "B": "Create a musical rhythm",
+      "C": "Celebrate community spirit",
+      "D": "Express love for the nation"
+    },
+    "answer": "A",
+    "explanation": "The refrain highlights the narrator's repeated refusal to get involved, emphasising the theme of indifference.",
+    "q": "The refrain 'not my business' in Osundare's poem is used to:",
+    "a": "Emphasise the narrator's indifference",
+    "ans": "A"
+  },
+  {
+    "id": 72,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Hearty Garlands",
+    "question": "S.O.H. Afriyie-Vidza's Hearty Garlands is best described as a:",
+    "options": {
+      "A": "Satirical poem",
+      "B": "Panegyric",
+      "C": "Elegy",
+      "D": "Ballad"
+    },
+    "answer": "B",
+    "explanation": "Hearty Garlands is a panegyric, a poem of praise celebrating an individual or a cause.",
+    "q": "S.O.H. Afriyie-Vidza's Hearty Garlands is best described as a:",
+    "a": "Panegyric",
+    "ans": "B"
+  },
+  {
+    "id": 73,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Hearty Garlands",
+    "question": "The tone of Hearty Garlands is:",
+    "options": {
+      "A": "Celebratory and laudatory",
+      "B": "Mournful and sad",
+      "C": "Angry and accusatory",
+      "D": "Humorous and playful"
+    },
+    "answer": "A",
+    "explanation": "The poem adopts a celebratory and laudatory tone, praising the subject with enthusiasm.",
+    "q": "The tone of Hearty Garlands is:",
+    "a": "Celebratory and laudatory",
+    "ans": "A"
+  },
+  {
+    "id": 74,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Breast of the Sea",
+    "question": "In Syl Cheney-Coker's The Breast of the Sea, the sea symbolises:",
+    "options": {
+      "A": "A source of life and mystery",
+      "B": "A place of danger",
+      "C": "A romantic setting",
+      "D": "A political metaphor"
+    },
+    "answer": "A",
+    "explanation": "The sea symbolises a source of life, mystery, and spiritual significance in the poem.",
+    "q": "In Syl Cheney-Coker's The Breast of the Sea, the sea symbolises:",
+    "a": "A source of life and mystery",
+    "ans": "A"
+  },
+  {
+    "id": 75,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "In Lord Byron's She Walks in Beauty, the poet compares the woman's beauty to:",
+    "options": {
+      "A": "A cloudless clime and starry skies",
+      "B": "A raging storm",
+      "C": "A dark night",
+      "D": "A flowing river"
+    },
+    "answer": "A",
+    "explanation": "Byron compares the woman's beauty to 'the night of cloudless climes and starry skies'.",
+    "q": "In Lord Byron's She Walks in Beauty, the poet compares the woman's beauty to:",
+    "a": "A cloudless clime and starry skies",
+    "ans": "A"
+  },
+  {
+    "id": 76,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "The central theme of She Walks in Beauty is:",
+    "options": {
+      "A": "The harmony of physical and inner beauty",
+      "B": "The pain of unrequited love",
+      "C": "The fleeting nature of life",
+      "D": "The horror of war"
+    },
+    "answer": "A",
+    "explanation": "The poem celebrates the harmonious blend of physical beauty and inner goodness in the woman.",
+    "q": "The central theme of She Walks in Beauty is:",
+    "a": "The harmony of physical and inner beauty",
+    "ans": "A"
+  },
+  {
+    "id": 77,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Nun's Priest's Tale",
+    "question": "In Chaucer's The Nun's Priest's Tale, the main character is:",
+    "options": {
+      "A": "Chauntecleer the rooster",
+      "B": "The Nun",
+      "C": "The Priest",
+      "D": "The Fox"
+    },
+    "answer": "A",
+    "explanation": "The tale centres on Chauntecleer, the rooster who is tricked by the fox.",
+    "q": "In Chaucer's The Nun's Priest's Tale, the main character is:",
+    "a": "Chauntecleer the rooster",
+    "ans": "A"
+  },
+  {
+    "id": 78,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Nun's Priest's Tale",
+    "question": "The moral of The Nun's Priest's Tale is about:",
+    "options": {
+      "A": "The dangers of flattery and pride",
+      "B": "The importance of hard work",
+      "C": "The value of education",
+      "D": "The beauty of nature"
+    },
+    "answer": "A",
+    "explanation": "The tale warns against flattery and pride, as Chauntecleer is tricked by the fox's flattering words.",
+    "q": "The moral of The Nun's Priest's Tale is about:",
+    "a": "The dangers of flattery and pride",
+    "ans": "A"
+  },
+  {
+    "id": 79,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Telephone Call",
+    "question": "In Fleur Adcock's The Telephone Call, the poet explores the theme of:",
+    "options": {
+      "A": "Disappointment and the nature of luck",
+      "B": "Romantic love",
+      "C": "The beauty of technology",
+      "D": "The pain of death"
+    },
+    "answer": "A",
+    "explanation": "The poem explores the theme of disappointment and the elusive nature of luck and fortune.",
+    "q": "In Fleur Adcock's The Telephone Call, the poet explores the theme of:",
+    "a": "Disappointment and the nature of luck",
+    "ans": "A"
+  },
+  {
+    "id": 80,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Stone",
+    "question": "In Wilfred Wilson Gibson's The Stone, the stone symbolises:",
+    "options": {
+      "A": "The burden of guilt and memory",
+      "B": "The beauty of nature",
+      "C": "The power of love",
+      "D": "The joy of childhood"
+    },
+    "answer": "A",
+    "explanation": "The stone symbolises the burden of guilt and the haunting nature of memory.",
+    "q": "In Wilfred Wilson Gibson's The Stone, the stone symbolises:",
+    "a": "The burden of guilt and memory",
+    "ans": "A"
+  },
+  {
+    "id": 81,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The main character in a literary work is called the:",
+    "options": {
+      "A": "Antagonist",
+      "B": "Protagonist",
+      "C": "Foil",
+      "D": "Narrator"
+    },
+    "answer": "B",
+    "explanation": "The protagonist is the central character around whom the action of a literary work revolves.",
+    "q": "The main character in a literary work is called the:",
+    "a": "Protagonist",
+    "ans": "B"
+  },
+  {
+    "id": 82,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The character or force that opposes the protagonist is the:",
+    "options": {
+      "A": "Protagonist",
+      "B": "Antagonist",
+      "C": "Foil",
+      "D": "Narrator"
+    },
+    "answer": "B",
+    "explanation": "The antagonist is the character or force that opposes the protagonist in a literary work.",
+    "q": "The character or force that opposes the protagonist is the:",
+    "a": "Antagonist",
+    "ans": "B"
+  },
+  {
+    "id": 83,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The use of humour to criticise or expose folly in society is called:",
+    "options": {
+      "A": "Satire",
+      "B": "Irony",
+      "C": "Parody",
+      "D": "Farce"
+    },
+    "answer": "A",
+    "explanation": "Satire uses humour, irony, and exaggeration to expose and criticise human folly or societal flaws.",
+    "q": "The use of humour to criticise or expose folly in society is called:",
+    "a": "Satire",
+    "ans": "A"
+  },
+  {
+    "id": 84,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The difference between what is said and what is meant, or between appearance and reality, is:",
+    "options": {
+      "A": "Irony",
+      "B": "Satire",
+      "C": "Symbolism",
+      "D": "Metaphor"
+    },
+    "answer": "A",
+    "explanation": "Irony involves a contrast between what is stated and what is actually meant, or between expectation and reality.",
+    "q": "The difference between what is said and what is meant, or between appearance and reality, is:",
+    "a": "Irony",
+    "ans": "A"
+  },
+  {
+    "id": 85,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "A figure of speech in which a part represents the whole is called:",
+    "options": {
+      "A": "Metonymy",
+      "B": "Synecdoche",
+      "C": "Metaphor",
+      "D": "Simile"
+    },
+    "answer": "B",
+    "explanation": "Synecdoche uses a part of something to represent the whole, such as 'wheels' for a car.",
+    "q": "A figure of speech in which a part represents the whole is called:",
+    "a": "Synecdoche",
+    "ans": "B"
+  },
+  {
+    "id": 86,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "A figure of speech in which the name of one thing is substituted for another closely associated with it is:",
+    "options": {
+      "A": "Synecdoche",
+      "B": "Metonymy",
+      "C": "Simile",
+      "D": "Personification"
+    },
+    "answer": "B",
+    "explanation": "Metonymy substitutes the name of an attribute or associated thing for the thing itself, such as 'the crown' for the monarchy.",
+    "q": "A figure of speech in which the name of one thing is substituted for another closely associated with it is:",
+    "a": "Metonymy",
+    "ans": "B"
+  },
+  {
+    "id": 87,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The technique of presenting a character's thoughts and feelings as they flow continuously is:",
+    "options": {
+      "A": "Stream of consciousness",
+      "B": "Flashback",
+      "C": "Foreshadowing",
+      "D": "Soliloquy"
+    },
+    "answer": "A",
+    "explanation": "Stream of consciousness is a narrative technique that presents a character's continuous flow of thoughts and feelings.",
+    "q": "The technique of presenting a character's thoughts and feelings as they flow continuously is:",
+    "a": "Stream of consciousness",
+    "ans": "A"
+  },
+  {
+    "id": 88,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "A sudden moment of insight or revelation experienced by a character is called:",
+    "options": {
+      "A": "Epiphany",
+      "B": "Climax",
+      "C": "Denouement",
+      "D": "Exposition"
+    },
+    "answer": "A",
+    "explanation": "An epiphany is a sudden, profound moment of insight or realisation experienced by a character.",
+    "q": "A sudden moment of insight or revelation experienced by a character is called:",
+    "a": "Epiphany",
+    "ans": "A"
+  },
+  {
+    "id": 89,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The point of highest tension or drama in a literary work is the:",
+    "options": {
+      "A": "Exposition",
+      "B": "Climax",
+      "C": "Denouement",
+      "D": "Prologue"
+    },
+    "answer": "B",
+    "explanation": "The climax is the turning point or moment of highest tension in a narrative, after which events move towards resolution.",
+    "q": "The point of highest tension or drama in a literary work is the:",
+    "a": "Climax",
+    "ans": "B"
+  },
+  {
+    "id": 90,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The final resolution of the plot in a literary work is called the:",
+    "options": {
+      "A": "Climax",
+      "B": "Denouement",
+      "C": "Exposition",
+      "D": "Crisis"
+    },
+    "answer": "B",
+    "explanation": "The denouement is the final resolution of the plot, where loose ends are tied up and conflicts are resolved.",
+    "q": "The final resolution of the plot in a literary work is called the:",
+    "a": "Denouement",
+    "ans": "B"
+  },
+  {
+    "id": 91,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Principles",
+    "question": "The principle that a literary work should be judged by its own standards rather than external criteria is called:",
+    "options": {
+      "A": "Mimesis",
+      "B": "Autonomy of art",
+      "C": "Didacticism",
+      "D": "Realism"
+    },
+    "answer": "B",
+    "explanation": "The autonomy of art is the principle that a literary work should be evaluated on its own terms, independent of external moral or political criteria.",
+    "q": "The principle that a literary work should be judged by its own standards rather than external criteria is called:",
+    "a": "Autonomy of art",
+    "ans": "B"
+  },
+  {
+    "id": 92,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Principles",
+    "question": "The concept of 'mimesis' in literature refers to:",
+    "options": {
+      "A": "Imitation of reality",
+      "B": "Use of metaphor",
+      "C": "Rhythmic structure",
+      "D": "Moral instruction"
+    },
+    "answer": "A",
+    "explanation": "Mimesis is the imitation or representation of reality in art and literature.",
+    "q": "The concept of 'mimesis' in literature refers to:",
+    "a": "Imitation of reality",
+    "ans": "A"
+  },
+  {
+    "id": 93,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Principles",
+    "question": "The use of literature to teach moral lessons is called:",
+    "options": {
+      "A": "Didacticism",
+      "B": "Aestheticism",
+      "C": "Realism",
+      "D": "Naturalism"
+    },
+    "answer": "A",
+    "explanation": "Didacticism is the practice of using literature to instruct or impart moral lessons.",
+    "q": "The use of literature to teach moral lessons is called:",
+    "a": "Didacticism",
+    "ans": "A"
+  },
+  {
+    "id": 94,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Principles",
+    "question": "The literary principle that emphasises the depiction of everyday life without idealisation is:",
+    "options": {
+      "A": "Romanticism",
+      "B": "Realism",
+      "C": "Surrealism",
+      "D": "Classicism"
+    },
+    "answer": "B",
+    "explanation": "Realism in literature aims to represent life as it actually is, without idealisation or romanticisation.",
+    "q": "The literary principle that emphasises the depiction of everyday life without idealisation is:",
+    "a": "Realism",
+    "ans": "B"
+  },
+  {
+    "id": 95,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Principles",
+    "question": "The literary movement that emphasised emotion, imagination, and nature is:",
+    "options": {
+      "A": "Realism",
+      "B": "Romanticism",
+      "C": "Naturalism",
+      "D": "Classicism"
+    },
+    "answer": "B",
+    "explanation": "Romanticism was a literary movement that valued emotion, imagination, individualism, and nature.",
+    "q": "The literary movement that emphasised emotion, imagination, and nature is:",
+    "a": "Romanticism",
+    "ans": "B"
+  },
+  {
+    "id": 96,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Prose",
+    "question": "'The old man sat by the window, his wrinkled hands resting on a cane that had seen better days.' This sentence primarily uses:",
+    "options": {
+      "A": "Metaphor",
+      "B": "Visual imagery",
+      "C": "Onomatopoeia",
+      "D": "Alliteration"
+    },
+    "answer": "B",
+    "explanation": "The sentence creates a vivid visual image of the old man and his cane through descriptive details.",
+    "q": "'The old man sat by the window, his wrinkled hands resting on a cane that had seen better days.' This sentence primarily uses:",
+    "a": "Visual imagery",
+    "ans": "B"
+  },
+  {
+    "id": 97,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Prose",
+    "question": "'The city was a jungle, and its inhabitants were predators.' The figure of speech used here is:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Hyperbole"
+    },
+    "answer": "B",
+    "explanation": "The sentence uses metaphor by directly equating the city with a jungle and its inhabitants with predators.",
+    "q": "'The city was a jungle, and its inhabitants were predators.' The figure of speech used here is:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 98,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The wind whispered secrets to the trees.' This line contains an example of:",
+    "options": {
+      "A": "Simile",
+      "B": "Personification",
+      "C": "Onomatopoeia",
+      "D": "Alliteration"
+    },
+    "answer": "B",
+    "explanation": "The wind is given the human ability to whisper, making this personification.",
+    "q": "'The wind whispered secrets to the trees.' This line contains an example of:",
+    "a": "Personification",
+    "ans": "B"
+  },
+  {
+    "id": 99,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'Her smile was a ray of sunshine in the dark room.' The figure of speech used is:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Hyperbole"
+    },
+    "answer": "B",
+    "explanation": "The sentence uses metaphor by directly equating her smile with a ray of sunshine.",
+    "q": "'Her smile was a ray of sunshine in the dark room.' The figure of speech used is:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 100,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Drama",
+    "question": "'JAMES: (Alone) If only I had listened to my mother. Now I am doomed.' This excerpt is an example of:",
+    "options": {
+      "A": "Dialogue",
+      "B": "Soliloquy",
+      "C": "Aside",
+      "D": "Monologue"
+    },
+    "answer": "B",
+    "explanation": "James is alone on stage, speaking his thoughts aloud, which is a soliloquy.",
+    "q": "'JAMES: (Alone) If only I had listened to my mother. Now I am doomed.' This excerpt is an example of:",
+    "a": "Soliloquy",
+    "ans": "B"
+  },
+  {
+    "id": 101,
+    "topic": "Drama",
+    "subtopic": "Types of Drama",
+    "question": "A play written primarily to be sung, with orchestral accompaniment, is an:",
+    "options": {
+      "A": "Farce",
+      "B": "Opera",
+      "C": "Melodrama",
+      "D": "Tragicomedy"
+    },
+    "answer": "B",
+    "explanation": "An opera is a dramatic work in which the actors sing their parts, accompanied by an orchestra.",
+    "q": "A play written primarily to be sung, with orchestral accompaniment, is an:",
+    "a": "Opera",
+    "ans": "B"
+  },
+  {
+    "id": 102,
+    "topic": "Drama",
+    "subtopic": "Dramatic Techniques",
+    "question": "The use of mime in drama involves:",
+    "options": {
+      "A": "Exaggerated gestures and actions without words",
+      "B": "Singing and dancing",
+      "C": "Elaborate costumes",
+      "D": "Use of flashback"
+    },
+    "answer": "A",
+    "explanation": "Mime is a form of dramatic performance that uses exaggerated gestures and actions without speech.",
+    "q": "The use of mime in drama involves:",
+    "a": "Exaggerated gestures and actions without words",
+    "ans": "A"
+  },
+  {
+    "id": 103,
+    "topic": "Drama",
+    "subtopic": "Dramatic Techniques",
+    "question": "The division of a play into acts and scenes serves to:",
+    "options": {
+      "A": "Indicate changes in time and location",
+      "B": "Increase the length of the play",
+      "C": "Confuse the audience",
+      "D": "Reduce production costs"
+    },
+    "answer": "A",
+    "explanation": "Acts and scenes mark changes in time, location, or action within a play, helping to structure the narrative.",
+    "q": "The division of a play into acts and scenes serves to:",
+    "a": "Indicate changes in time and location",
+    "ans": "A"
+  },
+  {
+    "id": 104,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The character of Enobarbus in Antony and Cleopatra serves as:",
+    "options": {
+      "A": "A comic foil and commentator",
+      "B": "A villain",
+      "C": "A romantic hero",
+      "D": "A political leader"
+    },
+    "answer": "A",
+    "explanation": "Enobarbus provides comic relief and insightful commentary on the actions of Antony and Cleopatra.",
+    "q": "The character of Enobarbus in Antony and Cleopatra serves as:",
+    "a": "A comic foil and commentator",
+    "ans": "A"
+  },
+  {
+    "id": 105,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "Antony's tragic flaw in the play is often considered to be:",
+    "options": {
+      "A": "His excessive pride",
+      "B": "His infatuation with Cleopatra",
+      "C": "His jealousy of Caesar",
+      "D": "His love for Rome"
+    },
+    "answer": "B",
+    "explanation": "Antony's infatuation with Cleopatra is often viewed as his tragic flaw, leading to his neglect of duty and ultimate downfall.",
+    "q": "Antony's tragic flaw in the play is often considered to be:",
+    "a": "His infatuation with Cleopatra",
+    "ans": "B"
+  },
+  {
+    "id": 106,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The character of Christie in The Marriage of Anansewa serves as:",
+    "options": {
+      "A": "A confidante to Anansewa",
+      "B": "A rival to Anansewa",
+      "C": "A wealthy suitor",
+      "D": "A village elder"
+    },
+    "answer": "A",
+    "explanation": "Christie is Anansewa's friend and confidante, providing a voice of reason and support.",
+    "q": "The character of Christie in The Marriage of Anansewa serves as:",
+    "a": "A confidante to Anansewa",
+    "ans": "A"
+  },
+  {
+    "id": 107,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The play The Marriage of Anansewa critiques:",
+    "options": {
+      "A": "The commodification of women in marriage",
+      "B": "The importance of education",
+      "C": "The beauty of rural life",
+      "D": "The benefits of colonialism"
+    },
+    "answer": "A",
+    "explanation": "The play critiques the treatment of women as commodities in marriage, as Ananse uses his daughter for financial gain.",
+    "q": "The play The Marriage of Anansewa critiques:",
+    "a": "The commodification of women in marriage",
+    "ans": "A"
+  },
+  {
+    "id": 108,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The Inspector's name, 'Goole', is significant because it suggests:",
+    "options": {
+      "A": "A ghostly or supernatural presence",
+      "B": "A police officer",
+      "C": "A government official",
+      "D": "A family friend"
+    },
+    "answer": "A",
+    "explanation": "The name 'Goole' is a homophone for 'ghoul', suggesting the Inspector may be a supernatural figure representing moral judgment.",
+    "q": "The Inspector's name, 'Goole', is significant because it suggests:",
+    "a": "A ghostly or supernatural presence",
+    "ans": "A"
+  },
+  {
+    "id": 109,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "The character of Richard Rich in A Man for All Seasons represents:",
+    "options": {
+      "A": "Loyalty and integrity",
+      "B": "Ambition and moral compromise",
+      "C": "Religious devotion",
+      "D": "Political wisdom"
+    },
+    "answer": "B",
+    "explanation": "Richard Rich represents ambition and moral compromise, as he betrays More to advance his own career.",
+    "q": "The character of Richard Rich in A Man for All Seasons represents:",
+    "a": "Ambition and moral compromise",
+    "ans": "B"
+  },
+  {
+    "id": 110,
+    "topic": "Prose",
+    "subtopic": "Narrative Techniques",
+    "question": "A story within a story is known as:",
+    "options": {
+      "A": "Frame narrative",
+      "B": "Stream of consciousness",
+      "C": "Epistolary narrative",
+      "D": "Flashback"
+    },
+    "answer": "A",
+    "explanation": "A frame narrative is a story that is told within another story, often providing context for the inner tale.",
+    "q": "A story within a story is known as:",
+    "a": "Frame narrative",
+    "ans": "A"
+  },
+  {
+    "id": 111,
+    "topic": "Prose",
+    "subtopic": "Narrative Techniques",
+    "question": "A novel written in the form of letters exchanged between characters is called:",
+    "options": {
+      "A": "Epistolary novel",
+      "B": "Picaresque novel",
+      "C": "Bildungsroman",
+      "D": "Gothic novel"
+    },
+    "answer": "A",
+    "explanation": "An epistolary novel is written as a series of documents, usually letters exchanged between characters.",
+    "q": "A novel written in the form of letters exchanged between characters is called:",
+    "a": "Epistolary novel",
+    "ans": "A"
+  },
+  {
+    "id": 112,
+    "topic": "Prose",
+    "subtopic": "Narrative Techniques",
+    "question": "A novel that traces the moral and psychological growth of its protagonist is a:",
+    "options": {
+      "A": "Bildungsroman",
+      "B": "Picaresque novel",
+      "C": "Epistolary novel",
+      "D": "Historical novel"
+    },
+    "answer": "A",
+    "explanation": "A bildungsroman is a coming-of-age novel that focuses on the protagonist's moral and psychological development.",
+    "q": "A novel that traces the moral and psychological growth of its protagonist is a:",
+    "a": "Bildungsroman",
+    "ans": "A"
+  },
+  {
+    "id": 113,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "The setting of So the Path Does Not Die spans:",
+    "options": {
+      "A": "Sierra Leone and the United States",
+      "B": "Nigeria and Ghana",
+      "C": "Liberia and Sierra Leone",
+      "D": "Kenya and Tanzania"
+    },
+    "answer": "A",
+    "explanation": "The novel is set primarily in Sierra Leone and the United States, reflecting the protagonist's transnational journey.",
+    "q": "The setting of So the Path Does Not Die spans:",
+    "a": "Sierra Leone and the United States",
+    "ans": "A"
+  },
+  {
+    "id": 114,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "Finaba's profession in So the Path Does Not Die is:",
+    "options": {
+      "A": "A teacher",
+      "B": "A nurse",
+      "C": "A lawyer",
+      "D": "A journalist"
+    },
+    "answer": "B",
+    "explanation": "Finaba works as a nurse, a profession that reflects her nurturing nature and desire to help others.",
+    "q": "Finaba's profession in So the Path Does Not Die is:",
+    "a": "A nurse",
+    "ans": "B"
+  },
+  {
+    "id": 115,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "The novel Redemption Road is set against the backdrop of:",
+    "options": {
+      "A": "The Liberian civil war",
+      "B": "The Nigerian civil war",
+      "C": "The Sierra Leonean civil war",
+      "D": "World War II"
+    },
+    "answer": "A",
+    "explanation": "The novel is set in post-civil war Liberia, exploring the aftermath of the conflict.",
+    "q": "The novel Redemption Road is set against the backdrop of:",
+    "a": "The Liberian civil war",
+    "ans": "A"
+  },
+  {
+    "id": 116,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "The trial of Tom Robinson in To Kill a Mockingbird exposes:",
+    "options": {
+      "A": "The fairness of the American justice system",
+      "B": "The racial prejudice in Maycomb",
+      "C": "The importance of education",
+      "D": "The power of the media"
+    },
+    "answer": "B",
+    "explanation": "The trial exposes the deep-seated racial prejudice in Maycomb, as Tom is convicted despite clear evidence of his innocence.",
+    "q": "The trial of Tom Robinson in To Kill a Mockingbird exposes:",
+    "a": "The racial prejudice in Maycomb",
+    "ans": "B"
+  },
+  {
+    "id": 117,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "Boo Radley in To Kill a Mockingbird is an example of:",
+    "options": {
+      "A": "A round character",
+      "B": "A flat character",
+      "C": "A dynamic character",
+      "D": "A foil"
+    },
+    "answer": "B",
+    "explanation": "Boo Radley is a flat character, remaining largely unchanged and mysterious throughout the novel.",
+    "q": "Boo Radley in To Kill a Mockingbird is an example of:",
+    "a": "A flat character",
+    "ans": "B"
+  },
+  {
+    "id": 118,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "The novel Path of Lucas is primarily about:",
+    "options": {
+      "A": "A man's journey of grief and healing",
+      "B": "A political revolution",
+      "C": "A romantic comedy",
+      "D": "A war story"
+    },
+    "answer": "A",
+    "explanation": "The novel follows Lucas's journey through grief after the loss of his wife, exploring themes of healing and resilience.",
+    "q": "The novel Path of Lucas is primarily about:",
+    "a": "A man's journey of grief and healing",
+    "ans": "A"
+  },
+  {
+    "id": 119,
+    "topic": "Poetry",
+    "subtopic": "Poetic Devices",
+    "question": "The repetition of similar sounds at the ends of lines in poetry is called:",
+    "options": {
+      "A": "Rhyme",
+      "B": "Rhythm",
+      "C": "Assonance",
+      "D": "Alliteration"
+    },
+    "answer": "A",
+    "explanation": "Rhyme is the correspondence of sounds at the ends of lines or within lines of poetry.",
+    "q": "The repetition of similar sounds at the ends of lines in poetry is called:",
+    "a": "Rhyme",
+    "ans": "A"
+  },
+  {
+    "id": 120,
+    "topic": "Poetry",
+    "subtopic": "Poetic Devices",
+    "question": "The pattern of stressed and unstressed syllables in poetry is called:",
+    "options": {
+      "A": "Rhyme",
+      "B": "Rhythm",
+      "C": "Meter",
+      "D": "Diction"
+    },
+    "answer": "B",
+    "explanation": "Rhythm is the pattern of stressed and unstressed syllables that gives poetry its musical quality.",
+    "q": "The pattern of stressed and unstressed syllables in poetry is called:",
+    "a": "Rhythm",
+    "ans": "B"
+  },
+  {
+    "id": 121,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "In Once Upon a Time, the poet's attitude towards adult hypocrisy is one of:",
+    "options": {
+      "A": "Admiration",
+      "B": "Disgust and regret",
+      "C": "Indifference",
+      "D": "Amusement"
+    },
+    "answer": "B",
+    "explanation": "The poet expresses disgust and regret at the hypocrisy and artificiality of adult social interactions.",
+    "q": "In Once Upon a Time, the poet's attitude towards adult hypocrisy is one of:",
+    "a": "Disgust and regret",
+    "ans": "B"
+  },
+  {
+    "id": 122,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "The tone of New Tongue can best be described as:",
+    "options": {
+      "A": "Nostalgic and melancholic",
+      "B": "Angry and defiant",
+      "C": "Joyful and celebratory",
+      "D": "Humorous and light-hearted"
+    },
+    "answer": "A",
+    "explanation": "The poem adopts a nostalgic and melancholic tone, reflecting on the loss of cultural identity.",
+    "q": "The tone of New Tongue can best be described as:",
+    "a": "Nostalgic and melancholic",
+    "ans": "A"
+  },
+  {
+    "id": 123,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "In Soyinka's Night, the poet's persona is:",
+    "options": {
+      "A": "A lone traveller",
+      "B": "A city dweller",
+      "C": "A farmer",
+      "D": "A soldier"
+    },
+    "answer": "A",
+    "explanation": "The persona is a lone traveller navigating the mysteries and dangers of the night.",
+    "q": "In Soyinka's Night, the poet's persona is:",
+    "a": "A lone traveller",
+    "ans": "A"
+  },
+  {
+    "id": 124,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "The structure of Not My Business, with its repeated refrain, creates a sense of:",
+    "options": {
+      "A": "Building tension and inevitability",
+      "B": "Calm and serenity",
+      "C": "Confusion and chaos",
+      "D": "Joy and celebration"
+    },
+    "answer": "A",
+    "explanation": "The repetitive structure builds tension, emphasising the narrator's increasing isolation and the inevitability of consequences.",
+    "q": "The structure of Not My Business, with its repeated refrain, creates a sense of:",
+    "a": "Building tension and inevitability",
+    "ans": "A"
+  },
+  {
+    "id": 125,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Breast of the Sea",
+    "question": "The imagery in The Breast of the Sea is predominantly:",
+    "options": {
+      "A": "Nautical and natural",
+      "B": "Urban and industrial",
+      "C": "Military and violent",
+      "D": "Domestic and homely"
+    },
+    "answer": "A",
+    "explanation": "The poem uses nautical and natural imagery, drawing on the sea and its associations with life and mystery.",
+    "q": "The imagery in The Breast of the Sea is predominantly:",
+    "a": "Nautical and natural",
+    "ans": "A"
+  },
+  {
+    "id": 126,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "The structure of She Walks in Beauty consists of:",
+    "options": {
+      "A": "Three six-line stanzas",
+      "B": "Two quatrains and a couplet",
+      "C": "Four quatrains",
+      "D": "One long stanza"
+    },
+    "answer": "A",
+    "explanation": "The poem is composed of three stanzas, each with six lines (sestets).",
+    "q": "The structure of She Walks in Beauty consists of:",
+    "a": "Three six-line stanzas",
+    "ans": "A"
+  },
+  {
+    "id": 127,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Nun's Priest's Tale",
+    "question": "The Nun's Priest's Tale is an example of a:",
+    "options": {
+      "A": "Beast fable",
+      "B": "Tragedy",
+      "C": "Romance",
+      "D": "Ballad"
+    },
+    "answer": "A",
+    "explanation": "The tale is a beast fable, using animals to convey moral lessons about human behaviour.",
+    "q": "The Nun's Priest's Tale is an example of a:",
+    "a": "Beast fable",
+    "ans": "A"
+  },
+  {
+    "id": 128,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Telephone Call",
+    "question": "The poem The Telephone Call is written in:",
+    "options": {
+      "A": "Free verse",
+      "B": "Sonnet form",
+      "C": "Ballad form",
+      "D": "Ode form"
+    },
+    "answer": "A",
+    "explanation": "The poem is written in free verse, without a regular rhyme scheme or meter.",
+    "q": "The poem The Telephone Call is written in:",
+    "a": "Free verse",
+    "ans": "A"
+  },
+  {
+    "id": 129,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Stone",
+    "question": "The central image in The Stone is:",
+    "options": {
+      "A": "A stone that the narrator cannot remove",
+      "B": "A mountain",
+      "C": "A river",
+      "D": "A tree"
+    },
+    "answer": "A",
+    "explanation": "The poem centres on a stone that the narrator encounters, symbolising a burden or unresolved guilt.",
+    "q": "The central image in The Stone is:",
+    "a": "A stone that the narrator cannot remove",
+    "ans": "A"
+  },
+  {
+    "id": 130,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'denouement' refers to:",
+    "options": {
+      "A": "The final resolution of a plot",
+      "B": "The introduction of characters",
+      "C": "The climax of a story",
+      "D": "The setting of a narrative"
+    },
+    "answer": "A",
+    "explanation": "Denouement is the final part of a narrative where the plot is resolved and conflicts are settled.",
+    "q": "The term 'denouement' refers to:",
+    "a": "The final resolution of a plot",
+    "ans": "A"
+  },
+  {
+    "id": 131,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "A reference to a well-known person, place, event, or literary work is called:",
+    "options": {
+      "A": "Allusion",
+      "B": "Illusion",
+      "C": "Delusion",
+      "D": "Elusion"
+    },
+    "answer": "A",
+    "explanation": "An allusion is an indirect reference to a familiar person, place, event, or literary work.",
+    "q": "A reference to a well-known person, place, event, or literary work is called:",
+    "a": "Allusion",
+    "ans": "A"
+  },
+  {
+    "id": 132,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The use of exaggeration for emphasis or effect is called:",
+    "options": {
+      "A": "Hyperbole",
+      "B": "Understatement",
+      "C": "Litotes",
+      "D": "Euphemism"
+    },
+    "answer": "A",
+    "explanation": "Hyperbole is a figure of speech that uses deliberate exaggeration for emphasis or effect.",
+    "q": "The use of exaggeration for emphasis or effect is called:",
+    "a": "Hyperbole",
+    "ans": "A"
+  },
+  {
+    "id": 133,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "A mild or indirect expression used in place of a harsh one is:",
+    "options": {
+      "A": "Euphemism",
+      "B": "Hyperbole",
+      "C": "Metaphor",
+      "D": "Irony"
+    },
+    "answer": "A",
+    "explanation": "A euphemism is a mild or indirect word or expression substituted for one considered too harsh or blunt.",
+    "q": "A mild or indirect expression used in place of a harsh one is:",
+    "a": "Euphemism",
+    "ans": "A"
+  },
+  {
+    "id": 134,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The presentation of something as smaller or less important than it actually is:",
+    "options": {
+      "A": "Hyperbole",
+      "B": "Understatement",
+      "C": "Euphemism",
+      "D": "Metonymy"
+    },
+    "answer": "B",
+    "explanation": "Understatement is the presentation of something as being smaller or less important than it really is.",
+    "q": "The presentation of something as smaller or less important than it actually is:",
+    "a": "Understatement",
+    "ans": "B"
+  },
+  {
+    "id": 135,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "A figure of speech in which a negative statement is used to affirm something is:",
+    "options": {
+      "A": "Litotes",
+      "B": "Hyperbole",
+      "C": "Irony",
+      "D": "Paradox"
+    },
+    "answer": "A",
+    "explanation": "Litotes is an ironic understatement that expresses a positive statement by negating its opposite.",
+    "q": "A figure of speech in which a negative statement is used to affirm something is:",
+    "a": "Litotes",
+    "ans": "A"
+  },
+  {
+    "id": 136,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "A statement that appears contradictory but reveals a truth is a:",
+    "options": {
+      "A": "Paradox",
+      "B": "Irony",
+      "C": "Metaphor",
+      "D": "Simile"
+    },
+    "answer": "A",
+    "explanation": "A paradox is a statement that seems self-contradictory but may contain a deeper truth.",
+    "q": "A statement that appears contradictory but reveals a truth is a:",
+    "a": "Paradox",
+    "ans": "A"
+  },
+  {
+    "id": 137,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Principles",
+    "question": "The principle of 'decorum' in literature refers to:",
+    "options": {
+      "A": "Appropriateness of style to subject matter",
+      "B": "Use of decorative language",
+      "C": "Moral instruction",
+      "D": "Realistic depiction"
+    },
+    "answer": "A",
+    "explanation": "Decorum is the principle that style and language should be appropriate to the subject matter and characters.",
+    "q": "The principle of 'decorum' in literature refers to:",
+    "a": "Appropriateness of style to subject matter",
+    "ans": "A"
+  },
+  {
+    "id": 138,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Principles",
+    "question": "The 'three unities' of classical drama are:",
+    "options": {
+      "A": "Time, place, and action",
+      "B": "Plot, character, and theme",
+      "C": "Dialogue, action, and setting",
+      "D": "Tragedy, comedy, and history"
+    },
+    "answer": "A",
+    "explanation": "The three unities are unity of time, unity of place, and unity of action, derived from Aristotle's Poetics.",
+    "q": "The 'three unities' of classical drama are:",
+    "a": "Time, place, and action",
+    "ans": "A"
+  },
+  {
+    "id": 139,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Prose",
+    "question": "'The rain came down in torrents, beating against the windows like angry fists.' The figure of speech in this sentence is:",
+    "options": {
+      "A": "Metaphor",
+      "B": "Simile",
+      "C": "Personification",
+      "D": "Hyperbole"
+    },
+    "answer": "B",
+    "explanation": "The sentence uses 'like' to compare the rain to angry fists, making it a simile.",
+    "q": "'The rain came down in torrents, beating against the windows like angry fists.' The figure of speech in this sentence is:",
+    "a": "Simile",
+    "ans": "B"
+  },
+  {
+    "id": 140,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The moon is a queen of the night sky.' This line contains:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Onomatopoeia"
+    },
+    "answer": "B",
+    "explanation": "The line uses metaphor by directly equating the moon with a queen.",
+    "q": "'The moon is a queen of the night sky.' This line contains:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 141,
+    "topic": "Drama",
+    "subtopic": "Types of Drama",
+    "question": "A play that deals with the fall of a person of high estate due to a flaw in character is a:",
+    "options": {
+      "A": "Comedy",
+      "B": "Tragedy",
+      "C": "Farce",
+      "D": "Melodrama"
+    },
+    "answer": "B",
+    "explanation": "Tragedy typically depicts the downfall of a noble character caused by a tragic flaw.",
+    "q": "A play that deals with the fall of a person of high estate due to a flaw in character is a:",
+    "a": "Tragedy",
+    "ans": "B"
+  },
+  {
+    "id": 142,
+    "topic": "Drama",
+    "subtopic": "Dramatic Techniques",
+    "question": "The term 'dramatis personae' refers to:",
+    "options": {
+      "A": "The list of characters in a play",
+      "B": "The stage directions",
+      "C": "The plot summary",
+      "D": "The setting of the play"
+    },
+    "answer": "A",
+    "explanation": "Dramatis personae is the list of characters appearing in a play, usually placed at the beginning.",
+    "q": "The term 'dramatis personae' refers to:",
+    "a": "The list of characters in a play",
+    "ans": "A"
+  },
+  {
+    "id": 143,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The play Antony and Cleopatra is set in:",
+    "options": {
+      "A": "Rome and Egypt",
+      "B": "Greece and Persia",
+      "C": "England and France",
+      "D": "Italy and Spain"
+    },
+    "answer": "A",
+    "explanation": "The play alternates between Rome and Egypt, symbolising the conflict between duty and pleasure.",
+    "q": "The play Antony and Cleopatra is set in:",
+    "a": "Rome and Egypt",
+    "ans": "A"
+  },
+  {
+    "id": 144,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The character of Ananse in The Marriage of Anansewa is best described as:",
+    "options": {
+      "A": "A tragic hero",
+      "B": "A trickster figure",
+      "C": "A romantic hero",
+      "D": "A villain"
+    },
+    "answer": "B",
+    "explanation": "Ananse is a trickster figure, using cunning and deception to achieve his goals.",
+    "q": "The character of Ananse in The Marriage of Anansewa is best described as:",
+    "a": "A trickster figure",
+    "ans": "B"
+  },
+  {
+    "id": 145,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The Inspector's final speech in An Inspector Calls emphasises:",
+    "options": {
+      "A": "The importance of social responsibility",
+      "B": "The need for punishment",
+      "C": "The value of wealth",
+      "D": "The power of the police"
+    },
+    "answer": "A",
+    "explanation": "The Inspector's final speech warns of the consequences of ignoring social responsibility and the interconnectedness of society.",
+    "q": "The Inspector's final speech in An Inspector Calls emphasises:",
+    "a": "The importance of social responsibility",
+    "ans": "A"
+  },
+  {
+    "id": 146,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "The play A Man for All Seasons is primarily concerned with the conflict between:",
+    "options": {
+      "A": "Church and state",
+      "B": "Individual conscience and political authority",
+      "C": "Rich and poor",
+      "D": "Tradition and modernity"
+    },
+    "answer": "B",
+    "explanation": "The play explores the conflict between Sir Thomas More's individual conscience and the political authority of King Henry VIII.",
+    "q": "The play A Man for All Seasons is primarily concerned with the conflict between:",
+    "a": "Individual conscience and political authority",
+    "ans": "B"
+  },
+  {
+    "id": 147,
+    "topic": "Prose",
+    "subtopic": "Types of Prose",
+    "question": "A prose work that tells the story of a person's life written by someone else is a:",
+    "options": {
+      "A": "Autobiography",
+      "B": "Biography",
+      "C": "Memoir",
+      "D": "Diary"
+    },
+    "answer": "B",
+    "explanation": "A biography is an account of a person's life written by another person.",
+    "q": "A prose work that tells the story of a person's life written by someone else is a:",
+    "a": "Biography",
+    "ans": "B"
+  },
+  {
+    "id": 148,
+    "topic": "Prose",
+    "subtopic": "Narrative Techniques",
+    "question": "A narrator who is a character within the story but has limited knowledge is using:",
+    "options": {
+      "A": "First-person limited narration",
+      "B": "Third-person omniscient narration",
+      "C": "Second-person narration",
+      "D": "Objective narration"
+    },
+    "answer": "A",
+    "explanation": "First-person limited narration uses 'I' and is limited to the narrator's knowledge and experience.",
+    "q": "A narrator who is a character within the story but has limited knowledge is using:",
+    "a": "First-person limited narration",
+    "ans": "A"
+  },
+  {
+    "id": 149,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "The theme of female genital mutilation is central to:",
+    "options": {
+      "A": "So the Path Does Not Die",
+      "B": "Redemption Road",
+      "C": "To Kill a Mockingbird",
+      "D": "Path of Lucas"
+    },
+    "answer": "A",
+    "explanation": "So the Path Does Not Die addresses the controversial practice of female genital mutilation and its impact on women.",
+    "q": "The theme of female genital mutilation is central to:",
+    "a": "So the Path Does Not Die",
+    "ans": "A"
+  },
+  {
+    "id": 150,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "The title Redemption Road suggests a journey towards:",
+    "options": {
+      "A": "Wealth and prosperity",
+      "B": "Forgiveness and healing",
+      "C": "Political power",
+      "D": "Romantic fulfilment"
+    },
+    "answer": "B",
+    "explanation": "The title suggests a journey towards redemption, forgiveness, and healing after the trauma of war.",
+    "q": "The title Redemption Road suggests a journey towards:",
+    "a": "Forgiveness and healing",
+    "ans": "B"
+  },
+  {
+    "id": 151,
+    "topic": "Poetry",
+    "subtopic": "Types of Poetry",
+    "question": "A poem written in unrhymed iambic pentameter is called:",
+    "options": {
+      "A": "Blank verse",
+      "B": "Free verse",
+      "C": "Sonnet",
+      "D": "Ode"
+    },
+    "answer": "A",
+    "explanation": "Blank verse is unrhymed poetry written in iambic pentameter, commonly used in Shakespeare's plays.",
+    "q": "A poem written in unrhymed iambic pentameter is called:",
+    "a": "Blank verse",
+    "ans": "A"
+  },
+  {
+    "id": 152,
+    "topic": "Poetry",
+    "subtopic": "Types of Poetry",
+    "question": "A poem that celebrates a person, place, or thing in an elaborate and formal way is an:",
+    "options": {
+      "A": "Ode",
+      "B": "Elegy",
+      "C": "Epic",
+      "D": "Sonnet"
+    },
+    "answer": "A",
+    "explanation": "An ode is a lyric poem of elaborate or elevated style, often celebrating a person, place, or thing.",
+    "q": "A poem that celebrates a person, place, or thing in an elaborate and formal way is an:",
+    "a": "Ode",
+    "ans": "A"
+  },
+  {
+    "id": 153,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "The line 'I have learned to wear many faces like dresses' in Once Upon a Time suggests:",
+    "options": {
+      "A": "The poet's love for fashion",
+      "B": "The artificiality of adult behaviour",
+      "C": "The poet's profession",
+      "D": "The beauty of diversity"
+    },
+    "answer": "B",
+    "explanation": "The line suggests the artificiality of adult behaviour, where people adopt different personas for different situations.",
+    "q": "The line 'I have learned to wear many faces like dresses' in Once Upon a Time suggests:",
+    "a": "The artificiality of adult behaviour",
+    "ans": "B"
+  },
+  {
+    "id": 154,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "The 'new tongue' in Elizabeth Kamara's poem primarily represents:",
+    "options": {
+      "A": "A foreign language acquired through education",
+      "B": "A physical deformity",
+      "C": "A musical instrument",
+      "D": "A political slogan"
+    },
+    "answer": "A",
+    "explanation": "The 'new tongue' represents the foreign language the poet acquired, which displaces her mother tongue.",
+    "q": "The 'new tongue' in Elizabeth Kamara's poem primarily represents:",
+    "a": "A foreign language acquired through education",
+    "ans": "A"
+  },
+  {
+    "id": 155,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "In Soyinka's Night, the night is personified as:",
+    "options": {
+      "A": "A mysterious and powerful force",
+      "B": "A gentle and comforting presence",
+      "C": "A playful child",
+      "D": "A wise old man"
+    },
+    "answer": "A",
+    "explanation": "The night is personified as a mysterious and powerful force, evoking awe and fear.",
+    "q": "In Soyinka's Night, the night is personified as:",
+    "a": "A mysterious and powerful force",
+    "ans": "A"
+  },
+  {
+    "id": 156,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "The poem Not My Business ends with:",
+    "options": {
+      "A": "The narrator being arrested",
+      "B": "The narrator celebrating his safety",
+      "C": "The narrator helping the victims",
+      "D": "The narrator fleeing the country"
+    },
+    "answer": "A",
+    "explanation": "The poem ends with the narrator being arrested, illustrating that indifference to oppression ultimately leads to one's own victimisation.",
+    "q": "The poem Not My Business ends with:",
+    "a": "The narrator being arrested",
+    "ans": "A"
+  },
+  {
+    "id": 157,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Breast of the Sea",
+    "question": "The poet's tone in The Breast of the Sea is:",
+    "options": {
+      "A": "Reverent and contemplative",
+      "B": "Angry and accusatory",
+      "C": "Humorous and playful",
+      "D": "Indifferent and detached"
+    },
+    "answer": "A",
+    "explanation": "The poem adopts a reverent and contemplative tone, reflecting on the sea's beauty and mystery.",
+    "q": "The poet's tone in The Breast of the Sea is:",
+    "a": "Reverent and contemplative",
+    "ans": "A"
+  },
+  {
+    "id": 158,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "The woman in She Walks in Beauty is described as having a beauty that is:",
+    "options": {
+      "A": "Purely physical",
+      "B": "Both physical and spiritual",
+      "C": "Artificial and superficial",
+      "D": "Fading and ephemeral"
+    },
+    "answer": "B",
+    "explanation": "Byron describes the woman's beauty as a harmonious blend of physical attractiveness and inner goodness.",
+    "q": "The woman in She Walks in Beauty is described as having a beauty that is:",
+    "a": "Both physical and spiritual",
+    "ans": "B"
+  },
+  {
+    "id": 159,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Nun's Priest's Tale",
+    "question": "Chauntecleer's dream in The Nun's Priest's Tale foreshadows:",
+    "options": {
+      "A": "His encounter with the fox",
+      "B": "His death",
+      "C": "His marriage",
+      "D": "His journey"
+    },
+    "answer": "A",
+    "explanation": "Chauntecleer's dream of a beast foreshadows his encounter with the fox, who nearly catches him.",
+    "q": "Chauntecleer's dream in The Nun's Priest's Tale foreshadows:",
+    "a": "His encounter with the fox",
+    "ans": "A"
+  },
+  {
+    "id": 160,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Telephone Call",
+    "question": "The speaker in The Telephone Call receives a call informing her that she has:",
+    "options": {
+      "A": "Won a prize",
+      "B": "Lost a loved one",
+      "C": "Been selected for a job",
+      "D": "Been invited to a party"
+    },
+    "answer": "A",
+    "explanation": "The speaker receives a call telling her she has won a prize, but the call turns out to be a hoax.",
+    "q": "The speaker in The Telephone Call receives a call informing her that she has:",
+    "a": "Won a prize",
+    "ans": "A"
+  },
+  {
+    "id": 161,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Stone",
+    "question": "The narrator in The Stone is haunted by:",
+    "options": {
+      "A": "Guilt over a past action",
+      "B": "Fear of the dark",
+      "C": "Love for a woman",
+      "D": "Desire for wealth"
+    },
+    "answer": "A",
+    "explanation": "The narrator is haunted by guilt over a past action, symbolised by the stone he cannot remove.",
+    "q": "The narrator in The Stone is haunted by:",
+    "a": "Guilt over a past action",
+    "ans": "A"
+  },
+  {
+    "id": 162,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'genre' refers to:",
+    "options": {
+      "A": "A category or type of literature",
+      "B": "The main character of a story",
+      "C": "The setting of a narrative",
+      "D": "The author's style"
+    },
+    "answer": "A",
+    "explanation": "Genre is a category or type of literature, such as tragedy, comedy, novel, or poetry.",
+    "q": "The term 'genre' refers to:",
+    "a": "A category or type of literature",
+    "ans": "A"
+  },
+  {
+    "id": 163,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'bildungsroman' refers to a novel about:",
+    "options": {
+      "A": "A young person's growth and development",
+      "B": "A historical event",
+      "C": "A detective mystery",
+      "D": "A romantic relationship"
+    },
+    "answer": "A",
+    "explanation": "A bildungsroman is a coming-of-age novel focusing on the protagonist's moral and psychological growth.",
+    "q": "The term 'bildungsroman' refers to a novel about:",
+    "a": "A young person's growth and development",
+    "ans": "A"
+  },
+  {
+    "id": 164,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'picaresque' refers to a novel that:",
+    "options": {
+      "A": "Follows the adventures of a roguish hero",
+      "B": "Focuses on a single day",
+      "C": "Is written in letters",
+      "D": "Is set in the future"
+    },
+    "answer": "A",
+    "explanation": "A picaresque novel follows the adventures of a roguish, low-born protagonist who lives by his wits.",
+    "q": "The term 'picaresque' refers to a novel that:",
+    "a": "Follows the adventures of a roguish hero",
+    "ans": "A"
+  },
+  {
+    "id": 165,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'gothic' in literature is associated with:",
+    "options": {
+      "A": "Mystery, horror, and the supernatural",
+      "B": "Romantic love",
+      "C": "Political satire",
+      "D": "Realistic depiction of everyday life"
+    },
+    "answer": "A",
+    "explanation": "Gothic literature is characterised by elements of mystery, horror, the supernatural, and dark settings.",
+    "q": "The term 'gothic' in literature is associated with:",
+    "a": "Mystery, horror, and the supernatural",
+    "ans": "A"
+  },
+  {
+    "id": 166,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Drama",
+    "question": "'MARY: (To herself) If I had known, I would never have come here.' This is an example of:",
+    "options": {
+      "A": "Soliloquy",
+      "B": "Aside",
+      "C": "Dialogue",
+      "D": "Monologue"
+    },
+    "answer": "B",
+    "explanation": "Mary is speaking to herself, intending her remark to be heard by the audience but not by other characters, making it an aside.",
+    "q": "'MARY: (To herself) If I had known, I would never have come here.' This is an example of:",
+    "a": "Aside",
+    "ans": "B"
+  },
+  {
+    "id": 167,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The old house groaned under the weight of its memories.' This line contains:",
+    "options": {
+      "A": "Simile",
+      "B": "Personification",
+      "C": "Metaphor",
+      "D": "Onomatopoeia"
+    },
+    "answer": "B",
+    "explanation": "The house is given the human ability to groan and have memories, which is personification.",
+    "q": "'The old house groaned under the weight of its memories.' This line contains:",
+    "a": "Personification",
+    "ans": "B"
+  },
+  {
+    "id": 168,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The relationship between Antony and Caesar in the play is characterised by:",
+    "options": {
+      "A": "Mutual trust",
+      "B": "Political rivalry and tension",
+      "C": "Romantic love",
+      "D": "Indifference"
+    },
+    "answer": "B",
+    "explanation": "The relationship between Antony and Caesar is marked by political rivalry, tension, and mutual suspicion.",
+    "q": "The relationship between Antony and Caesar in the play is characterised by:",
+    "a": "Political rivalry and tension",
+    "ans": "B"
+  },
+  {
+    "id": 169,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The play The Marriage of Anansewa is set in:",
+    "options": {
+      "A": "Ghana",
+      "B": "Nigeria",
+      "C": "Kenya",
+      "D": "South Africa"
+    },
+    "answer": "A",
+    "explanation": "The play is set in Ghana and draws on Ghanaian cultural traditions and oral storytelling.",
+    "q": "The play The Marriage of Anansewa is set in:",
+    "a": "Ghana",
+    "ans": "A"
+  },
+  {
+    "id": 170,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The Birling family in An Inspector Calls represents:",
+    "options": {
+      "A": "The working class",
+      "B": "The wealthy upper class",
+      "C": "The middle class",
+      "D": "The aristocracy"
+    },
+    "answer": "B",
+    "explanation": "The Birling family represents the wealthy upper class, whose actions have consequences for the less fortunate.",
+    "q": "The Birling family in An Inspector Calls represents:",
+    "a": "The wealthy upper class",
+    "ans": "B"
+  },
+  {
+    "id": 171,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "Sir Thomas More's refusal to sign the Act of Supremacy leads to:",
+    "options": {
+      "A": "His execution",
+      "B": "His promotion",
+      "C": "His exile",
+      "D": "His wealth"
+    },
+    "answer": "A",
+    "explanation": "More's refusal to acknowledge Henry VIII as head of the Church leads to his trial and execution.",
+    "q": "Sir Thomas More's refusal to sign the Act of Supremacy leads to:",
+    "a": "His execution",
+    "ans": "A"
+  },
+  {
+    "id": 172,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "Finaba's return to Sierra Leone in So the Path Does Not Die represents:",
+    "options": {
+      "A": "A rejection of Western values",
+      "B": "A reconnection with her cultural roots",
+      "C": "A political statement",
+      "D": "A romantic reunion"
+    },
+    "answer": "B",
+    "explanation": "Finaba's return represents her reconnection with her cultural roots and her search for identity.",
+    "q": "Finaba's return to Sierra Leone in So the Path Does Not Die represents:",
+    "a": "A reconnection with her cultural roots",
+    "ans": "B"
+  },
+  {
+    "id": 173,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "The character of Bendu in Redemption Road is a:",
+    "options": {
+      "A": "Former child soldier",
+      "B": "War widow",
+      "C": "Political leader",
+      "D": "Journalist"
+    },
+    "answer": "B",
+    "explanation": "Bendu is a war widow who struggles to rebuild her life after the death of her husband during the civil war.",
+    "q": "The character of Bendu in Redemption Road is a:",
+    "a": "War widow",
+    "ans": "B"
+  },
+  {
+    "id": 174,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "The character of Atticus Finch represents:",
+    "options": {
+      "A": "Racial prejudice",
+      "B": "Moral integrity and justice",
+      "C": "Political ambition",
+      "D": "Religious hypocrisy"
+    },
+    "answer": "B",
+    "explanation": "Atticus Finch embodies moral integrity, justice, and the courage to stand up for what is right.",
+    "q": "The character of Atticus Finch represents:",
+    "a": "Moral integrity and justice",
+    "ans": "B"
+  },
+  {
+    "id": 175,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "Lucas's journey in Path of Lucas is primarily a journey of:",
+    "options": {
+      "A": "Physical travel across countries",
+      "B": "Emotional healing after loss",
+      "C": "Political awakening",
+      "D": "Professional success"
+    },
+    "answer": "B",
+    "explanation": "Lucas's journey is primarily emotional, as he navigates grief and finds healing after the loss of his wife.",
+    "q": "Lucas's journey in Path of Lucas is primarily a journey of:",
+    "a": "Emotional healing after loss",
+    "ans": "B"
+  },
+  {
+    "id": 176,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "The poet in Once Upon a Time wishes to:",
+    "options": {
+      "A": "Return to the innocence of childhood",
+      "B": "Become a politician",
+      "C": "Travel the world",
+      "D": "Write a novel"
+    },
+    "answer": "A",
+    "explanation": "The poet expresses a longing to return to the innocence and sincerity of childhood, before learning to wear 'many faces'.",
+    "q": "The poet in Once Upon a Time wishes to:",
+    "a": "Return to the innocence of childhood",
+    "ans": "A"
+  },
+  {
+    "id": 177,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "The poet's attitude towards her 'new tongue' in New Tongue is:",
+    "options": {
+      "A": "Ambivalent and melancholic",
+      "B": "Purely celebratory",
+      "C": "Angry and resentful",
+      "D": "Indifferent"
+    },
+    "answer": "A",
+    "explanation": "The poet expresses mixed feelings about her new tongue, acknowledging its necessity while mourning the loss of her mother tongue.",
+    "q": "The poet's attitude towards her 'new tongue' in New Tongue is:",
+    "a": "Ambivalent and melancholic",
+    "ans": "A"
+  },
+  {
+    "id": 178,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "The poem Night by Wole Soyinka explores the theme of:",
+    "options": {
+      "A": "Spiritual uncertainty and mystery",
+      "B": "Romantic love",
+      "C": "Political revolution",
+      "D": "Childhood innocence"
+    },
+    "answer": "A",
+    "explanation": "The poem explores themes of spiritual uncertainty, mystery, and the unknown through the symbol of night.",
+    "q": "The poem Night by Wole Soyinka explores the theme of:",
+    "a": "Spiritual uncertainty and mystery",
+    "ans": "A"
+  },
+  {
+    "id": 179,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "The victims in Not My Business are targeted because they:",
+    "options": {
+      "A": "Are wealthy",
+      "B": "Resist the oppressive regime",
+      "C": "Are foreigners",
+      "D": "Are criminals"
+    },
+    "answer": "B",
+    "explanation": "The victims in the poem are targeted for resisting the oppressive regime, highlighting the dangers of political apathy.",
+    "q": "The victims in Not My Business are targeted because they:",
+    "a": "Resist the oppressive regime",
+    "ans": "B"
+  },
+  {
+    "id": 180,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Breast of the Sea",
+    "question": "The sea in The Breast of the Sea is portrayed as:",
+    "options": {
+      "A": "A nurturing and mysterious force",
+      "B": "A destructive and evil force",
+      "C": "A political symbol",
+      "D": "A romantic setting"
+    },
+    "answer": "A",
+    "explanation": "The sea is portrayed as a nurturing and mysterious force, evoking both life and the unknown.",
+    "q": "The sea in The Breast of the Sea is portrayed as:",
+    "a": "A nurturing and mysterious force",
+    "ans": "A"
+  },
+  {
+    "id": 181,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "The woman's beauty in She Walks in Beauty is compared to:",
+    "options": {
+      "A": "A cloudless night sky",
+      "B": "A stormy sea",
+      "C": "A desert landscape",
+      "D": "A bustling city"
+    },
+    "answer": "A",
+    "explanation": "Byron compares the woman's beauty to 'the night of cloudless climes and starry skies'.",
+    "q": "The woman's beauty in She Walks in Beauty is compared to:",
+    "a": "A cloudless night sky",
+    "ans": "A"
+  },
+  {
+    "id": 182,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Nun's Priest's Tale",
+    "question": "The fox in The Nun's Priest's Tale represents:",
+    "options": {
+      "A": "Cunning and deceit",
+      "B": "Loyalty and friendship",
+      "C": "Wisdom and age",
+      "D": "Innocence and naivety"
+    },
+    "answer": "A",
+    "explanation": "The fox represents cunning and deceit, using flattery to trick Chauntecleer.",
+    "q": "The fox in The Nun's Priest's Tale represents:",
+    "a": "Cunning and deceit",
+    "ans": "A"
+  },
+  {
+    "id": 183,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Telephone Call",
+    "question": "The speaker's reaction to the phone call in The Telephone Call is one of:",
+    "options": {
+      "A": "Excitement and joy",
+      "B": "Disappointment and disillusionment",
+      "C": "Anger and resentment",
+      "D": "Indifference"
+    },
+    "answer": "B",
+    "explanation": "The speaker feels disappointed and disillusioned when she realises the call was a hoax.",
+    "q": "The speaker's reaction to the phone call in The Telephone Call is one of:",
+    "a": "Disappointment and disillusionment",
+    "ans": "B"
+  },
+  {
+    "id": 184,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Stone",
+    "question": "The stone in The Stone serves as a:",
+    "options": {
+      "A": "Symbol of guilt and burden",
+      "B": "Symbol of wealth",
+      "C": "Symbol of love",
+      "D": "Symbol of power"
+    },
+    "answer": "A",
+    "explanation": "The stone symbolises the burden of guilt and the haunting nature of memory.",
+    "q": "The stone in The Stone serves as a:",
+    "a": "Symbol of guilt and burden",
+    "ans": "A"
+  },
+  {
+    "id": 185,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'cliffhanger' refers to:",
+    "options": {
+      "A": "An ending that leaves the audience in suspense",
+      "B": "A type of character",
+      "C": "A poetic device",
+      "D": "A dramatic technique"
+    },
+    "answer": "A",
+    "explanation": "A cliffhanger is a suspenseful ending that leaves the audience eager to know what happens next.",
+    "q": "The term 'cliffhanger' refers to:",
+    "a": "An ending that leaves the audience in suspense",
+    "ans": "A"
+  },
+  {
+    "id": 186,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'in medias res' means:",
+    "options": {
+      "A": "In the middle of things",
+      "B": "At the beginning",
+      "C": "At the end",
+      "D": "From the outside"
+    },
+    "answer": "A",
+    "explanation": "In medias res is a narrative technique that starts the story in the middle of the action.",
+    "q": "The term 'in medias res' means:",
+    "a": "In the middle of things",
+    "ans": "A"
+  },
+  {
+    "id": 187,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'deus ex machina' refers to:",
+    "options": {
+      "A": "An unexpected resolution of a plot",
+      "B": "A type of character",
+      "C": "A poetic form",
+      "D": "A dramatic technique"
+    },
+    "answer": "A",
+    "explanation": "Deus ex machina is an unexpected, artificial, or improbable resolution of a plot, often through a contrived intervention.",
+    "q": "The term 'deus ex machina' refers to:",
+    "a": "An unexpected resolution of a plot",
+    "ans": "A"
+  },
+  {
+    "id": 188,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'hamartia' in tragedy refers to:",
+    "options": {
+      "A": "A tragic flaw",
+      "B": "A comic element",
+      "C": "A type of plot",
+      "D": "A poetic device"
+    },
+    "answer": "A",
+    "explanation": "Hamartia is a tragic flaw or error of judgment that leads to the downfall of a tragic hero.",
+    "q": "The term 'hamartia' in tragedy refers to:",
+    "a": "A tragic flaw",
+    "ans": "A"
+  },
+  {
+    "id": 189,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'catharsis' in tragedy refers to:",
+    "options": {
+      "A": "The purging of emotions",
+      "B": "The climax of the plot",
+      "C": "The introduction of the play",
+      "D": "The resolution of conflict"
+    },
+    "answer": "A",
+    "explanation": "Catharsis is the emotional purging or cleansing experienced by the audience at the end of a tragedy.",
+    "q": "The term 'catharsis' in tragedy refers to:",
+    "a": "The purging of emotions",
+    "ans": "A"
+  },
+  {
+    "id": 190,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Prose",
+    "question": "'The street was a river of people, flowing endlessly into the night.' This sentence uses:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Hyperbole"
+    },
+    "answer": "B",
+    "explanation": "The sentence uses metaphor by directly equating the street with a river of people.",
+    "q": "'The street was a river of people, flowing endlessly into the night.' This sentence uses:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 191,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The daffodils danced in the gentle breeze.' This line contains:",
+    "options": {
+      "A": "Simile",
+      "B": "Personification",
+      "C": "Metaphor",
+      "D": "Alliteration"
+    },
+    "answer": "B",
+    "explanation": "The daffodils are given the human ability to dance, which is personification.",
+    "q": "'The daffodils danced in the gentle breeze.' This line contains:",
+    "a": "Personification",
+    "ans": "B"
+  },
+  {
+    "id": 192,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The play Antony and Cleopatra is classified as a:",
+    "options": {
+      "A": "Comedy",
+      "B": "Tragedy",
+      "C": "History",
+      "D": "Romance"
+    },
+    "answer": "B",
+    "explanation": "Antony and Cleopatra is classified as a tragedy, dealing with the downfall of its noble protagonists.",
+    "q": "The play Antony and Cleopatra is classified as a:",
+    "a": "Tragedy",
+    "ans": "B"
+  },
+  {
+    "id": 193,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The play The Marriage of Anansewa belongs to which dramatic genre?",
+    "options": {
+      "A": "Tragedy",
+      "B": "Comedy",
+      "C": "Melodrama",
+      "D": "Farce"
+    },
+    "answer": "B",
+    "explanation": "The play is a comedy that uses humour and satire to critique social customs and human greed.",
+    "q": "The play The Marriage of Anansewa belongs to which dramatic genre?",
+    "a": "Comedy",
+    "ans": "B"
+  },
+  {
+    "id": 194,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The play An Inspector Calls was written by:",
+    "options": {
+      "A": "J.B. Priestley",
+      "B": "Robert Bolt",
+      "C": "William Shakespeare",
+      "D": "Efua Sutherland"
+    },
+    "answer": "A",
+    "explanation": "An Inspector Calls was written by the English playwright J.B. Priestley.",
+    "q": "The play An Inspector Calls was written by:",
+    "a": "J.B. Priestley",
+    "ans": "A"
+  },
+  {
+    "id": 195,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "A Man for All Seasons was written by:",
+    "options": {
+      "A": "Robert Bolt",
+      "B": "J.B. Priestley",
+      "C": "William Shakespeare",
+      "D": "Efua Sutherland"
+    },
+    "answer": "A",
+    "explanation": "A Man for All Seasons was written by the English playwright Robert Bolt.",
+    "q": "A Man for All Seasons was written by:",
+    "a": "Robert Bolt",
+    "ans": "A"
+  },
+  {
+    "id": 196,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "So the Path Does Not Die was written by:",
+    "options": {
+      "A": "Pede Hollist",
+      "B": "Elma Shaw",
+      "C": "Harper Lee",
+      "D": "Susanne Bellefeuille"
+    },
+    "answer": "A",
+    "explanation": "So the Path Does Not Die was written by the Sierra Leonean author Pede Hollist.",
+    "q": "So the Path Does Not Die was written by:",
+    "a": "Pede Hollist",
+    "ans": "A"
+  },
+  {
+    "id": 197,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "Redemption Road was written by:",
+    "options": {
+      "A": "Elma Shaw",
+      "B": "Pede Hollist",
+      "C": "Harper Lee",
+      "D": "Susanne Bellefeuille"
+    },
+    "answer": "A",
+    "explanation": "Redemption Road was written by the Liberian author Elma Shaw.",
+    "q": "Redemption Road was written by:",
+    "a": "Elma Shaw",
+    "ans": "A"
+  },
+  {
+    "id": 198,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "To Kill a Mockingbird was written by:",
+    "options": {
+      "A": "Harper Lee",
+      "B": "Pede Hollist",
+      "C": "Elma Shaw",
+      "D": "Susanne Bellefeuille"
+    },
+    "answer": "A",
+    "explanation": "To Kill a Mockingbird was written by the American author Harper Lee.",
+    "q": "To Kill a Mockingbird was written by:",
+    "a": "Harper Lee",
+    "ans": "A"
+  },
+  {
+    "id": 199,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "Path of Lucas was written by:",
+    "options": {
+      "A": "Susanne Bellefeuille",
+      "B": "Harper Lee",
+      "C": "Pede Hollist",
+      "D": "Elma Shaw"
+    },
+    "answer": "A",
+    "explanation": "Path of Lucas was written by the Canadian author Susanne Bellefeuille.",
+    "q": "Path of Lucas was written by:",
+    "a": "Susanne Bellefeuille",
+    "ans": "A"
+  },
+  {
+    "id": 200,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "Once Upon a Time was written by:",
+    "options": {
+      "A": "Gabriel Okara",
+      "B": "Niyi Osundare",
+      "C": "Wole Soyinka",
+      "D": "Syl Cheney-Coker"
+    },
+    "answer": "A",
+    "explanation": "Once Upon a Time was written by the Nigerian poet Gabriel Okara.",
+    "q": "Once Upon a Time was written by:",
+    "a": "Gabriel Okara",
+    "ans": "A"
+  },
+  {
+    "id": 201,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "New Tongue was written by:",
+    "options": {
+      "A": "Elizabeth Kamara",
+      "B": "Gabriel Okara",
+      "C": "Wole Soyinka",
+      "D": "Niyi Osundare"
+    },
+    "answer": "A",
+    "explanation": "New Tongue was written by the Sierra Leonean poet Elizabeth Kamara.",
+    "q": "New Tongue was written by:",
+    "a": "Elizabeth Kamara",
+    "ans": "A"
+  },
+  {
+    "id": 202,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "Night was written by:",
+    "options": {
+      "A": "Wole Soyinka",
+      "B": "Gabriel Okara",
+      "C": "Niyi Osundare",
+      "D": "Syl Cheney-Coker"
+    },
+    "answer": "A",
+    "explanation": "Night was written by the Nigerian Nobel laureate Wole Soyinka.",
+    "q": "Night was written by:",
+    "a": "Wole Soyinka",
+    "ans": "A"
+  },
+  {
+    "id": 203,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "Not My Business was written by:",
+    "options": {
+      "A": "Niyi Osundare",
+      "B": "Gabriel Okara",
+      "C": "Wole Soyinka",
+      "D": "Syl Cheney-Coker"
+    },
+    "answer": "A",
+    "explanation": "Not My Business was written by the Nigerian poet Niyi Osundare.",
+    "q": "Not My Business was written by:",
+    "a": "Niyi Osundare",
+    "ans": "A"
+  },
+  {
+    "id": 204,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Hearty Garlands",
+    "question": "Hearty Garlands was written by:",
+    "options": {
+      "A": "S.O.H. Afriyie-Vidza",
+      "B": "Gabriel Okara",
+      "C": "Niyi Osundare",
+      "D": "Wole Soyinka"
+    },
+    "answer": "A",
+    "explanation": "Hearty Garlands was written by the Ghanaian poet S.O.H. Afriyie-Vidza.",
+    "q": "Hearty Garlands was written by:",
+    "a": "S.O.H. Afriyie-Vidza",
+    "ans": "A"
+  },
+  {
+    "id": 205,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Breast of the Sea",
+    "question": "The Breast of the Sea was written by:",
+    "options": {
+      "A": "Syl Cheney-Coker",
+      "B": "Gabriel Okara",
+      "C": "Niyi Osundare",
+      "D": "Wole Soyinka"
+    },
+    "answer": "A",
+    "explanation": "The Breast of the Sea was written by the Sierra Leonean poet Syl Cheney-Coker.",
+    "q": "The Breast of the Sea was written by:",
+    "a": "Syl Cheney-Coker",
+    "ans": "A"
+  },
+  {
+    "id": 206,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "She Walks in Beauty was written by:",
+    "options": {
+      "A": "Lord Byron",
+      "B": "John Donne",
+      "C": "Maya Angelou",
+      "D": "T.S. Eliot"
+    },
+    "answer": "A",
+    "explanation": "She Walks in Beauty was written by the English Romantic poet Lord Byron.",
+    "q": "She Walks in Beauty was written by:",
+    "a": "Lord Byron",
+    "ans": "A"
+  },
+  {
+    "id": 207,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Nun's Priest's Tale",
+    "question": "The Nun's Priest's Tale was written by:",
+    "options": {
+      "A": "Geoffrey Chaucer",
+      "B": "Lord Byron",
+      "C": "John Donne",
+      "D": "William Blake"
+    },
+    "answer": "A",
+    "explanation": "The Nun's Priest's Tale is one of The Canterbury Tales written by Geoffrey Chaucer.",
+    "q": "The Nun's Priest's Tale was written by:",
+    "a": "Geoffrey Chaucer",
+    "ans": "A"
+  },
+  {
+    "id": 208,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Telephone Call",
+    "question": "The Telephone Call was written by:",
+    "options": {
+      "A": "Fleur Adcock",
+      "B": "Maya Angelou",
+      "C": "Lord Byron",
+      "D": "T.S. Eliot"
+    },
+    "answer": "A",
+    "explanation": "The Telephone Call was written by the New Zealand poet Fleur Adcock.",
+    "q": "The Telephone Call was written by:",
+    "a": "Fleur Adcock",
+    "ans": "A"
+  },
+  {
+    "id": 209,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Stone",
+    "question": "The Stone was written by:",
+    "options": {
+      "A": "Wilfred Wilson Gibson",
+      "B": "Lord Byron",
+      "C": "John Donne",
+      "D": "Fleur Adcock"
+    },
+    "answer": "A",
+    "explanation": "The Stone was written by the English poet Wilfred Wilson Gibson.",
+    "q": "The Stone was written by:",
+    "a": "Wilfred Wilson Gibson",
+    "ans": "A"
+  },
+  {
+    "id": 210,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'symbolism' in literature refers to:",
+    "options": {
+      "A": "The use of symbols to represent ideas or qualities",
+      "B": "The use of humour",
+      "C": "The use of rhyme",
+      "D": "The use of dialogue"
+    },
+    "answer": "A",
+    "explanation": "Symbolism is the use of symbols to signify ideas and qualities by giving them symbolic meanings different from their literal sense.",
+    "q": "The term 'symbolism' in literature refers to:",
+    "a": "The use of symbols to represent ideas or qualities",
+    "ans": "A"
+  },
+  {
+    "id": 211,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'motif' refers to:",
+    "options": {
+      "A": "A recurring element in a literary work",
+      "B": "The main character",
+      "C": "The setting",
+      "D": "The plot"
+    },
+    "answer": "A",
+    "explanation": "A motif is a recurring image, idea, or symbol that helps to develop the theme of a literary work.",
+    "q": "The term 'motif' refers to:",
+    "a": "A recurring element in a literary work",
+    "ans": "A"
+  },
+  {
+    "id": 212,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'theme' in literature refers to:",
+    "options": {
+      "A": "The central idea or message",
+      "B": "The main character",
+      "C": "The setting",
+      "D": "The plot"
+    },
+    "answer": "A",
+    "explanation": "Theme is the central idea, message, or underlying meaning of a literary work.",
+    "q": "The term 'theme' in literature refers to:",
+    "a": "The central idea or message",
+    "ans": "A"
+  },
+  {
+    "id": 213,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'plot' in literature refers to:",
+    "options": {
+      "A": "The sequence of events in a story",
+      "B": "The central idea",
+      "C": "The main character",
+      "D": "The setting"
+    },
+    "answer": "A",
+    "explanation": "Plot is the sequence of events that make up a story, including the exposition, rising action, climax, falling action, and resolution.",
+    "q": "The term 'plot' in literature refers to:",
+    "a": "The sequence of events in a story",
+    "ans": "A"
+  },
+  {
+    "id": 214,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'setting' in literature refers to:",
+    "options": {
+      "A": "The time and place of a story",
+      "B": "The main character",
+      "C": "The central idea",
+      "D": "The sequence of events"
+    },
+    "answer": "A",
+    "explanation": "Setting is the time and place in which a story takes place, including the social and cultural context.",
+    "q": "The term 'setting' in literature refers to:",
+    "a": "The time and place of a story",
+    "ans": "A"
+  },
+  {
+    "id": 215,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'characterisation' refers to:",
+    "options": {
+      "A": "The creation and development of characters",
+      "B": "The sequence of events",
+      "C": "The central idea",
+      "D": "The time and place"
+    },
+    "answer": "A",
+    "explanation": "Characterisation is the process by which the writer creates and develops characters in a literary work.",
+    "q": "The term 'characterisation' refers to:",
+    "a": "The creation and development of characters",
+    "ans": "A"
+  },
+  {
+    "id": 216,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Prose",
+    "question": "'Her voice was music to his ears.' This sentence uses:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Onomatopoeia"
+    },
+    "answer": "B",
+    "explanation": "The sentence uses metaphor by directly equating her voice with music.",
+    "q": "'Her voice was music to his ears.' This sentence uses:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 217,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The thunder growled angrily in the distance.' This line contains:",
+    "options": {
+      "A": "Simile",
+      "B": "Personification",
+      "C": "Metaphor",
+      "D": "Alliteration"
+    },
+    "answer": "B",
+    "explanation": "The thunder is given the human ability to growl angrily, which is personification.",
+    "q": "'The thunder growled angrily in the distance.' This line contains:",
+    "a": "Personification",
+    "ans": "B"
+  },
+  {
+    "id": 218,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The character of Octavia in Antony and Cleopatra serves as:",
+    "options": {
+      "A": "A political pawn",
+      "B": "A comic foil",
+      "C": "A villain",
+      "D": "A romantic heroine"
+    },
+    "answer": "A",
+    "explanation": "Octavia is used as a political pawn in the alliance between Antony and Caesar, representing the political dimension of the play.",
+    "q": "The character of Octavia in Antony and Cleopatra serves as:",
+    "a": "A political pawn",
+    "ans": "A"
+  },
+  {
+    "id": 219,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The character of Anansewa's mother in The Marriage of Anansewa is:",
+    "options": {
+      "A": "A voice of reason",
+      "B": "A schemer like Ananse",
+      "C": "A comic figure",
+      "D": "A tragic figure"
+    },
+    "answer": "A",
+    "explanation": "Anansewa's mother provides a voice of reason, often cautioning Ananse against his schemes.",
+    "q": "The character of Anansewa's mother in The Marriage of Anansewa is:",
+    "a": "A voice of reason",
+    "ans": "A"
+  },
+  {
+    "id": 220,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The character of Sheila in An Inspector Calls represents:",
+    "options": {
+      "A": "The hope for social change",
+      "B": "Capitalist greed",
+      "C": "Political conservatism",
+      "D": "Religious faith"
+    },
+    "answer": "A",
+    "explanation": "Sheila represents the hope for social change, as she accepts responsibility and advocates for social justice.",
+    "q": "The character of Sheila in An Inspector Calls represents:",
+    "a": "The hope for social change",
+    "ans": "A"
+  },
+  {
+    "id": 221,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "The character of Cromwell in A Man for All Seasons represents:",
+    "options": {
+      "A": "Political corruption and ruthlessness",
+      "B": "Religious devotion",
+      "C": "Loyalty to More",
+      "D": "Moral integrity"
+    },
+    "answer": "A",
+    "explanation": "Cromwell represents political corruption and ruthlessness, willing to destroy More to achieve his political ends.",
+    "q": "The character of Cromwell in A Man for All Seasons represents:",
+    "a": "Political corruption and ruthlessness",
+    "ans": "A"
+  },
+  {
+    "id": 222,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "The theme of migration is central to:",
+    "options": {
+      "A": "So the Path Does Not Die",
+      "B": "Redemption Road",
+      "C": "To Kill a Mockingbird",
+      "D": "Path of Lucas"
+    },
+    "answer": "A",
+    "explanation": "So the Path Does Not Die explores themes of migration, displacement, and the search for identity across cultures.",
+    "q": "The theme of migration is central to:",
+    "a": "So the Path Does Not Die",
+    "ans": "A"
+  },
+  {
+    "id": 223,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "The theme of survival is central to:",
+    "options": {
+      "A": "Redemption Road",
+      "B": "So the Path Does Not Die",
+      "C": "To Kill a Mockingbird",
+      "D": "Path of Lucas"
+    },
+    "answer": "A",
+    "explanation": "Redemption Road explores themes of survival, resilience, and healing in the aftermath of war.",
+    "q": "The theme of survival is central to:",
+    "a": "Redemption Road",
+    "ans": "A"
+  },
+  {
+    "id": 224,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "The theme of racial injustice is central to:",
+    "options": {
+      "A": "To Kill a Mockingbird",
+      "B": "So the Path Does Not Die",
+      "C": "Redemption Road",
+      "D": "Path of Lucas"
+    },
+    "answer": "A",
+    "explanation": "To Kill a Mockingbird is a powerful exploration of racial injustice and prejudice in the American South.",
+    "q": "The theme of racial injustice is central to:",
+    "a": "To Kill a Mockingbird",
+    "ans": "A"
+  },
+  {
+    "id": 225,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "The theme of love and loss is central to:",
+    "options": {
+      "A": "Path of Lucas",
+      "B": "So the Path Does Not Die",
+      "C": "Redemption Road",
+      "D": "To Kill a Mockingbird"
+    },
+    "answer": "A",
+    "explanation": "Path of Lucas explores themes of love, loss, and the healing power of human connection.",
+    "q": "The theme of love and loss is central to:",
+    "a": "Path of Lucas",
+    "ans": "A"
+  },
+  {
+    "id": 226,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "The poem Once Upon a Time is written in the form of:",
+    "options": {
+      "A": "A dramatic monologue",
+      "B": "A sonnet",
+      "C": "An ode",
+      "D": "A ballad"
+    },
+    "answer": "A",
+    "explanation": "The poem takes the form of a dramatic monologue, with the poet addressing an implied listener.",
+    "q": "The poem Once Upon a Time is written in the form of:",
+    "a": "A dramatic monologue",
+    "ans": "A"
+  },
+  {
+    "id": 227,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "The poem New Tongue is written in:",
+    "options": {
+      "A": "Free verse",
+      "B": "Sonnet form",
+      "C": "Ballad form",
+      "D": "Ode form"
+    },
+    "answer": "A",
+    "explanation": "New Tongue is written in free verse, without a regular rhyme scheme or meter.",
+    "q": "The poem New Tongue is written in:",
+    "a": "Free verse",
+    "ans": "A"
+  },
+  {
+    "id": 228,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "The poem Night uses which of the following poetic devices extensively?",
+    "options": {
+      "A": "Imagery",
+      "B": "Onomatopoeia",
+      "C": "Alliteration",
+      "D": "Rhyme"
+    },
+    "answer": "A",
+    "explanation": "Night relies heavily on vivid imagery to create its atmosphere of mystery and foreboding.",
+    "q": "The poem Night uses which of the following poetic devices extensively?",
+    "a": "Imagery",
+    "ans": "A"
+  },
+  {
+    "id": 229,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "The poem Not My Business is written in:",
+    "options": {
+      "A": "Stanza form with a refrain",
+      "B": "Sonnet form",
+      "C": "Blank verse",
+      "D": "Free verse"
+    },
+    "answer": "A",
+    "explanation": "The poem is structured in stanzas with a repeated refrain, emphasising the theme of indifference.",
+    "q": "The poem Not My Business is written in:",
+    "a": "Stanza form with a refrain",
+    "ans": "A"
+  },
+  {
+    "id": 230,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "The rhyme scheme of She Walks in Beauty is:",
+    "options": {
+      "A": "ABABAB",
+      "B": "AABBCC",
+      "C": "ABBAAB",
+      "D": "ABCABC"
+    },
+    "answer": "A",
+    "explanation": "The poem follows an ABABAB rhyme scheme in each of its three stanzas.",
+    "q": "The rhyme scheme of She Walks in Beauty is:",
+    "a": "ABABAB",
+    "ans": "A"
+  },
+  {
+    "id": 231,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'atmosphere' in literature refers to:",
+    "options": {
+      "A": "The emotional feeling or mood of a literary work",
+      "B": "The physical setting",
+      "C": "The main character",
+      "D": "The plot"
+    },
+    "answer": "A",
+    "explanation": "Atmosphere is the emotional feeling or mood created by a literary work through setting, imagery, and tone.",
+    "q": "The term 'atmosphere' in literature refers to:",
+    "a": "The emotional feeling or mood of a literary work",
+    "ans": "A"
+  },
+  {
+    "id": 232,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'tone' in literature refers to:",
+    "options": {
+      "A": "The writer's attitude towards the subject",
+      "B": "The physical setting",
+      "C": "The main character",
+      "D": "The sequence of events"
+    },
+    "answer": "A",
+    "explanation": "Tone is the writer's attitude or feeling towards the subject matter, conveyed through diction and style.",
+    "q": "The term 'tone' in literature refers to:",
+    "a": "The writer's attitude towards the subject",
+    "ans": "A"
+  },
+  {
+    "id": 233,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'diction' in literature refers to:",
+    "options": {
+      "A": "The choice of words by the writer",
+      "B": "The physical setting",
+      "C": "The main character",
+      "D": "The sequence of events"
+    },
+    "answer": "A",
+    "explanation": "Diction is the writer's choice and arrangement of words to convey meaning and create effect.",
+    "q": "The term 'diction' in literature refers to:",
+    "a": "The choice of words by the writer",
+    "ans": "A"
+  },
+  {
+    "id": 234,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'imagery' in literature refers to:",
+    "options": {
+      "A": "The use of descriptive language to create mental images",
+      "B": "The physical setting",
+      "C": "The main character",
+      "D": "The sequence of events"
+    },
+    "answer": "A",
+    "explanation": "Imagery is the use of vivid and descriptive language to create mental images and appeal to the senses.",
+    "q": "The term 'imagery' in literature refers to:",
+    "a": "The use of descriptive language to create mental images",
+    "ans": "A"
+  },
+  {
+    "id": 235,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Drama",
+    "question": "'JOHN: (To the audience) Little does she know what awaits her.' This is an example of:",
+    "options": {
+      "A": "Soliloquy",
+      "B": "Aside",
+      "C": "Dialogue",
+      "D": "Monologue"
+    },
+    "answer": "B",
+    "explanation": "John is speaking to the audience, not to the other characters on stage, making it an aside.",
+    "q": "'JOHN: (To the audience) Little does she know what awaits her.' This is an example of:",
+    "a": "Aside",
+    "ans": "B"
+  },
+  {
+    "id": 236,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The city never sleeps; its eyes are always open.' This line contains:",
+    "options": {
+      "A": "Simile",
+      "B": "Personification",
+      "C": "Metaphor",
+      "D": "Hyperbole"
+    },
+    "answer": "B",
+    "explanation": "The city is given human qualities (sleeping, eyes), which is personification.",
+    "q": "'The city never sleeps; its eyes are always open.' This line contains:",
+    "a": "Personification",
+    "ans": "B"
+  },
+  {
+    "id": 237,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The theme of love versus duty is central to:",
+    "options": {
+      "A": "Antony and Cleopatra",
+      "B": "The Marriage of Anansewa",
+      "C": "An Inspector Calls",
+      "D": "A Man for All Seasons"
+    },
+    "answer": "A",
+    "explanation": "Antony and Cleopatra explores the conflict between personal love and public duty.",
+    "q": "The theme of love versus duty is central to:",
+    "a": "Antony and Cleopatra",
+    "ans": "A"
+  },
+  {
+    "id": 238,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The theme of greed is central to:",
+    "options": {
+      "A": "The Marriage of Anansewa",
+      "B": "Antony and Cleopatra",
+      "C": "An Inspector Calls",
+      "D": "A Man for All Seasons"
+    },
+    "answer": "A",
+    "explanation": "The Marriage of Anansewa critiques greed, as Ananse uses his daughter for financial gain.",
+    "q": "The theme of greed is central to:",
+    "a": "The Marriage of Anansewa",
+    "ans": "A"
+  },
+  {
+    "id": 239,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The theme of social responsibility is central to:",
+    "options": {
+      "A": "An Inspector Calls",
+      "B": "Antony and Cleopatra",
+      "C": "The Marriage of Anansewa",
+      "D": "A Man for All Seasons"
+    },
+    "answer": "A",
+    "explanation": "An Inspector Calls explores the theme of social responsibility and the consequences of individual actions on others.",
+    "q": "The theme of social responsibility is central to:",
+    "a": "An Inspector Calls",
+    "ans": "A"
+  },
+  {
+    "id": 240,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "The theme of conscience versus authority is central to:",
+    "options": {
+      "A": "A Man for All Seasons",
+      "B": "Antony and Cleopatra",
+      "C": "The Marriage of Anansewa",
+      "D": "An Inspector Calls"
+    },
+    "answer": "A",
+    "explanation": "A Man for All Seasons explores the conflict between individual conscience and political authority.",
+    "q": "The theme of conscience versus authority is central to:",
+    "a": "A Man for All Seasons",
+    "ans": "A"
+  },
+  {
+    "id": 241,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "The theme of cultural identity is central to:",
+    "options": {
+      "A": "So the Path Does Not Die",
+      "B": "Redemption Road",
+      "C": "To Kill a Mockingbird",
+      "D": "Path of Lucas"
+    },
+    "answer": "A",
+    "explanation": "So the Path Does Not Die explores themes of cultural identity and the tension between tradition and modernity.",
+    "q": "The theme of cultural identity is central to:",
+    "a": "So the Path Does Not Die",
+    "ans": "A"
+  },
+  {
+    "id": 242,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "The theme of post-war trauma is central to:",
+    "options": {
+      "A": "Redemption Road",
+      "B": "So the Path Does Not Die",
+      "C": "To Kill a Mockingbird",
+      "D": "Path of Lucas"
+    },
+    "answer": "A",
+    "explanation": "Redemption Road explores the psychological and emotional trauma experienced by survivors of the Liberian civil war.",
+    "q": "The theme of post-war trauma is central to:",
+    "a": "Redemption Road",
+    "ans": "A"
+  },
+  {
+    "id": 243,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "The theme of loss of innocence is central to:",
+    "options": {
+      "A": "To Kill a Mockingbird",
+      "B": "So the Path Does Not Die",
+      "C": "Redemption Road",
+      "D": "Path of Lucas"
+    },
+    "answer": "A",
+    "explanation": "To Kill a Mockingbird explores the loss of innocence as Scout and Jem confront racial injustice and prejudice.",
+    "q": "The theme of loss of innocence is central to:",
+    "a": "To Kill a Mockingbird",
+    "ans": "A"
+  },
+  {
+    "id": 244,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "The theme of resilience is central to:",
+    "options": {
+      "A": "Path of Lucas",
+      "B": "So the Path Does Not Die",
+      "C": "Redemption Road",
+      "D": "To Kill a Mockingbird"
+    },
+    "answer": "A",
+    "explanation": "Path of Lucas explores themes of resilience and the human capacity to overcome adversity.",
+    "q": "The theme of resilience is central to:",
+    "a": "Path of Lucas",
+    "ans": "A"
+  },
+  {
+    "id": 245,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "The theme of hypocrisy is central to:",
+    "options": {
+      "A": "Once Upon a Time",
+      "B": "New Tongue",
+      "C": "Night",
+      "D": "Not My Business"
+    },
+    "answer": "A",
+    "explanation": "Once Upon a Time critiques the hypocrisy and artificiality of adult social interactions.",
+    "q": "The theme of hypocrisy is central to:",
+    "a": "Once Upon a Time",
+    "ans": "A"
+  },
+  {
+    "id": 246,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "The theme of cultural displacement is central to:",
+    "options": {
+      "A": "New Tongue",
+      "B": "Once Upon a Time",
+      "C": "Night",
+      "D": "Not My Business"
+    },
+    "answer": "A",
+    "explanation": "New Tongue explores themes of cultural displacement and the loss of one's mother tongue.",
+    "q": "The theme of cultural displacement is central to:",
+    "a": "New Tongue",
+    "ans": "A"
+  },
+  {
+    "id": 247,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "The theme of spiritual mystery is central to:",
+    "options": {
+      "A": "Night",
+      "B": "Once Upon a Time",
+      "C": "New Tongue",
+      "D": "Not My Business"
+    },
+    "answer": "A",
+    "explanation": "Night explores themes of spiritual mystery, uncertainty, and the unknown.",
+    "q": "The theme of spiritual mystery is central to:",
+    "a": "Night",
+    "ans": "A"
+  },
+  {
+    "id": 248,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "The theme of apathy is central to:",
+    "options": {
+      "A": "Not My Business",
+      "B": "Once Upon a Time",
+      "C": "New Tongue",
+      "D": "Night"
+    },
+    "answer": "A",
+    "explanation": "Not My Business critiques apathy and indifference to oppression and injustice.",
+    "q": "The theme of apathy is central to:",
+    "a": "Not My Business",
+    "ans": "A"
+  },
+  {
+    "id": 249,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "The theme of beauty is central to:",
+    "options": {
+      "A": "She Walks in Beauty",
+      "B": "The Nun's Priest's Tale",
+      "C": "The Telephone Call",
+      "D": "The Stone"
+    },
+    "answer": "A",
+    "explanation": "She Walks in Beauty celebrates the harmonious blend of physical and inner beauty.",
+    "q": "The theme of beauty is central to:",
+    "a": "She Walks in Beauty",
+    "ans": "A"
+  },
+  {
+    "id": 250,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Nun's Priest's Tale",
+    "question": "The theme of flattery is central to:",
+    "options": {
+      "A": "The Nun's Priest's Tale",
+      "B": "She Walks in Beauty",
+      "C": "The Telephone Call",
+      "D": "The Stone"
+    },
+    "answer": "A",
+    "explanation": "The Nun's Priest's Tale warns against the dangers of flattery and pride.",
+    "q": "The theme of flattery is central to:",
+    "a": "The Nun's Priest's Tale",
+    "ans": "A"
+  },
+  {
+    "id": 251,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Telephone Call",
+    "question": "The theme of disappointment is central to:",
+    "options": {
+      "A": "The Telephone Call",
+      "B": "She Walks in Beauty",
+      "C": "The Nun's Priest's Tale",
+      "D": "The Stone"
+    },
+    "answer": "A",
+    "explanation": "The Telephone Call explores themes of disappointment and the elusive nature of luck.",
+    "q": "The theme of disappointment is central to:",
+    "a": "The Telephone Call",
+    "ans": "A"
+  },
+  {
+    "id": 252,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Stone",
+    "question": "The theme of guilt is central to:",
+    "options": {
+      "A": "The Stone",
+      "B": "She Walks in Beauty",
+      "C": "The Nun's Priest's Tale",
+      "D": "The Telephone Call"
+    },
+    "answer": "A",
+    "explanation": "The Stone explores themes of guilt, memory, and the burden of past actions.",
+    "q": "The theme of guilt is central to:",
+    "a": "The Stone",
+    "ans": "A"
+  },
+  {
+    "id": 253,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'protagonist' refers to:",
+    "options": {
+      "A": "The main character in a literary work",
+      "B": "The character who opposes the main character",
+      "C": "The narrator of the story",
+      "D": "The author of the work"
+    },
+    "answer": "A",
+    "explanation": "The protagonist is the central character around whom the action of a literary work revolves.",
+    "q": "The term 'protagonist' refers to:",
+    "a": "The main character in a literary work",
+    "ans": "A"
+  },
+  {
+    "id": 254,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'antagonist' refers to:",
+    "options": {
+      "A": "The character or force that opposes the protagonist",
+      "B": "The main character",
+      "C": "The narrator",
+      "D": "The author"
+    },
+    "answer": "A",
+    "explanation": "The antagonist is the character or force that opposes the protagonist in a literary work.",
+    "q": "The term 'antagonist' refers to:",
+    "a": "The character or force that opposes the protagonist",
+    "ans": "A"
+  },
+  {
+    "id": 255,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'foil' refers to:",
+    "options": {
+      "A": "A character who contrasts with another character",
+      "B": "The main character",
+      "C": "The narrator",
+      "D": "The author"
+    },
+    "answer": "A",
+    "explanation": "A foil is a character whose traits contrast with those of another character, highlighting the latter's qualities.",
+    "q": "The term 'foil' refers to:",
+    "a": "A character who contrasts with another character",
+    "ans": "A"
+  },
+  {
+    "id": 256,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Prose",
+    "question": "'The old man's face was a map of wrinkles, each line telling a story.' This sentence uses:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Onomatopoeia"
+    },
+    "answer": "B",
+    "explanation": "The sentence uses metaphor by directly equating the old man's face with a map.",
+    "q": "'The old man's face was a map of wrinkles, each line telling a story.' This sentence uses:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 257,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The stars were diamonds scattered across the velvet sky.' This line contains:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Alliteration"
+    },
+    "answer": "B",
+    "explanation": "The line uses metaphor by directly equating the stars with diamonds.",
+    "q": "'The stars were diamonds scattered across the velvet sky.' This line contains:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 258,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "Antony's famous speech 'I am dying, Egypt, dying' is addressed to:",
+    "options": {
+      "A": "Cleopatra",
+      "B": "Caesar",
+      "C": "Enobarbus",
+      "D": "Octavia"
+    },
+    "answer": "A",
+    "explanation": "Antony addresses these words to Cleopatra, whom he calls 'Egypt', as he dies in her arms.",
+    "q": "Antony's famous speech 'I am dying, Egypt, dying' is addressed to:",
+    "a": "Cleopatra",
+    "ans": "A"
+  },
+  {
+    "id": 259,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The 'Mboguo' in The Marriage of Anansewa is performed to:",
+    "options": {
+      "A": "Celebrate Anansewa's engagement",
+      "B": "Mourn a death",
+      "C": "Welcome a chief",
+      "D": "Mark the harvest season"
+    },
+    "answer": "A",
+    "explanation": "The Mboguo is a traditional Ghanaian performance that celebrates Anansewa's engagement to the Chief.",
+    "q": "The 'Mboguo' in The Marriage of Anansewa is performed to:",
+    "a": "Celebrate Anansewa's engagement",
+    "ans": "A"
+  },
+  {
+    "id": 260,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The play An Inspector Calls is set in:",
+    "options": {
+      "A": "Brumley, England, in 1912",
+      "B": "London, England, in 1945",
+      "C": "New York, USA, in 1920",
+      "D": "Paris, France, in 1900"
+    },
+    "answer": "A",
+    "explanation": "The play is set in the fictional industrial city of Brumley, England, in 1912.",
+    "q": "The play An Inspector Calls is set in:",
+    "a": "Brumley, England, in 1912",
+    "ans": "A"
+  },
+  {
+    "id": 261,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "The play A Man for All Seasons is set in:",
+    "options": {
+      "A": "16th-century England",
+      "B": "17th-century France",
+      "C": "18th-century Spain",
+      "D": "19th-century Germany"
+    },
+    "answer": "A",
+    "explanation": "The play is set in 16th-century England during the reign of King Henry VIII.",
+    "q": "The play A Man for All Seasons is set in:",
+    "a": "16th-century England",
+    "ans": "A"
+  },
+  {
+    "id": 262,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "The novel So the Path Does Not Die is set in:",
+    "options": {
+      "A": "Sierra Leone and the United States",
+      "B": "Nigeria and Ghana",
+      "C": "Liberia and Sierra Leone",
+      "D": "Kenya and Tanzania"
+    },
+    "answer": "A",
+    "explanation": "The novel is set primarily in Sierra Leone and the United States, reflecting the protagonist's transnational journey.",
+    "q": "The novel So the Path Does Not Die is set in:",
+    "a": "Sierra Leone and the United States",
+    "ans": "A"
+  },
+  {
+    "id": 263,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "The novel Redemption Road is set in:",
+    "options": {
+      "A": "Post-war Liberia",
+      "B": "Post-war Sierra Leone",
+      "C": "Post-war Nigeria",
+      "D": "Post-war Ghana"
+    },
+    "answer": "A",
+    "explanation": "Redemption Road is set in post-civil war Liberia, exploring the aftermath of the conflict.",
+    "q": "The novel Redemption Road is set in:",
+    "a": "Post-war Liberia",
+    "ans": "A"
+  },
+  {
+    "id": 264,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "The novel To Kill a Mockingbird is set in:",
+    "options": {
+      "A": "Maycomb, Alabama, in the 1930s",
+      "B": "New York City in the 1950s",
+      "C": "Chicago in the 1920s",
+      "D": "California in the 1960s"
+    },
+    "answer": "A",
+    "explanation": "The novel is set in the fictional town of Maycomb, Alabama, during the 1930s.",
+    "q": "The novel To Kill a Mockingbird is set in:",
+    "a": "Maycomb, Alabama, in the 1930s",
+    "ans": "A"
+  },
+  {
+    "id": 265,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "The novel Path of Lucas is set in:",
+    "options": {
+      "A": "Canada",
+      "B": "The United States",
+      "C": "The United Kingdom",
+      "D": "Australia"
+    },
+    "answer": "A",
+    "explanation": "Path of Lucas is set primarily in Canada, where the protagonist Lucas resides.",
+    "q": "The novel Path of Lucas is set in:",
+    "a": "Canada",
+    "ans": "A"
+  },
+  {
+    "id": 266,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "The poem Once Upon a Time is written by a poet from:",
+    "options": {
+      "A": "Nigeria",
+      "B": "Ghana",
+      "C": "Sierra Leone",
+      "D": "Kenya"
+    },
+    "answer": "A",
+    "explanation": "Gabriel Okara, the author of Once Upon a Time, is a Nigerian poet.",
+    "q": "The poem Once Upon a Time is written by a poet from:",
+    "a": "Nigeria",
+    "ans": "A"
+  },
+  {
+    "id": 267,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "The poem New Tongue is written by a poet from:",
+    "options": {
+      "A": "Sierra Leone",
+      "B": "Nigeria",
+      "C": "Ghana",
+      "D": "Kenya"
+    },
+    "answer": "A",
+    "explanation": "Elizabeth Kamara, the author of New Tongue, is a Sierra Leonean poet.",
+    "q": "The poem New Tongue is written by a poet from:",
+    "a": "Sierra Leone",
+    "ans": "A"
+  },
+  {
+    "id": 268,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "The poem Night is written by a poet from:",
+    "options": {
+      "A": "Nigeria",
+      "B": "Ghana",
+      "C": "Sierra Leone",
+      "D": "Kenya"
+    },
+    "answer": "A",
+    "explanation": "Wole Soyinka, the author of Night, is a Nigerian poet and playwright.",
+    "q": "The poem Night is written by a poet from:",
+    "a": "Nigeria",
+    "ans": "A"
+  },
+  {
+    "id": 269,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "The poem Not My Business is written by a poet from:",
+    "options": {
+      "A": "Nigeria",
+      "B": "Ghana",
+      "C": "Sierra Leone",
+      "D": "Kenya"
+    },
+    "answer": "A",
+    "explanation": "Niyi Osundare, the author of Not My Business, is a Nigerian poet.",
+    "q": "The poem Not My Business is written by a poet from:",
+    "a": "Nigeria",
+    "ans": "A"
+  },
+  {
+    "id": 270,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "She Walks in Beauty was written by a poet from:",
+    "options": {
+      "A": "England",
+      "B": "America",
+      "C": "France",
+      "D": "Germany"
+    },
+    "answer": "A",
+    "explanation": "Lord Byron, the author of She Walks in Beauty, was an English Romantic poet.",
+    "q": "She Walks in Beauty was written by a poet from:",
+    "a": "England",
+    "ans": "A"
+  },
+  {
+    "id": 271,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'allegory' refers to:",
+    "options": {
+      "A": "A story with a hidden moral or political meaning",
+      "B": "A type of poem",
+      "C": "A dramatic technique",
+      "D": "A narrative device"
+    },
+    "answer": "A",
+    "explanation": "An allegory is a narrative that uses symbolic figures and events to convey a hidden moral, political, or philosophical meaning.",
+    "q": "The term 'allegory' refers to:",
+    "a": "A story with a hidden moral or political meaning",
+    "ans": "A"
+  },
+  {
+    "id": 272,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'parable' refers to:",
+    "options": {
+      "A": "A short story that teaches a moral lesson",
+      "B": "A long narrative poem",
+      "C": "A type of drama",
+      "D": "A poetic device"
+    },
+    "answer": "A",
+    "explanation": "A parable is a short, simple story that illustrates a moral or spiritual lesson.",
+    "q": "The term 'parable' refers to:",
+    "a": "A short story that teaches a moral lesson",
+    "ans": "A"
+  },
+  {
+    "id": 273,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'fable' refers to:",
+    "options": {
+      "A": "A short story with animals as characters that teaches a moral",
+      "B": "A type of poem",
+      "C": "A dramatic technique",
+      "D": "A narrative device"
+    },
+    "answer": "A",
+    "explanation": "A fable is a short story, typically with animals as characters, that conveys a moral lesson.",
+    "q": "The term 'fable' refers to:",
+    "a": "A short story with animals as characters that teaches a moral",
+    "ans": "A"
+  },
+  {
+    "id": 274,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'myth' refers to:",
+    "options": {
+      "A": "A traditional story explaining natural phenomena or cultural beliefs",
+      "B": "A type of poem",
+      "C": "A dramatic technique",
+      "D": "A narrative device"
+    },
+    "answer": "A",
+    "explanation": "A myth is a traditional story, often involving supernatural beings, that explains natural phenomena or cultural beliefs.",
+    "q": "The term 'myth' refers to:",
+    "a": "A traditional story explaining natural phenomena or cultural beliefs",
+    "ans": "A"
+  },
+  {
+    "id": 275,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'legend' refers to:",
+    "options": {
+      "A": "A traditional story about a historical figure or event",
+      "B": "A type of poem",
+      "C": "A dramatic technique",
+      "D": "A narrative device"
+    },
+    "answer": "A",
+    "explanation": "A legend is a traditional story, sometimes based on historical events, that has been passed down through generations.",
+    "q": "The term 'legend' refers to:",
+    "a": "A traditional story about a historical figure or event",
+    "ans": "A"
+  },
+  {
+    "id": 276,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Prose",
+    "question": "'The silence was so loud it hurt his ears.' This sentence contains:",
+    "options": {
+      "A": "Simile",
+      "B": "Oxymoron",
+      "C": "Metaphor",
+      "D": "Hyperbole"
+    },
+    "answer": "B",
+    "explanation": "The sentence uses an oxymoron by juxtaposing contradictory words 'silence' and 'loud'.",
+    "q": "'The silence was so loud it hurt his ears.' This sentence contains:",
+    "a": "Oxymoron",
+    "ans": "B"
+  },
+  {
+    "id": 277,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The pen is mightier than the sword.' This is an example of:",
+    "options": {
+      "A": "Simile",
+      "B": "Metonymy",
+      "C": "Metaphor",
+      "D": "Personification"
+    },
+    "answer": "B",
+    "explanation": "The sentence uses metonymy by substituting 'pen' for writing and 'sword' for military force.",
+    "q": "'The pen is mightier than the sword.' This is an example of:",
+    "a": "Metonymy",
+    "ans": "B"
+  },
+  {
+    "id": 278,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The character of Pompey in Antony and Cleopatra represents:",
+    "options": {
+      "A": "A political threat to the triumvirate",
+      "B": "A comic figure",
+      "C": "A romantic interest",
+      "D": "A loyal ally"
+    },
+    "answer": "A",
+    "explanation": "Pompey represents a political and military threat to the triumvirate of Antony, Caesar, and Lepidus.",
+    "q": "The character of Pompey in Antony and Cleopatra represents:",
+    "a": "A political threat to the triumvirate",
+    "ans": "A"
+  },
+  {
+    "id": 279,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: The Marriage of Anansewa",
+    "question": "The play The Marriage of Anansewa incorporates elements of:",
+    "options": {
+      "A": "African oral tradition",
+      "B": "Western realism",
+      "C": "Greek tragedy",
+      "D": "Japanese theatre"
+    },
+    "answer": "A",
+    "explanation": "The play incorporates elements of African oral tradition, including storytelling, songs, and dances.",
+    "q": "The play The Marriage of Anansewa incorporates elements of:",
+    "a": "African oral tradition",
+    "ans": "A"
+  },
+  {
+    "id": 280,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: An Inspector Calls",
+    "question": "The Inspector's interrogation of the Birling family reveals:",
+    "options": {
+      "A": "Their collective responsibility for Eva Smith's death",
+      "B": "Their innocence",
+      "C": "Their wealth",
+      "D": "Their political views"
+    },
+    "answer": "A",
+    "explanation": "The Inspector reveals that each member of the Birling family played a role in Eva Smith's downfall, highlighting their collective responsibility.",
+    "q": "The Inspector's interrogation of the Birling family reveals:",
+    "a": "Their collective responsibility for Eva Smith's death",
+    "ans": "A"
+  },
+  {
+    "id": 281,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: A Man for All Seasons",
+    "question": "The play A Man for All Seasons explores the conflict between:",
+    "options": {
+      "A": "Individual conscience and political authority",
+      "B": "Rich and poor",
+      "C": "Tradition and modernity",
+      "D": "Church and state"
+    },
+    "answer": "A",
+    "explanation": "The play explores the conflict between Sir Thomas More's individual conscience and the political authority of King Henry VIII.",
+    "q": "The play A Man for All Seasons explores the conflict between:",
+    "a": "Individual conscience and political authority",
+    "ans": "A"
+  },
+  {
+    "id": 282,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "The novel So the Path Does Not Die explores the theme of:",
+    "options": {
+      "A": "Female genital mutilation",
+      "B": "Racial injustice",
+      "C": "Post-war trauma",
+      "D": "Disability"
+    },
+    "answer": "A",
+    "explanation": "The novel addresses the controversial practice of female genital mutilation and its impact on women.",
+    "q": "The novel So the Path Does Not Die explores the theme of:",
+    "a": "Female genital mutilation",
+    "ans": "A"
+  },
+  {
+    "id": 283,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Redemption Road",
+    "question": "The novel Redemption Road explores the theme of:",
+    "options": {
+      "A": "Post-war trauma and healing",
+      "B": "Female genital mutilation",
+      "C": "Racial injustice",
+      "D": "Disability"
+    },
+    "answer": "A",
+    "explanation": "The novel deals with the aftermath of the Liberian civil war, exploring themes of trauma, loss, and redemption.",
+    "q": "The novel Redemption Road explores the theme of:",
+    "a": "Post-war trauma and healing",
+    "ans": "A"
+  },
+  {
+    "id": 284,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: To Kill a Mockingbird",
+    "question": "The novel To Kill a Mockingbird explores the theme of:",
+    "options": {
+      "A": "Racial injustice",
+      "B": "Female genital mutilation",
+      "C": "Post-war trauma",
+      "D": "Disability"
+    },
+    "answer": "A",
+    "explanation": "The novel powerfully explores racial injustice, prejudice, and the loss of innocence in the American South.",
+    "q": "The novel To Kill a Mockingbird explores the theme of:",
+    "a": "Racial injustice",
+    "ans": "A"
+  },
+  {
+    "id": 285,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: Path of Lucas",
+    "question": "The novel Path of Lucas explores the theme of:",
+    "options": {
+      "A": "Love, loss, and resilience",
+      "B": "Racial injustice",
+      "C": "Female genital mutilation",
+      "D": "Post-war trauma"
+    },
+    "answer": "A",
+    "explanation": "The novel explores themes of love, loss, and the resilience of the human spirit in the face of adversity.",
+    "q": "The novel Path of Lucas explores the theme of:",
+    "a": "Love, loss, and resilience",
+    "ans": "A"
+  },
+  {
+    "id": 286,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Once Upon a Time",
+    "question": "The poem Once Upon a Time explores the theme of:",
+    "options": {
+      "A": "Loss of childhood innocence",
+      "B": "Cultural displacement",
+      "C": "Spiritual mystery",
+      "D": "Political apathy"
+    },
+    "answer": "A",
+    "explanation": "The poem laments the loss of innocence and sincerity in adulthood, as people learn to wear 'many faces'.",
+    "q": "The poem Once Upon a Time explores the theme of:",
+    "a": "Loss of childhood innocence",
+    "ans": "A"
+  },
+  {
+    "id": 287,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: New Tongue",
+    "question": "The poem New Tongue explores the theme of:",
+    "options": {
+      "A": "Cultural displacement",
+      "B": "Loss of childhood innocence",
+      "C": "Spiritual mystery",
+      "D": "Political apathy"
+    },
+    "answer": "A",
+    "explanation": "The poem explores themes of cultural displacement, assimilation, and the loss of one's mother tongue.",
+    "q": "The poem New Tongue explores the theme of:",
+    "a": "Cultural displacement",
+    "ans": "A"
+  },
+  {
+    "id": 288,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Night",
+    "question": "The poem Night explores the theme of:",
+    "options": {
+      "A": "Spiritual mystery and uncertainty",
+      "B": "Loss of childhood innocence",
+      "C": "Cultural displacement",
+      "D": "Political apathy"
+    },
+    "answer": "A",
+    "explanation": "The poem explores themes of spiritual mystery, uncertainty, and the unknown through the symbol of night.",
+    "q": "The poem Night explores the theme of:",
+    "a": "Spiritual mystery and uncertainty",
+    "ans": "A"
+  },
+  {
+    "id": 289,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: Not My Business",
+    "question": "The poem Not My Business explores the theme of:",
+    "options": {
+      "A": "Political apathy and its consequences",
+      "B": "Loss of childhood innocence",
+      "C": "Cultural displacement",
+      "D": "Spiritual mystery"
+    },
+    "answer": "A",
+    "explanation": "The poem critiques apathy and indifference to oppression, showing how it ultimately leads to one's own victimisation.",
+    "q": "The poem Not My Business explores the theme of:",
+    "a": "Political apathy and its consequences",
+    "ans": "A"
+  },
+  {
+    "id": 290,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: She Walks in Beauty",
+    "question": "The poem She Walks in Beauty explores the theme of:",
+    "options": {
+      "A": "The harmony of physical and inner beauty",
+      "B": "The pain of unrequited love",
+      "C": "The fleeting nature of life",
+      "D": "The horror of war"
+    },
+    "answer": "A",
+    "explanation": "The poem celebrates the harmonious blend of physical beauty and inner goodness in the woman.",
+    "q": "The poem She Walks in Beauty explores the theme of:",
+    "a": "The harmony of physical and inner beauty",
+    "ans": "A"
+  },
+  {
+    "id": 291,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Nun's Priest's Tale",
+    "question": "The Nun's Priest's Tale explores the theme of:",
+    "options": {
+      "A": "The dangers of flattery and pride",
+      "B": "The harmony of physical and inner beauty",
+      "C": "The fleeting nature of life",
+      "D": "The horror of war"
+    },
+    "answer": "A",
+    "explanation": "The tale warns against flattery and pride, as Chauntecleer is tricked by the fox's flattering words.",
+    "q": "The Nun's Priest's Tale explores the theme of:",
+    "a": "The dangers of flattery and pride",
+    "ans": "A"
+  },
+  {
+    "id": 292,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Telephone Call",
+    "question": "The Telephone Call explores the theme of:",
+    "options": {
+      "A": "Disappointment and the nature of luck",
+      "B": "The harmony of physical and inner beauty",
+      "C": "The dangers of flattery",
+      "D": "The burden of guilt"
+    },
+    "answer": "A",
+    "explanation": "The poem explores themes of disappointment and the elusive nature of luck and fortune.",
+    "q": "The Telephone Call explores the theme of:",
+    "a": "Disappointment and the nature of luck",
+    "ans": "A"
+  },
+  {
+    "id": 293,
+    "topic": "Poetry",
+    "subtopic": "Prescribed Poem: The Stone",
+    "question": "The Stone explores the theme of:",
+    "options": {
+      "A": "Guilt and the burden of memory",
+      "B": "Disappointment and the nature of luck",
+      "C": "The harmony of physical and inner beauty",
+      "D": "The dangers of flattery"
+    },
+    "answer": "A",
+    "explanation": "The poem explores themes of guilt, memory, and the burden of past actions.",
+    "q": "The Stone explores the theme of:",
+    "a": "Guilt and the burden of memory",
+    "ans": "A"
+  },
+  {
+    "id": 294,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'narrative technique' refers to:",
+    "options": {
+      "A": "The methods used by a writer to tell a story",
+      "B": "The central idea of a story",
+      "C": "The main character",
+      "D": "The setting"
+    },
+    "answer": "A",
+    "explanation": "Narrative technique refers to the methods and strategies used by a writer to tell a story, such as point of view, flashback, and foreshadowing.",
+    "q": "The term 'narrative technique' refers to:",
+    "a": "The methods used by a writer to tell a story",
+    "ans": "A"
+  },
+  {
+    "id": 295,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'point of view' in literature refers to:",
+    "options": {
+      "A": "The perspective from which a story is told",
+      "B": "The central idea",
+      "C": "The main character",
+      "D": "The setting"
+    },
+    "answer": "A",
+    "explanation": "Point of view is the perspective from which a narrative is told, such as first-person, third-person omniscient, or third-person limited.",
+    "q": "The term 'point of view' in literature refers to:",
+    "a": "The perspective from which a story is told",
+    "ans": "A"
+  },
+  {
+    "id": 296,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Drama",
+    "question": "'SARAH: (Alone on stage) To be or not to be, that is the question.' This is an example of:",
+    "options": {
+      "A": "Soliloquy",
+      "B": "Aside",
+      "C": "Dialogue",
+      "D": "Monologue"
+    },
+    "answer": "A",
+    "explanation": "Sarah is alone on stage, speaking her thoughts aloud, which is a soliloquy.",
+    "q": "'SARAH: (Alone on stage) To be or not to be, that is the question.' This is an example of:",
+    "a": "Soliloquy",
+    "ans": "A"
+  },
+  {
+    "id": 297,
+    "topic": "Literary Appreciation",
+    "subtopic": "Unseen Poetry",
+    "question": "'The road was a ribbon of moonlight.' This line contains:",
+    "options": {
+      "A": "Simile",
+      "B": "Metaphor",
+      "C": "Personification",
+      "D": "Onomatopoeia"
+    },
+    "answer": "B",
+    "explanation": "The line uses metaphor by directly equating the road with a ribbon of moonlight.",
+    "q": "'The road was a ribbon of moonlight.' This line contains:",
+    "a": "Metaphor",
+    "ans": "B"
+  },
+  {
+    "id": 298,
+    "topic": "Drama",
+    "subtopic": "Prescribed Text: Antony and Cleopatra",
+    "question": "The play Antony and Cleopatra is a tragedy because:",
+    "options": {
+      "A": "It ends with the death of the protagonists",
+      "B": "It has a happy ending",
+      "C": "It is a comedy",
+      "D": "It has no conflict"
+    },
+    "answer": "A",
+    "explanation": "The play is a tragedy as it ends with the deaths of Antony and Cleopatra, the noble protagonists.",
+    "q": "The play Antony and Cleopatra is a tragedy because:",
+    "a": "It ends with the death of the protagonists",
+    "ans": "A"
+  },
+  {
+    "id": 299,
+    "topic": "Prose",
+    "subtopic": "Prescribed Text: So the Path Does Not Die",
+    "question": "The novel So the Path Does Not Die is an example of:",
+    "options": {
+      "A": "A bildungsroman",
+      "B": "A picaresque novel",
+      "C": "An epistolary novel",
+      "D": "A gothic novel"
+    },
+    "answer": "A",
+    "explanation": "The novel is a bildungsroman, focusing on Finaba's moral and psychological growth as she navigates different cultures.",
+    "q": "The novel So the Path Does Not Die is an example of:",
+    "a": "A bildungsroman",
+    "ans": "A"
+  },
+  {
+    "id": 300,
+    "topic": "General Literary Principles",
+    "subtopic": "Literary Terms",
+    "question": "The term 'dramatic irony' refers to:",
+    "options": {
+      "A": "When the audience knows something the characters do not",
+      "B": "When a character says one thing but means another",
+      "C": "When the plot is resolved unexpectedly",
+      "D": "When the setting is ironic"
+    },
+    "answer": "A",
+    "explanation": "Dramatic irony occurs when the audience possesses information that the characters on stage do not, creating tension or humour.",
+    "q": "The term 'dramatic irony' refers to:",
+    "a": "When the audience knows something the characters do not",
+    "ans": "A"
+  }
+]

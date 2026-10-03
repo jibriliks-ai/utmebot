@@ -1,0 +1,223 @@
+[
+  {
+    "id": 1,
+    "topic": "Measurements and Units",
+    "subtopic": "Fundamental Quantities",
+    "question": "Which of the following is a fundamental quantity?",
+    "options": {
+      "A": "Force",
+      "B": "Electric charge",
+      "C": "Temperature",
+      "D": "Pressure"
+    },
+    "answer": "C",
+    "explanation": "Temperature is one of the seven fundamental quantities in physics. Force, electric charge, and pressure are derived quantities.",
+    "q": "Which of the following is a fundamental quantity?",
+    "a": "Temperature",
+    "ans": "C"
+  },
+  {
+    "id": 2,
+    "topic": "Measurements and Units",
+    "subtopic": "Derived Quantities",
+    "question": "The unit of which of the following quantities can be expressed as kg m² s⁻³?",
+    "options": {
+      "A": "Power",
+      "B": "Pressure",
+      "C": "Momentum",
+      "D": "Work"
+    },
+    "answer": "A",
+    "explanation": "Power = Work/Time = (kg m² s⁻²)/s = kg m² s⁻³.",
+    "q": "The unit of which of the following quantities can be expressed as kg m² s⁻³?",
+    "a": "Power",
+    "ans": "A"
+  },
+  {
+    "id": 3,
+    "topic": "Measurements and Units",
+    "subtopic": "Dimensional Analysis",
+    "question": "The dimension of the quantity 'impulse' is:",
+    "options": {
+      "A": "MLT⁻¹",
+      "B": "MLT⁻²",
+      "C": "ML²T⁻¹",
+      "D": "ML²T⁻²"
+    },
+    "answer": "A",
+    "explanation": "Impulse = Force × Time = MLT⁻² × T = MLT⁻¹.",
+    "q": "The dimension of the quantity 'impulse' is:",
+    "a": "MLT⁻¹",
+    "ans": "A"
+  },
+  {
+    "id": 4,
+    "topic": "Measurements and Units",
+    "subtopic": "Measuring Instruments",
+    "question": "A micrometer screw gauge has a pitch of 0.5 mm and 50 divisions on its circular scale. The least count of the instrument is:",
+    "options": {
+      "A": "0.01 mm",
+      "B": "0.05 mm",
+      "C": "0.5 mm",
+      "D": "0.001 mm"
+    },
+    "answer": "A",
+    "explanation": "Least count = Pitch / Number of divisions = 0.5 mm / 50 = 0.01 mm.",
+    "q": "A micrometer screw gauge has a pitch of 0.5 mm and 50 divisions on its circular scale. The least count of the instrument is:",
+    "a": "0.01 mm",
+    "ans": "A"
+  },
+  {
+    "id": 5,
+    "topic": "Measurements and Units",
+    "subtopic": "Errors and Accuracy",
+    "question": "Which of the following is a systematic error?",
+    "options": {
+      "A": "Zero error of a vernier caliper",
+      "B": "Random fluctuation in temperature",
+      "C": "Parallax error",
+      "D": "Reading error due to eye estimation"
+    },
+    "answer": "A",
+    "explanation": "Zero error is a systematic error that consistently shifts measurements in one direction.",
+    "q": "Which of the following is a systematic error?",
+    "a": "Zero error of a vernier caliper",
+    "ans": "A"
+  },
+  {
+    "id": 6,
+    "topic": "Scalars and Vectors",
+    "subtopic": "Vector Resolution",
+    "question": "A force of 10 N acts at 60° to the horizontal. Its horizontal component is:",
+    "options": {
+      "A": "5.0 N",
+      "B": "8.7 N",
+      "C": "10.0 N",
+      "D": "7.1 N"
+    },
+    "answer": "A",
+    "explanation": "Horizontal component = 10 cos 60° = 10 × 0.5 = 5.0 N.",
+    "q": "A force of 10 N acts at 60° to the horizontal. Its horizontal component is:",
+    "a": "5.0 N",
+    "ans": "A"
+  },
+  {
+    "id": 7,
+    "topic": "Scalars and Vectors",
+    "subtopic": "Resultant Vectors",
+    "question": "Two forces of 6 N and 8 N act at right angles to each other. The magnitude of their resultant is:",
+    "options": {
+      "A": "10 N",
+      "B": "14 N",
+      "C": "2 N",
+      "D": "48 N"
+    },
+    "answer": "A",
+    "explanation": "Resultant = √(6² + 8²) = √(36 + 64) = √100 = 10 N.",
+    "q": "Two forces of 6 N and 8 N act at right angles to each other. The magnitude of their resultant is:",
+    "a": "10 N",
+    "ans": "A"
+  },
+  {
+    "id": 8,
+    "topic": "Motion",
+    "subtopic": "Linear Motion",
+    "question": "A car accelerates uniformly from rest to 20 m/s in 10 s. Its acceleration is:",
+    "options": {
+      "A": "2 m/s²",
+      "B": "0.5 m/s²",
+      "C": "200 m/s²",
+      "D": "20 m/s²"
+    },
+    "answer": "A",
+    "explanation": "a = (v - u)/t = (20 - 0)/10 = 2 m/s².",
+    "q": "A car accelerates uniformly from rest to 20 m/s in 10 s. Its acceleration is:",
+    "a": "2 m/s²",
+    "ans": "A"
+  },
+  {
+    "id": 9,
+    "topic": "Motion",
+    "subtopic": "Motion under Gravity",
+    "question": "A stone is dropped from a height of 45 m. If g = 10 m/s², the time taken to reach the ground is:",
+    "options": {
+      "A": "3 s",
+      "B": "4.5 s",
+      "C": "9 s",
+      "D": "2 s"
+    },
+    "answer": "A",
+    "explanation": "s = ut + ½gt² → 45 = 0 + ½ × 10 × t² → t² = 9 → t = 3 s.",
+    "q": "A stone is dropped from a height of 45 m. If g = 10 m/s², the time taken to reach the ground is:",
+    "a": "3 s",
+    "ans": "A"
+  },
+  {
+    "id": 10,
+    "topic": "Motion",
+    "subtopic": "Projectile Motion",
+    "question": "A body is projected at 30 m/s at an angle of 30° to the horizontal. The maximum height reached is (g = 10 m/s²):",
+    "options": {
+      "A": "11.25 m",
+      "B": "22.5 m",
+      "C": "45 m",
+      "D": "5.6 m"
+    },
+    "answer": "A",
+    "explanation": "H = (u² sin²θ)/(2g) = (30² × sin²30°)/(2×10) = (900 × 0.25)/20 = 11.25 m.",
+    "q": "A body is projected at 30 m/s at an angle of 30° to the horizontal. The maximum height reached is (g = 10 m/s²):",
+    "a": "11.25 m",
+    "ans": "A"
+  },
+  {
+    "id": 11,
+    "topic": "Motion",
+    "subtopic": "Circular Motion",
+    "question": "A body moves in a circle of radius 2 m with a constant speed of 4 m/s. Its centripetal acceleration is:",
+    "options": {
+      "A": "8 m/s²",
+      "B": "2 m/s²",
+      "C": "16 m/s²",
+      "D": "4 m/s²"
+    },
+    "answer": "A",
+    "explanation": "a = v²/r = 4²/2 = 8 m/s².",
+    "q": "A body moves in a circle of radius 2 m with a constant speed of 4 m/s. Its centripetal acceleration is:",
+    "a": "8 m/s²",
+    "ans": "A"
+  },
+  {
+    "id": 12,
+    "topic": "Gravitational Field",
+    "subtopic": "Newton's Law of Gravitation",
+    "question": "The gravitational force between two masses is F. If the distance between them is doubled, the force becomes:",
+    "options": {
+      "A": "F/4",
+      "B": "F/2",
+      "C": "2F",
+      "D": "4F"
+    },
+    "answer": "A",
+    "explanation": "F ∝ 1/r². If r → 2r, F → F/4.",
+    "q": "The gravitational force between two masses is F. If the distance between them is doubled, the force becomes:",
+    "a": "F/4",
+    "ans": "A"
+  },
+  {
+    "id": 13,
+    "topic": "Gravitational Field",
+    "subtopic": "Escape Velocity",
+    "question": "The escape velocity from the Earth's surface is approximately:",
+    "options": {
+      "A": "11.2 km/s",
+      "B": "8.0 km/s",
+      "C": "20 km/s",
+      "D": "15 km/s"
+    },
+    "answer": "A",
+    "explanation": "Escape velocity v = √(2gR) ≈ 11.2 km/s for Earth.",
+    "q": "The escape velocity from the Earth's surface is approximately:",
+    "a": "11.2 km/s",
+    "ans": "A"
+  }
+]

@@ -1,0 +1,1702 @@
+[
+  {
+    "id": 301,
+    "topic": "Measurements and Units",
+    "subtopic": "Dimensions",
+    "question": "Which of the following quantities has the same dimension as energy?",
+    "options": {
+      "A": "Power",
+      "B": "Torque",
+      "C": "Force",
+      "D": "Momentum"
+    },
+    "answer": "B",
+    "explanation": "Torque has dimension ML²T⁻², the same as energy.",
+    "q": "Which of the following quantities has the same dimension as energy?",
+    "a": "Torque",
+    "ans": "B"
+  },
+  {
+    "id": 302,
+    "topic": "Scalars and Vectors",
+    "subtopic": "Vector Components",
+    "question": "A vector of magnitude 10 units makes an angle of 30° with the x-axis. Its y-component is:",
+    "options": {
+      "A": "5.0 units",
+      "B": "8.7 units",
+      "C": "10.0 units",
+      "D": "0.0 units"
+    },
+    "answer": "A",
+    "explanation": "y-component = 10 sin 30° = 10 × 0.5 = 5.0 units.",
+    "q": "A vector of magnitude 10 units makes an angle of 30° with the x-axis. Its y-component is:",
+    "a": "5.0 units",
+    "ans": "A"
+  },
+  {
+    "id": 303,
+    "topic": "Motion",
+    "subtopic": "Circular Motion",
+    "question": "A particle moves with constant speed in a circular path. Which of the following quantities remains constant?",
+    "options": {
+      "A": "Velocity",
+      "B": "Acceleration",
+      "C": "Kinetic energy",
+      "D": "Momentum"
+    },
+    "answer": "C",
+    "explanation": "Speed is constant, so kinetic energy (½mv²) is constant. Velocity, acceleration, and momentum change direction continuously.",
+    "q": "A particle moves with constant speed in a circular path. Which of the following quantities remains constant?",
+    "a": "Kinetic energy",
+    "ans": "C"
+  },
+  {
+    "id": 304,
+    "topic": "Motion",
+    "subtopic": "Motion under Gravity",
+    "question": "A body is thrown vertically upward with a velocity of 20 m/s. The time taken to reach the maximum height is (g = 10 m/s²):",
+    "options": {
+      "A": "2 s",
+      "B": "4 s",
+      "C": "1 s",
+      "D": "5 s"
+    },
+    "answer": "A",
+    "explanation": "At maximum height, v = 0. Using v = u - gt: 0 = 20 - 10t → t = 2 s.",
+    "q": "A body is thrown vertically upward with a velocity of 20 m/s. The time taken to reach the maximum height is (g = 10 m/s²):",
+    "a": "2 s",
+    "ans": "A"
+  },
+  {
+    "id": 305,
+    "topic": "Motion",
+    "subtopic": "Projectile Motion",
+    "question": "The horizontal range of a projectile is maximum when the angle of projection is:",
+    "options": {
+      "A": "30°",
+      "B": "45°",
+      "C": "60°",
+      "D": "90°"
+    },
+    "answer": "B",
+    "explanation": "Range R = u² sin 2θ / g is maximum when sin 2θ = 1, i.e., 2θ = 90° → θ = 45°.",
+    "q": "The horizontal range of a projectile is maximum when the angle of projection is:",
+    "a": "45°",
+    "ans": "B"
+  },
+  {
+    "id": 306,
+    "topic": "Gravitational Field",
+    "subtopic": "Variation of g",
+    "question": "If the mass of the Earth is doubled and its radius is halved, the acceleration due to gravity at its surface becomes:",
+    "options": {
+      "A": "2g",
+      "B": "4g",
+      "C": "8g",
+      "D": "g/2"
+    },
+    "answer": "C",
+    "explanation": "g = GM/R². New g' = G(2M)/(R/2)² = 2GM/(R²/4) = 8GM/R² = 8g.",
+    "q": "If the mass of the Earth is doubled and its radius is halved, the acceleration due to gravity at its surface becomes:",
+    "a": "8g",
+    "ans": "C"
+  },
+  {
+    "id": 307,
+    "topic": "Equilibrium of Forces",
+    "subtopic": "Moments",
+    "question": "A uniform meter rule of weight 1 N is pivoted at the 30 cm mark. A weight of 5 N is hung at the 10 cm mark. Where must a weight of 2 N be hung to balance the rule?",
+    "options": {
+      "A": "70 cm mark",
+      "B": "80 cm mark",
+      "C": "60 cm mark",
+      "D": "90 cm mark"
+    },
+    "answer": "A",
+    "explanation": "Taking moments about pivot (30 cm): 5 N at 10 cm is 20 cm left → anticlockwise moment = 5×20 = 100 Ncm. Rule weight 1 N acts at 50 cm, which is 20 cm right → clockwise moment = 1×20 = 20 Ncm. Net anticlockwise = 80 Ncm. For balance, 2 N must be at distance d right: 2d = 80 → d = 40 cm. So position = 30 + 40 = 70 cm.",
+    "q": "A uniform meter rule of weight 1 N is pivoted at the 30 cm mark. A weight of 5 N is hung at the 10 cm mark. Where must a weight of 2 N be hung to balance the rule?",
+    "a": "70 cm mark",
+    "ans": "A"
+  },
+  {
+    "id": 308,
+    "topic": "Work, Energy and Power",
+    "subtopic": "Kinetic Energy",
+    "question": "A body of mass 2 kg moves with a velocity of 3 m/s. Its kinetic energy is:",
+    "options": {
+      "A": "9 J",
+      "B": "6 J",
+      "C": "18 J",
+      "D": "3 J"
+    },
+    "answer": "A",
+    "explanation": "KE = ½mv² = ½ × 2 × 3² = 9 J.",
+    "q": "A body of mass 2 kg moves with a velocity of 3 m/s. Its kinetic energy is:",
+    "a": "9 J",
+    "ans": "A"
+  },
+  {
+    "id": 309,
+    "topic": "Work, Energy and Power",
+    "subtopic": "Power",
+    "question": "A machine does 500 J of work in 10 s. The power developed is:",
+    "options": {
+      "A": "50 W",
+      "B": "5000 W",
+      "C": "5 W",
+      "D": "100 W"
+    },
+    "answer": "A",
+    "explanation": "Power = Work / Time = 500 / 10 = 50 W.",
+    "q": "A machine does 500 J of work in 10 s. The power developed is:",
+    "a": "50 W",
+    "ans": "A"
+  },
+  {
+    "id": 310,
+    "topic": "Friction",
+    "subtopic": "Angle of Friction",
+    "question": "The coefficient of static friction between two surfaces is 0.4. The angle of friction is:",
+    "options": {
+      "A": "tan⁻¹(0.4)",
+      "B": "sin⁻¹(0.4)",
+      "C": "cos⁻¹(0.4)",
+      "D": "0.4°"
+    },
+    "answer": "A",
+    "explanation": "The angle of friction θ satisfies tan θ = μ. So θ = tan⁻¹(0.4).",
+    "q": "The coefficient of static friction between two surfaces is 0.4. The angle of friction is:",
+    "a": "tan⁻¹(0.4)",
+    "ans": "A"
+  },
+  {
+    "id": 311,
+    "topic": "Simple Machines",
+    "subtopic": "Mechanical Advantage",
+    "question": "A machine has a velocity ratio of 5 and an efficiency of 60%. Its mechanical advantage is:",
+    "options": {
+      "A": "3",
+      "B": "8.33",
+      "C": "0.12",
+      "D": "5"
+    },
+    "answer": "A",
+    "explanation": "Efficiency = MA/VR × 100%. So MA = (Efficiency × VR)/100 = (60 × 5)/100 = 3.",
+    "q": "A machine has a velocity ratio of 5 and an efficiency of 60%. Its mechanical advantage is:",
+    "a": "3",
+    "ans": "A"
+  },
+  {
+    "id": 312,
+    "topic": "Elasticity",
+    "subtopic": "Young's Modulus",
+    "question": "A wire of length L and cross-sectional area A stretches by an amount x under a force F. The Young's modulus of the material is:",
+    "options": {
+      "A": "FL/(Ax)",
+      "B": "Fx/(AL)",
+      "C": "FA/(Lx)",
+      "D": "F/(Ax)"
+    },
+    "answer": "A",
+    "explanation": "Young's modulus Y = (F/A) / (x/L) = FL/(Ax).",
+    "q": "A wire of length L and cross-sectional area A stretches by an amount x under a force F. The Young's modulus of the material is:",
+    "a": "FL/(Ax)",
+    "ans": "A"
+  },
+  {
+    "id": 313,
+    "topic": "Pressure",
+    "subtopic": "Pressure in Liquids",
+    "question": "The pressure at a depth of 10 m in water of density 1000 kg/m³ is (g = 10 m/s²):",
+    "options": {
+      "A": "10⁵ Pa",
+      "B": "10⁴ Pa",
+      "C": "10⁶ Pa",
+      "D": "10³ Pa"
+    },
+    "answer": "A",
+    "explanation": "P = ρgh = 1000 × 10 × 10 = 100,000 Pa = 10⁵ Pa.",
+    "q": "The pressure at a depth of 10 m in water of density 1000 kg/m³ is (g = 10 m/s²):",
+    "a": "10⁵ Pa",
+    "ans": "A"
+  },
+  {
+    "id": 314,
+    "topic": "Temperature and Its Measurement",
+    "subtopic": "Absolute Zero",
+    "question": "Absolute zero temperature is equivalent to:",
+    "options": {
+      "A": "-273 °C",
+      "B": "0 °C",
+      "C": "273 °C",
+      "D": "-100 °C"
+    },
+    "answer": "A",
+    "explanation": "Absolute zero is 0 K, which is -273.15 °C, approximately -273 °C.",
+    "q": "Absolute zero temperature is equivalent to:",
+    "a": "-273 °C",
+    "ans": "A"
+  },
+  {
+    "id": 315,
+    "topic": "Thermal Expansion",
+    "subtopic": "Linear Expansion",
+    "question": "A metal rod of length 2 m at 20 °C is heated to 120 °C. If the linear expansivity is 1.2 × 10⁻⁵ /°C, the increase in length is:",
+    "options": {
+      "A": "0.24 cm",
+      "B": "2.4 cm",
+      "C": "0.024 cm",
+      "D": "24 cm"
+    },
+    "answer": "A",
+    "explanation": "ΔL = L₀αΔθ = 2 × 1.2×10⁻⁵ × 100 = 2.4×10⁻³ m = 0.24 cm.",
+    "q": "A metal rod of length 2 m at 20 °C is heated to 120 °C. If the linear expansivity is 1.2 × 10⁻⁵ /°C, the increase in length is:",
+    "a": "0.24 cm",
+    "ans": "A"
+  },
+  {
+    "id": 316,
+    "topic": "Gas Laws",
+    "subtopic": "Charles' Law",
+    "question": "A gas occupies a volume of 500 cm³ at 27 °C. At constant pressure, its volume at 127 °C is:",
+    "options": {
+      "A": "666.7 cm³",
+      "B": "500 cm³",
+      "C": "400 cm³",
+      "D": "750 cm³"
+    },
+    "answer": "A",
+    "explanation": "V₁/T₁ = V₂/T₂. Convert to Kelvin: T₁ = 300 K, T₂ = 400 K. V₂ = 500 × 400/300 = 666.7 cm³.",
+    "q": "A gas occupies a volume of 500 cm³ at 27 °C. At constant pressure, its volume at 127 °C is:",
+    "a": "666.7 cm³",
+    "ans": "A"
+  },
+  {
+    "id": 317,
+    "topic": "Quantity of Heat",
+    "subtopic": "Specific Heat Capacity",
+    "question": "The quantity of heat required to raise the temperature of 0.5 kg of water by 20 °C is (specific heat capacity of water = 4200 J/kg°C):",
+    "options": {
+      "A": "42,000 J",
+      "B": "4,200 J",
+      "C": "420 J",
+      "D": "84,000 J"
+    },
+    "answer": "A",
+    "explanation": "Q = mcΔθ = 0.5 × 4200 × 20 = 42,000 J.",
+    "q": "The quantity of heat required to raise the temperature of 0.5 kg of water by 20 °C is (specific heat capacity of water = 4200 J/kg°C):",
+    "a": "42,000 J",
+    "ans": "A"
+  },
+  {
+    "id": 318,
+    "topic": "Change of State",
+    "subtopic": "Latent Heat of Fusion",
+    "question": "The specific latent heat of fusion of ice is 336 J/g. The heat required to melt 20 g of ice at 0 °C is:",
+    "options": {
+      "A": "6720 J",
+      "B": "336 J",
+      "C": "672 J",
+      "D": "3360 J"
+    },
+    "answer": "A",
+    "explanation": "Q = mL = 20 × 336 = 6720 J.",
+    "q": "The specific latent heat of fusion of ice is 336 J/g. The heat required to melt 20 g of ice at 0 °C is:",
+    "a": "6720 J",
+    "ans": "A"
+  },
+  {
+    "id": 319,
+    "topic": "Heat Transfer",
+    "subtopic": "Radiation",
+    "question": "Which mode of heat transfer does not require a material medium?",
+    "options": {
+      "A": "Conduction",
+      "B": "Convection",
+      "C": "Radiation",
+      "D": "All of the above"
+    },
+    "answer": "C",
+    "explanation": "Radiation can travel through a vacuum; conduction and convection require a medium.",
+    "q": "Which mode of heat transfer does not require a material medium?",
+    "a": "Radiation",
+    "ans": "C"
+  },
+  {
+    "id": 320,
+    "topic": "Wave Motion",
+    "subtopic": "Wave Equation",
+    "question": "A wave has a frequency of 100 Hz and a wavelength of 3 m. Its speed is:",
+    "options": {
+      "A": "300 m/s",
+      "B": "33.3 m/s",
+      "C": "0.03 m/s",
+      "D": "103 m/s"
+    },
+    "answer": "A",
+    "explanation": "v = fλ = 100 × 3 = 300 m/s.",
+    "q": "A wave has a frequency of 100 Hz and a wavelength of 3 m. Its speed is:",
+    "a": "300 m/s",
+    "ans": "A"
+  },
+  {
+    "id": 321,
+    "topic": "Sound Waves",
+    "subtopic": "Echo",
+    "question": "A person hears an echo after 2 s. If the speed of sound in air is 340 m/s, the distance to the reflecting surface is:",
+    "options": {
+      "A": "340 m",
+      "B": "680 m",
+      "C": "170 m",
+      "D": "850 m"
+    },
+    "answer": "A",
+    "explanation": "Total distance = v × t = 340 × 2 = 680 m. This is twice the distance to the surface, so d = 680/2 = 340 m.",
+    "q": "A person hears an echo after 2 s. If the speed of sound in air is 340 m/s, the distance to the reflecting surface is:",
+    "a": "340 m",
+    "ans": "A"
+  },
+  {
+    "id": 322,
+    "topic": "Light Energy",
+    "subtopic": "Refractive Index",
+    "question": "The refractive index of glass is 1.5. The speed of light in glass is (c = 3 × 10⁸ m/s):",
+    "options": {
+      "A": "2 × 10⁸ m/s",
+      "B": "3 × 10⁸ m/s",
+      "C": "1.5 × 10⁸ m/s",
+      "D": "4.5 × 10⁸ m/s"
+    },
+    "answer": "A",
+    "explanation": "n = c/v → v = c/n = 3×10⁸ / 1.5 = 2×10⁸ m/s.",
+    "q": "The refractive index of glass is 1.5. The speed of light in glass is (c = 3 × 10⁸ m/s):",
+    "a": "2 × 10⁸ m/s",
+    "ans": "A"
+  },
+  {
+    "id": 323,
+    "topic": "Light Energy",
+    "subtopic": "Mirrors",
+    "question": "An object is placed 15 cm in front of a concave mirror of focal length 10 cm. The image distance is:",
+    "options": {
+      "A": "30 cm",
+      "B": "20 cm",
+      "C": "15 cm",
+      "D": "6 cm"
+    },
+    "answer": "A",
+    "explanation": "Using 1/f = 1/v + 1/u: 1/10 = 1/v + 1/15 → 1/v = 1/10 - 1/15 = 1/30 → v = 30 cm.",
+    "q": "An object is placed 15 cm in front of a concave mirror of focal length 10 cm. The image distance is:",
+    "a": "30 cm",
+    "ans": "A"
+  },
+  {
+    "id": 324,
+    "topic": "Electrostatics",
+    "subtopic": "Coulomb's Law",
+    "question": "The force between two point charges is F. If the distance between them is tripled, the force becomes:",
+    "options": {
+      "A": "F/9",
+      "B": "F/3",
+      "C": "3F",
+      "D": "9F"
+    },
+    "answer": "A",
+    "explanation": "F ∝ 1/r². If r → 3r, F → F/9.",
+    "q": "The force between two point charges is F. If the distance between them is tripled, the force becomes:",
+    "a": "F/9",
+    "ans": "A"
+  },
+  {
+    "id": 325,
+    "topic": "Capacitors",
+    "subtopic": "Capacitors in Series",
+    "question": "Three capacitors of 6 μF each are connected in series. The equivalent capacitance is:",
+    "options": {
+      "A": "2 μF",
+      "B": "18 μF",
+      "C": "3 μF",
+      "D": "6 μF"
+    },
+    "answer": "A",
+    "explanation": "1/C = 1/6 + 1/6 + 1/6 = 3/6 = 1/2 → C = 2 μF.",
+    "q": "Three capacitors of 6 μF each are connected in series. The equivalent capacitance is:",
+    "a": "2 μF",
+    "ans": "A"
+  },
+  {
+    "id": 326,
+    "topic": "Current Electricity",
+    "subtopic": "Resistivity",
+    "question": "A wire of resistance 10 Ω is stretched to double its original length. Its new resistance is:",
+    "options": {
+      "A": "40 Ω",
+      "B": "20 Ω",
+      "C": "10 Ω",
+      "D": "5 Ω"
+    },
+    "answer": "A",
+    "explanation": "When a wire is stretched, volume remains constant. R ∝ L², so doubling length quadruples resistance: 4 × 10 = 40 Ω.",
+    "q": "A wire of resistance 10 Ω is stretched to double its original length. Its new resistance is:",
+    "a": "40 Ω",
+    "ans": "A"
+  },
+  {
+    "id": 327,
+    "topic": "Electrical Energy and Power",
+    "subtopic": "Energy Consumption",
+    "question": "A 2 kW electric heater is used for 3 hours. The energy consumed is:",
+    "options": {
+      "A": "6 kWh",
+      "B": "2 kWh",
+      "C": "3 kWh",
+      "D": "0.6 kWh"
+    },
+    "answer": "A",
+    "explanation": "Energy = Power × Time = 2 kW × 3 h = 6 kWh.",
+    "q": "A 2 kW electric heater is used for 3 hours. The energy consumed is:",
+    "a": "6 kWh",
+    "ans": "A"
+  },
+  {
+    "id": 328,
+    "topic": "Magnetism",
+    "subtopic": "Magnetic Field Due to a Solenoid",
+    "question": "The magnetic field inside a long solenoid is given by:",
+    "options": {
+      "A": "μ₀nI",
+      "B": "μ₀I/2πr",
+      "C": "μ₀I/2r",
+      "D": "μ₀nI/2"
+    },
+    "answer": "A",
+    "explanation": "The magnetic field inside a long solenoid is uniform and B = μ₀nI, where n is turns per unit length.",
+    "q": "The magnetic field inside a long solenoid is given by:",
+    "a": "μ₀nI",
+    "ans": "A"
+  },
+  {
+    "id": 329,
+    "topic": "Electromagnetic Induction",
+    "subtopic": "Faraday's Law",
+    "question": "The induced e.m.f. in a coil is directly proportional to the rate of change of:",
+    "options": {
+      "A": "Magnetic flux",
+      "B": "Current",
+      "C": "Resistance",
+      "D": "Voltage"
+    },
+    "answer": "A",
+    "explanation": "Faraday's law: induced e.m.f. = -dΦ/dt, proportional to the rate of change of magnetic flux.",
+    "q": "The induced e.m.f. in a coil is directly proportional to the rate of change of:",
+    "a": "Magnetic flux",
+    "ans": "A"
+  },
+  {
+    "id": 330,
+    "topic": "Modern Physics",
+    "subtopic": "Atomic Structure",
+    "question": "The charge of an electron is:",
+    "options": {
+      "A": "-1.6 × 10⁻¹⁹ C",
+      "B": "+1.6 × 10⁻¹⁹ C",
+      "C": "-9.1 × 10⁻³¹ C",
+      "D": "+9.1 × 10⁻³¹ C"
+    },
+    "answer": "A",
+    "explanation": "An electron has a negative charge of magnitude 1.6 × 10⁻¹⁹ C.",
+    "q": "The charge of an electron is:",
+    "a": "-1.6 × 10⁻¹⁹ C",
+    "ans": "A"
+  },
+  {
+    "id": 331,
+    "topic": "Measurements and Units",
+    "subtopic": "Dimensions",
+    "question": "The dimension of pressure is:",
+    "options": {
+      "A": "ML⁻¹T⁻²",
+      "B": "MLT⁻²",
+      "C": "ML²T⁻²",
+      "D": "ML⁻²T⁻²"
+    },
+    "answer": "A",
+    "explanation": "Pressure = Force/Area = MLT⁻² / L² = ML⁻¹T⁻².",
+    "q": "The dimension of pressure is:",
+    "a": "ML⁻¹T⁻²",
+    "ans": "A"
+  },
+  {
+    "id": 332,
+    "topic": "Scalars and Vectors",
+    "subtopic": "Resultant Vectors",
+    "question": "Two forces of 3 N and 4 N act at right angles to each other. The magnitude of their resultant is:",
+    "options": {
+      "A": "5 N",
+      "B": "7 N",
+      "C": "1 N",
+      "D": "12 N"
+    },
+    "answer": "A",
+    "explanation": "Resultant = √(3² + 4²) = √(9 + 16) = √25 = 5 N.",
+    "q": "Two forces of 3 N and 4 N act at right angles to each other. The magnitude of their resultant is:",
+    "a": "5 N",
+    "ans": "A"
+  },
+  {
+    "id": 333,
+    "topic": "Motion",
+    "subtopic": "Linear Motion",
+    "question": "A car accelerates uniformly from 10 m/s to 30 m/s in 5 s. Its acceleration is:",
+    "options": {
+      "A": "4 m/s²",
+      "B": "2 m/s²",
+      "C": "5 m/s²",
+      "D": "8 m/s²"
+    },
+    "answer": "A",
+    "explanation": "a = (v - u)/t = (30 - 10)/5 = 20/5 = 4 m/s².",
+    "q": "A car accelerates uniformly from 10 m/s to 30 m/s in 5 s. Its acceleration is:",
+    "a": "4 m/s²",
+    "ans": "A"
+  },
+  {
+    "id": 334,
+    "topic": "Motion",
+    "subtopic": "Projectile Motion",
+    "question": "A ball is projected with a velocity of 20 m/s at an angle of 60° to the horizontal. The time of flight is (g = 10 m/s²):",
+    "options": {
+      "A": "3.46 s",
+      "B": "2 s",
+      "C": "4 s",
+      "D": "1.73 s"
+    },
+    "answer": "A",
+    "explanation": "Time of flight T = 2u sinθ / g = 2 × 20 × sin 60° / 10 = 40 × 0.866 / 10 = 3.46 s.",
+    "q": "A ball is projected with a velocity of 20 m/s at an angle of 60° to the horizontal. The time of flight is (g = 10 m/s²):",
+    "a": "3.46 s",
+    "ans": "A"
+  },
+  {
+    "id": 335,
+    "topic": "Gravitational Field",
+    "subtopic": "Escape Velocity",
+    "question": "The escape velocity from the Earth is 11.2 km/s. If the mass of the Earth becomes 4 times its present value, the escape velocity would be:",
+    "options": {
+      "A": "22.4 km/s",
+      "B": "5.6 km/s",
+      "C": "11.2 km/s",
+      "D": "44.8 km/s"
+    },
+    "answer": "A",
+    "explanation": "Escape velocity v = √(2GM/R). If M becomes 4M, v becomes √4 = 2 times, i.e., 2 × 11.2 = 22.4 km/s.",
+    "q": "The escape velocity from the Earth is 11.2 km/s. If the mass of the Earth becomes 4 times its present value, the escape velocity would be:",
+    "a": "22.4 km/s",
+    "ans": "A"
+  },
+  {
+    "id": 336,
+    "topic": "Equilibrium of Forces",
+    "subtopic": "Equilibrium of Particles",
+    "question": "Three forces act at a point and are in equilibrium. Which of the following must be true?",
+    "options": {
+      "A": "They must be coplanar",
+      "B": "They must be concurrent",
+      "C": "They must be equal in magnitude",
+      "D": "They must be parallel"
+    },
+    "answer": "B",
+    "explanation": "For three non-parallel forces to be in equilibrium, they must be concurrent (their lines of action must meet at a point).",
+    "q": "Three forces act at a point and are in equilibrium. Which of the following must be true?",
+    "a": "They must be concurrent",
+    "ans": "B"
+  },
+  {
+    "id": 337,
+    "topic": "Work, Energy and Power",
+    "subtopic": "Work Done by a Force at an Angle",
+    "question": "A force of 10 N moves a body through 2 m at an angle of 60° to the direction of the force. The work done is:",
+    "options": {
+      "A": "10 J",
+      "B": "20 J",
+      "C": "17.3 J",
+      "D": "5 J"
+    },
+    "answer": "A",
+    "explanation": "W = Fd cos θ = 10 × 2 × cos 60° = 20 × 0.5 = 10 J.",
+    "q": "A force of 10 N moves a body through 2 m at an angle of 60° to the direction of the force. The work done is:",
+    "a": "10 J",
+    "ans": "A"
+  },
+  {
+    "id": 338,
+    "topic": "Friction",
+    "subtopic": "Kinetic Friction",
+    "question": "A block of mass 5 kg is on a rough horizontal surface with coefficient of kinetic friction 0.2. The force needed to keep it moving at constant velocity is (g = 10 m/s²):",
+    "options": {
+      "A": "10 N",
+      "B": "5 N",
+      "C": "2 N",
+      "D": "50 N"
+    },
+    "answer": "A",
+    "explanation": "For constant velocity, applied force = friction force = μmg = 0.2 × 5 × 10 = 10 N.",
+    "q": "A block of mass 5 kg is on a rough horizontal surface with coefficient of kinetic friction 0.2. The force needed to keep it moving at constant velocity is (g = 10 m/s²):",
+    "a": "10 N",
+    "ans": "A"
+  },
+  {
+    "id": 339,
+    "topic": "Simple Machines",
+    "subtopic": "Screw Jack",
+    "question": "A screw jack has a pitch of 5 mm and a handle of length 50 cm. Its velocity ratio is:",
+    "options": {
+      "A": "628",
+      "B": "100",
+      "C": "314",
+      "D": "157"
+    },
+    "answer": "A",
+    "explanation": "VR = 2πL/P = 2 × π × 0.5 / 0.005 = π × 200 ≈ 628.",
+    "q": "A screw jack has a pitch of 5 mm and a handle of length 50 cm. Its velocity ratio is:",
+    "a": "628",
+    "ans": "A"
+  },
+  {
+    "id": 340,
+    "topic": "Elasticity",
+    "subtopic": "Elastic Potential Energy",
+    "question": "A spring of force constant 100 N/m is compressed by 0.2 m. The elastic potential energy stored is:",
+    "options": {
+      "A": "2 J",
+      "B": "20 J",
+      "C": "0.2 J",
+      "D": "10 J"
+    },
+    "answer": "A",
+    "explanation": "Elastic PE = ½kx² = ½ × 100 × (0.2)² = 50 × 0.04 = 2 J.",
+    "q": "A spring of force constant 100 N/m is compressed by 0.2 m. The elastic potential energy stored is:",
+    "a": "2 J",
+    "ans": "A"
+  },
+  {
+    "id": 341,
+    "topic": "Pressure",
+    "subtopic": "Archimedes' Principle",
+    "question": "A body weighs 50 N in air and 40 N in water. The upthrust on the body is:",
+    "options": {
+      "A": "10 N",
+      "B": "90 N",
+      "C": "50 N",
+      "D": "40 N"
+    },
+    "answer": "A",
+    "explanation": "Upthrust = Weight in air - Weight in water = 50 - 40 = 10 N.",
+    "q": "A body weighs 50 N in air and 40 N in water. The upthrust on the body is:",
+    "a": "10 N",
+    "ans": "A"
+  },
+  {
+    "id": 342,
+    "topic": "Temperature and Its Measurement",
+    "subtopic": "Temperature Scales",
+    "question": "A thermometer has its ice point at 20 cm and steam point at 120 cm. When the mercury level is at 60 cm, the temperature is:",
+    "options": {
+      "A": "40 °C",
+      "B": "50 °C",
+      "C": "60 °C",
+      "D": "80 °C"
+    },
+    "answer": "A",
+    "explanation": "Temperature = (60 - 20)/(120 - 20) × 100 = (40/100) × 100 = 40 °C.",
+    "q": "A thermometer has its ice point at 20 cm and steam point at 120 cm. When the mercury level is at 60 cm, the temperature is:",
+    "a": "40 °C",
+    "ans": "A"
+  },
+  {
+    "id": 343,
+    "topic": "Thermal Expansion",
+    "subtopic": "Bimetallic Strips",
+    "question": "A bimetallic strip bends when heated because the two metals have different:",
+    "options": {
+      "A": "Specific heat capacities",
+      "B": "Linear expansivities",
+      "C": "Thermal conductivities",
+      "D": "Densities"
+    },
+    "answer": "B",
+    "explanation": "The two metals expand by different amounts (different linear expansivities), causing the strip to bend.",
+    "q": "A bimetallic strip bends when heated because the two metals have different:",
+    "a": "Linear expansivities",
+    "ans": "B"
+  },
+  {
+    "id": 344,
+    "topic": "Gas Laws",
+    "subtopic": "Pressure Law",
+    "question": "At constant volume, the pressure of a fixed mass of gas is directly proportional to its:",
+    "options": {
+      "A": "Absolute temperature",
+      "B": "Celsius temperature",
+      "C": "Volume",
+      "D": "Number of moles"
+    },
+    "answer": "A",
+    "explanation": "Pressure law: P ∝ T (Kelvin) at constant volume.",
+    "q": "At constant volume, the pressure of a fixed mass of gas is directly proportional to its:",
+    "a": "Absolute temperature",
+    "ans": "A"
+  },
+  {
+    "id": 345,
+    "topic": "Quantity of Heat",
+    "subtopic": "Latent Heat",
+    "question": "The heat required to change 1 kg of a solid to liquid at its melting point is called the:",
+    "options": {
+      "A": "Specific latent heat of fusion",
+      "B": "Specific heat capacity",
+      "C": "Specific latent heat of vaporization",
+      "D": "Heat capacity"
+    },
+    "answer": "A",
+    "explanation": "Specific latent heat of fusion is the heat needed to convert 1 kg of solid to liquid at its melting point.",
+    "q": "The heat required to change 1 kg of a solid to liquid at its melting point is called the:",
+    "a": "Specific latent heat of fusion",
+    "ans": "A"
+  },
+  {
+    "id": 346,
+    "topic": "Wave Motion",
+    "subtopic": "Wave Properties",
+    "question": "The distance between two consecutive crests of a wave is called the:",
+    "options": {
+      "A": "Wavelength",
+      "B": "Amplitude",
+      "C": "Frequency",
+      "D": "Period"
+    },
+    "answer": "A",
+    "explanation": "The distance between successive crests (or troughs) is the wavelength.",
+    "q": "The distance between two consecutive crests of a wave is called the:",
+    "a": "Wavelength",
+    "ans": "A"
+  },
+  {
+    "id": 347,
+    "topic": "Sound Waves",
+    "subtopic": "Pitch",
+    "question": "The pitch of a sound depends on its:",
+    "options": {
+      "A": "Frequency",
+      "B": "Amplitude",
+      "C": "Speed",
+      "D": "Wavelength"
+    },
+    "answer": "A",
+    "explanation": "Pitch is determined by the frequency of the sound wave.",
+    "q": "The pitch of a sound depends on its:",
+    "a": "Frequency",
+    "ans": "A"
+  },
+  {
+    "id": 348,
+    "topic": "Light Energy",
+    "subtopic": "Reflection",
+    "question": "The image formed by a plane mirror is always:",
+    "options": {
+      "A": "Virtual and erect",
+      "B": "Real and inverted",
+      "C": "Virtual and inverted",
+      "D": "Real and erect"
+    },
+    "answer": "A",
+    "explanation": "A plane mirror forms a virtual, erect image of the same size as the object.",
+    "q": "The image formed by a plane mirror is always:",
+    "a": "Virtual and erect",
+    "ans": "A"
+  },
+  {
+    "id": 349,
+    "topic": "Light Energy",
+    "subtopic": "Total Internal Reflection",
+    "question": "Total internal reflection occurs when light travels from a:",
+    "options": {
+      "A": "Denser to a rarer medium",
+      "B": "Rarer to a denser medium",
+      "C": "Vacuum to glass",
+      "D": "Air to water"
+    },
+    "answer": "A",
+    "explanation": "Total internal reflection requires light to travel from a denser to a rarer medium at an angle greater than the critical angle.",
+    "q": "Total internal reflection occurs when light travels from a:",
+    "a": "Denser to a rarer medium",
+    "ans": "A"
+  },
+  {
+    "id": 350,
+    "topic": "Electrostatics",
+    "subtopic": "Electric Field",
+    "question": "The electric field inside a hollow charged conductor is:",
+    "options": {
+      "A": "Zero",
+      "B": "Maximum",
+      "C": "Uniform",
+      "D": "Infinite"
+    },
+    "answer": "A",
+    "explanation": "For a hollow charged conductor, the electric field inside the cavity is zero (Faraday's cage).",
+    "q": "The electric field inside a hollow charged conductor is:",
+    "a": "Zero",
+    "ans": "A"
+  },
+  {
+    "id": 351,
+    "topic": "Capacitors",
+    "subtopic": "Energy Stored",
+    "question": "A capacitor of 10 μF is charged to a potential difference of 200 V. The energy stored is:",
+    "options": {
+      "A": "0.2 J",
+      "B": "2 J",
+      "C": "0.02 J",
+      "D": "20 J"
+    },
+    "answer": "A",
+    "explanation": "E = ½CV² = ½ × 10×10⁻⁶ × (200)² = ½ × 10⁻⁵ × 40000 = 0.2 J.",
+    "q": "A capacitor of 10 μF is charged to a potential difference of 200 V. The energy stored is:",
+    "a": "0.2 J",
+    "ans": "A"
+  },
+  {
+    "id": 352,
+    "topic": "Current Electricity",
+    "subtopic": "Kirchhoff's Laws",
+    "question": "Kirchhoff's second law (loop rule) is based on the conservation of:",
+    "options": {
+      "A": "Energy",
+      "B": "Charge",
+      "C": "Momentum",
+      "D": "Mass"
+    },
+    "answer": "A",
+    "explanation": "The loop rule states that the sum of potential differences around a closed loop is zero, based on energy conservation.",
+    "q": "Kirchhoff's second law (loop rule) is based on the conservation of:",
+    "a": "Energy",
+    "ans": "A"
+  },
+  {
+    "id": 353,
+    "topic": "Current Electricity",
+    "subtopic": "Resistors in Parallel",
+    "question": "Three resistors of 2 Ω, 3 Ω, and 6 Ω are connected in parallel. The equivalent resistance is:",
+    "options": {
+      "A": "1 Ω",
+      "B": "11 Ω",
+      "C": "0.5 Ω",
+      "D": "2 Ω"
+    },
+    "answer": "A",
+    "explanation": "1/R = 1/2 + 1/3 + 1/6 = 3/6 + 2/6 + 1/6 = 6/6 = 1 → R = 1 Ω.",
+    "q": "Three resistors of 2 Ω, 3 Ω, and 6 Ω are connected in parallel. The equivalent resistance is:",
+    "a": "1 Ω",
+    "ans": "A"
+  },
+  {
+    "id": 354,
+    "topic": "Magnetism",
+    "subtopic": "Force on a Conductor",
+    "question": "The force on a current-carrying conductor in a magnetic field is maximum when the conductor is:",
+    "options": {
+      "A": "Perpendicular to the field",
+      "B": "Parallel to the field",
+      "C": "At 45° to the field",
+      "D": "At 60° to the field"
+    },
+    "answer": "A",
+    "explanation": "F = BIL sin θ. The force is maximum when θ = 90° (perpendicular).",
+    "q": "The force on a current-carrying conductor in a magnetic field is maximum when the conductor is:",
+    "a": "Perpendicular to the field",
+    "ans": "A"
+  },
+  {
+    "id": 355,
+    "topic": "Electromagnetic Induction",
+    "subtopic": "Transformer",
+    "question": "A transformer has 100 turns in the primary and 500 turns in the secondary. If the primary voltage is 220 V, the secondary voltage is:",
+    "options": {
+      "A": "1100 V",
+      "B": "44 V",
+      "C": "220 V",
+      "D": "500 V"
+    },
+    "answer": "A",
+    "explanation": "Vs/Vp = Ns/Np → Vs = 220 × (500/100) = 220 × 5 = 1100 V.",
+    "q": "A transformer has 100 turns in the primary and 500 turns in the secondary. If the primary voltage is 220 V, the secondary voltage is:",
+    "a": "1100 V",
+    "ans": "A"
+  },
+  {
+    "id": 356,
+    "topic": "Modern Physics",
+    "subtopic": "Atomic Structure",
+    "question": "The number of neutrons in an atom of ²³⁸₉₂U is:",
+    "options": {
+      "A": "146",
+      "B": "92",
+      "C": "238",
+      "D": "330"
+    },
+    "answer": "A",
+    "explanation": "Number of neutrons = mass number - atomic number = 238 - 92 = 146.",
+    "q": "The number of neutrons in an atom of ²³⁸₉₂U is:",
+    "a": "146",
+    "ans": "A"
+  },
+  {
+    "id": 357,
+    "topic": "Measurements and Units",
+    "subtopic": "Fundamental Quantities",
+    "question": "The SI unit of luminous intensity is:",
+    "options": {
+      "A": "Candela",
+      "B": "Lumen",
+      "C": "Lux",
+      "D": "Watt"
+    },
+    "answer": "A",
+    "explanation": "The candela (cd) is the SI unit of luminous intensity.",
+    "q": "The SI unit of luminous intensity is:",
+    "a": "Candela",
+    "ans": "A"
+  },
+  {
+    "id": 358,
+    "topic": "Scalars and Vectors",
+    "subtopic": "Resultant Vectors",
+    "question": "The resultant of two equal forces of magnitude F acting at an angle of 120° to each other is:",
+    "options": {
+      "A": "F",
+      "B": "2F",
+      "C": "F√3",
+      "D": "0"
+    },
+    "answer": "A",
+    "explanation": "R = 2F cos(120°/2) = 2F cos 60° = 2F × 0.5 = F.",
+    "q": "The resultant of two equal forces of magnitude F acting at an angle of 120° to each other is:",
+    "a": "F",
+    "ans": "A"
+  },
+  {
+    "id": 359,
+    "topic": "Motion",
+    "subtopic": "Velocity-Time Graphs",
+    "question": "For a body moving with uniform acceleration, the velocity-time graph is a:",
+    "options": {
+      "A": "Straight line",
+      "B": "Parabola",
+      "C": "Hyperbola",
+      "D": "Circle"
+    },
+    "answer": "A",
+    "explanation": "Uniform acceleration means constant slope, so the v-t graph is a straight line.",
+    "q": "For a body moving with uniform acceleration, the velocity-time graph is a:",
+    "a": "Straight line",
+    "ans": "A"
+  },
+  {
+    "id": 360,
+    "topic": "Motion",
+    "subtopic": "Projectile Motion",
+    "question": "The horizontal range of a projectile is maximum when the angle of projection is:",
+    "options": {
+      "A": "45°",
+      "B": "30°",
+      "C": "60°",
+      "D": "90°"
+    },
+    "answer": "A",
+    "explanation": "Range R = u² sin 2θ / g is maximum when sin 2θ = 1, i.e., θ = 45°.",
+    "q": "The horizontal range of a projectile is maximum when the angle of projection is:",
+    "a": "45°",
+    "ans": "A"
+  },
+  {
+    "id": 361,
+    "topic": "Gravitational Field",
+    "subtopic": "Weight",
+    "question": "The weight of a body at the centre of the Earth is:",
+    "options": {
+      "A": "Zero",
+      "B": "Maximum",
+      "C": "Equal to its mass",
+      "D": "Infinite"
+    },
+    "answer": "A",
+    "explanation": "At the centre of the Earth, g = 0, so weight = mg = 0.",
+    "q": "The weight of a body at the centre of the Earth is:",
+    "a": "Zero",
+    "ans": "A"
+  },
+  {
+    "id": 362,
+    "topic": "Equilibrium of Forces",
+    "subtopic": "Stability",
+    "question": "A body is in stable equilibrium if its centre of gravity is:",
+    "options": {
+      "A": "Raised when slightly displaced",
+      "B": "Lowered when slightly displaced",
+      "C": "Unchanged when displaced",
+      "D": "At the pivot"
+    },
+    "answer": "A",
+    "explanation": "In stable equilibrium, a slight displacement raises the centre of gravity, so the body returns to its original position.",
+    "q": "A body is in stable equilibrium if its centre of gravity is:",
+    "a": "Raised when slightly displaced",
+    "ans": "A"
+  },
+  {
+    "id": 363,
+    "topic": "Work, Energy and Power",
+    "subtopic": "Conservation of Energy",
+    "question": "A body of mass 1 kg falls freely from a height of 10 m. Its kinetic energy just before hitting the ground is (g = 10 m/s²):",
+    "options": {
+      "A": "100 J",
+      "B": "10 J",
+      "C": "50 J",
+      "D": "20 J"
+    },
+    "answer": "A",
+    "explanation": "By conservation of energy, KE = PE = mgh = 1 × 10 × 10 = 100 J.",
+    "q": "A body of mass 1 kg falls freely from a height of 10 m. Its kinetic energy just before hitting the ground is (g = 10 m/s²):",
+    "a": "100 J",
+    "ans": "A"
+  },
+  {
+    "id": 364,
+    "topic": "Friction",
+    "subtopic": "Laws of Friction",
+    "question": "The force of friction between two surfaces is independent of:",
+    "options": {
+      "A": "Area of contact",
+      "B": "Nature of surfaces",
+      "C": "Normal reaction",
+      "D": "None of the above"
+    },
+    "answer": "A",
+    "explanation": "Friction is independent of the apparent area of contact; it depends on the nature of surfaces and normal reaction.",
+    "q": "The force of friction between two surfaces is independent of:",
+    "a": "Area of contact",
+    "ans": "A"
+  },
+  {
+    "id": 365,
+    "topic": "Simple Machines",
+    "subtopic": "Efficiency",
+    "question": "The efficiency of a machine is 80% and its mechanical advantage is 4. Its velocity ratio is:",
+    "options": {
+      "A": "5",
+      "B": "3.2",
+      "C": "0.8",
+      "D": "4"
+    },
+    "answer": "A",
+    "explanation": "Efficiency = MA/VR × 100%. So VR = MA / (Efficiency/100) = 4 / 0.8 = 5.",
+    "q": "The efficiency of a machine is 80% and its mechanical advantage is 4. Its velocity ratio is:",
+    "a": "5",
+    "ans": "A"
+  },
+  {
+    "id": 366,
+    "topic": "Elasticity",
+    "subtopic": "Young's Modulus",
+    "question": "The SI unit of Young's modulus is:",
+    "options": {
+      "A": "N/m²",
+      "B": "N/m",
+      "C": "N m",
+      "D": "N"
+    },
+    "answer": "A",
+    "explanation": "Young's modulus = stress/strain = (N/m²) / (dimensionless) = N/m².",
+    "q": "The SI unit of Young's modulus is:",
+    "a": "N/m²",
+    "ans": "A"
+  },
+  {
+    "id": 367,
+    "topic": "Pressure",
+    "subtopic": "Pascal's Principle",
+    "question": "A hydraulic press has a small piston of area 0.01 m² and a large piston of area 1 m². If a force of 10 N is applied on the small piston, the force on the large piston is:",
+    "options": {
+      "A": "1000 N",
+      "B": "100 N",
+      "C": "10 N",
+      "D": "0.1 N"
+    },
+    "answer": "A",
+    "explanation": "By Pascal's principle, F₂ = F₁ × A₂/A₁ = 10 × (1/0.01) = 10 × 100 = 1000 N.",
+    "q": "A hydraulic press has a small piston of area 0.01 m² and a large piston of area 1 m². If a force of 10 N is applied on the small piston, the force on the large piston is:",
+    "a": "1000 N",
+    "ans": "A"
+  },
+  {
+    "id": 368,
+    "topic": "Temperature and Its Measurement",
+    "subtopic": "Temperature Scales",
+    "question": "The Celsius and Fahrenheit scales give the same reading at:",
+    "options": {
+      "A": "-40°",
+      "B": "0°",
+      "C": "40°",
+      "D": "100°"
+    },
+    "answer": "A",
+    "explanation": "Using F = 1.8C + 32 and setting F = C: C = 1.8C + 32 → -0.8C = 32 → C = -40°.",
+    "q": "The Celsius and Fahrenheit scales give the same reading at:",
+    "a": "-40°",
+    "ans": "A"
+  },
+  {
+    "id": 369,
+    "topic": "Thermal Expansion",
+    "subtopic": "Expansion of Liquids",
+    "question": "The coefficient of real expansion of a liquid is equal to:",
+    "options": {
+      "A": "Apparent expansion + expansion of container",
+      "B": "Apparent expansion - expansion of container",
+      "C": "Apparent expansion × expansion of container",
+      "D": "Apparent expansion / expansion of container"
+    },
+    "answer": "A",
+    "explanation": "Real expansivity = apparent expansivity + expansivity of the container material.",
+    "q": "The coefficient of real expansion of a liquid is equal to:",
+    "a": "Apparent expansion + expansion of container",
+    "ans": "A"
+  },
+  {
+    "id": 370,
+    "topic": "Gas Laws",
+    "subtopic": "Kinetic Theory",
+    "question": "According to the kinetic theory of gases, the pressure of a gas is due to:",
+    "options": {
+      "A": "Collisions of gas molecules with the walls of the container",
+      "B": "Attraction between gas molecules",
+      "C": "Repulsion between gas molecules",
+      "D": "The weight of gas molecules"
+    },
+    "answer": "A",
+    "explanation": "Gas pressure results from the force exerted by molecules colliding with the container walls.",
+    "q": "According to the kinetic theory of gases, the pressure of a gas is due to:",
+    "a": "Collisions of gas molecules with the walls of the container",
+    "ans": "A"
+  },
+  {
+    "id": 371,
+    "topic": "Quantity of Heat",
+    "subtopic": "Specific Heat Capacity",
+    "question": "The heat required to raise the temperature of 1 kg of a substance by 1 K is called its:",
+    "options": {
+      "A": "Specific heat capacity",
+      "B": "Heat capacity",
+      "C": "Latent heat",
+      "D": "Thermal conductivity"
+    },
+    "answer": "A",
+    "explanation": "Specific heat capacity is the heat per unit mass per unit temperature change.",
+    "q": "The heat required to raise the temperature of 1 kg of a substance by 1 K is called its:",
+    "a": "Specific heat capacity",
+    "ans": "A"
+  },
+  {
+    "id": 372,
+    "topic": "Wave Motion",
+    "subtopic": "Wave Properties",
+    "question": "The number of complete oscillations per second is called the:",
+    "options": {
+      "A": "Frequency",
+      "B": "Period",
+      "C": "Amplitude",
+      "D": "Wavelength"
+    },
+    "answer": "A",
+    "explanation": "Frequency is the number of oscillations per second, measured in hertz (Hz).",
+    "q": "The number of complete oscillations per second is called the:",
+    "a": "Frequency",
+    "ans": "A"
+  },
+  {
+    "id": 373,
+    "topic": "Sound Waves",
+    "subtopic": "Speed of Sound",
+    "question": "Sound travels fastest in:",
+    "options": {
+      "A": "Solids",
+      "B": "Liquids",
+      "C": "Gases",
+      "D": "Vacuum"
+    },
+    "answer": "A",
+    "explanation": "Sound requires a medium and travels fastest in solids due to strong intermolecular forces.",
+    "q": "Sound travels fastest in:",
+    "a": "Solids",
+    "ans": "A"
+  },
+  {
+    "id": 374,
+    "topic": "Light Energy",
+    "subtopic": "Reflection",
+    "question": "The angle of incidence is equal to the angle of reflection. This is the law of:",
+    "options": {
+      "A": "Reflection",
+      "B": "Refraction",
+      "C": "Diffraction",
+      "D": "Dispersion"
+    },
+    "answer": "A",
+    "explanation": "The law of reflection states that the angle of incidence equals the angle of reflection.",
+    "q": "The angle of incidence is equal to the angle of reflection. This is the law of:",
+    "a": "Reflection",
+    "ans": "A"
+  },
+  {
+    "id": 375,
+    "topic": "Light Energy",
+    "subtopic": "Lenses",
+    "question": "A converging lens has a focal length of 20 cm. Its power is:",
+    "options": {
+      "A": "5 D",
+      "B": "0.05 D",
+      "C": "20 D",
+      "D": "2 D"
+    },
+    "answer": "A",
+    "explanation": "Power P = 1/f (in metres) = 1/0.2 = 5 dioptres (D).",
+    "q": "A converging lens has a focal length of 20 cm. Its power is:",
+    "a": "5 D",
+    "ans": "A"
+  },
+  {
+    "id": 376,
+    "topic": "Electrostatics",
+    "subtopic": "Electric Field",
+    "question": "The unit of electric field intensity is:",
+    "options": {
+      "A": "N/C",
+      "B": "N/m",
+      "C": "C/N",
+      "D": "V/m²"
+    },
+    "answer": "A",
+    "explanation": "Electric field intensity E = F/q, so its unit is N/C (or V/m).",
+    "q": "The unit of electric field intensity is:",
+    "a": "N/C",
+    "ans": "A"
+  },
+  {
+    "id": 377,
+    "topic": "Capacitors",
+    "subtopic": "Capacitors in Parallel",
+    "question": "When capacitors are connected in parallel, the equivalent capacitance is:",
+    "options": {
+      "A": "Sum of the capacitances",
+      "B": "Reciprocal of the sum of reciprocals",
+      "C": "Product of the capacitances",
+      "D": "Difference of the capacitances"
+    },
+    "answer": "A",
+    "explanation": "For parallel capacitors, C = C₁ + C₂ + C₃ + ...",
+    "q": "When capacitors are connected in parallel, the equivalent capacitance is:",
+    "a": "Sum of the capacitances",
+    "ans": "A"
+  },
+  {
+    "id": 378,
+    "topic": "Current Electricity",
+    "subtopic": "Resistance",
+    "question": "The resistance of a wire is inversely proportional to its:",
+    "options": {
+      "A": "Cross-sectional area",
+      "B": "Length",
+      "C": "Resistivity",
+      "D": "Temperature"
+    },
+    "answer": "A",
+    "explanation": "R = ρL/A, so resistance is inversely proportional to cross-sectional area A.",
+    "q": "The resistance of a wire is inversely proportional to its:",
+    "a": "Cross-sectional area",
+    "ans": "A"
+  },
+  {
+    "id": 379,
+    "topic": "Electrical Energy and Power",
+    "subtopic": "Power",
+    "question": "A 100 W bulb is connected to a 220 V supply. The current through the bulb is:",
+    "options": {
+      "A": "0.45 A",
+      "B": "2.2 A",
+      "C": "0.22 A",
+      "D": "4.5 A"
+    },
+    "answer": "A",
+    "explanation": "P = VI → I = P/V = 100/220 ≈ 0.45 A.",
+    "q": "A 100 W bulb is connected to a 220 V supply. The current through the bulb is:",
+    "a": "0.45 A",
+    "ans": "A"
+  },
+  {
+    "id": 380,
+    "topic": "Magnetism",
+    "subtopic": "Magnetic Field Lines",
+    "question": "The magnetic field lines around a bar magnet:",
+    "options": {
+      "A": "Emerge from the north pole and enter the south pole",
+      "B": "Emerge from the south pole and enter the north pole",
+      "C": "Form closed loops inside the magnet",
+      "D": "Are parallel straight lines"
+    },
+    "answer": "A",
+    "explanation": "By convention, magnetic field lines emerge from the north pole and enter the south pole outside the magnet.",
+    "q": "The magnetic field lines around a bar magnet:",
+    "a": "Emerge from the north pole and enter the south pole",
+    "ans": "A"
+  },
+  {
+    "id": 381,
+    "topic": "Electromagnetic Induction",
+    "subtopic": "Electric Generator",
+    "question": "The principle of an electric generator is:",
+    "options": {
+      "A": "Electromagnetic induction",
+      "B": "Mutual induction",
+      "C": "Self-induction",
+      "D": "Electrostatic induction"
+    },
+    "answer": "A",
+    "explanation": "An electric generator converts mechanical energy to electrical energy using electromagnetic induction.",
+    "q": "The principle of an electric generator is:",
+    "a": "Electromagnetic induction",
+    "ans": "A"
+  },
+  {
+    "id": 382,
+    "topic": "Modern Physics",
+    "subtopic": "Radioactivity",
+    "question": "The particle emitted in beta decay is:",
+    "options": {
+      "A": "Electron",
+      "B": "Proton",
+      "C": "Neutron",
+      "D": "Alpha particle"
+    },
+    "answer": "A",
+    "explanation": "Beta decay involves the emission of an electron (β-particle) from the nucleus.",
+    "q": "The particle emitted in beta decay is:",
+    "a": "Electron",
+    "ans": "A"
+  },
+  {
+    "id": 383,
+    "topic": "Modern Physics",
+    "subtopic": "Quantum Mechanics",
+    "question": "The energy of a photon of wavelength λ is given by:",
+    "options": {
+      "A": "hc/λ",
+      "B": "hλ/c",
+      "C": "hcλ",
+      "D": "h/λ"
+    },
+    "answer": "A",
+    "explanation": "Photon energy E = hf = hc/λ.",
+    "q": "The energy of a photon of wavelength λ is given by:",
+    "a": "hc/λ",
+    "ans": "A"
+  },
+  {
+    "id": 384,
+    "topic": "Measurements and Units",
+    "subtopic": "Dimensions",
+    "question": "The dimension of force is:",
+    "options": {
+      "A": "MLT⁻²",
+      "B": "ML²T⁻²",
+      "C": "MLT⁻¹",
+      "D": "ML⁻¹T⁻²"
+    },
+    "answer": "A",
+    "explanation": "Force = mass × acceleration = M × LT⁻² = MLT⁻².",
+    "q": "The dimension of force is:",
+    "a": "MLT⁻²",
+    "ans": "A"
+  },
+  {
+    "id": 385,
+    "topic": "Scalars and Vectors",
+    "subtopic": "Dot Product",
+    "question": "The scalar product of two vectors A and B is maximum when the angle between them is:",
+    "options": {
+      "A": "0°",
+      "B": "90°",
+      "C": "180°",
+      "D": "45°"
+    },
+    "answer": "A",
+    "explanation": "A·B = AB cos θ is maximum when cos θ = 1, i.e., θ = 0°.",
+    "q": "The scalar product of two vectors A and B is maximum when the angle between them is:",
+    "a": "0°",
+    "ans": "A"
+  },
+  {
+    "id": 386,
+    "topic": "Motion",
+    "subtopic": "Acceleration-Time Graphs",
+    "question": "The area under an acceleration-time graph gives:",
+    "options": {
+      "A": "Change in velocity",
+      "B": "Velocity",
+      "C": "Displacement",
+      "D": "Distance"
+    },
+    "answer": "A",
+    "explanation": "The area under an acceleration-time graph represents the change in velocity (Δv = ∫a dt).",
+    "q": "The area under an acceleration-time graph gives:",
+    "a": "Change in velocity",
+    "ans": "A"
+  },
+  {
+    "id": 387,
+    "topic": "Motion",
+    "subtopic": "Projectile Motion",
+    "question": "A projectile has maximum range when launched at an angle of:",
+    "options": {
+      "A": "45°",
+      "B": "30°",
+      "C": "60°",
+      "D": "90°"
+    },
+    "answer": "A",
+    "explanation": "Range R = u² sin 2θ / g is maximum when sin 2θ = 1, i.e., θ = 45°.",
+    "q": "A projectile has maximum range when launched at an angle of:",
+    "a": "45°",
+    "ans": "A"
+  },
+  {
+    "id": 388,
+    "topic": "Gravitational Field",
+    "subtopic": "Gravitational Potential Energy",
+    "question": "The gravitational potential energy of a body at infinity is taken as:",
+    "options": {
+      "A": "Zero",
+      "B": "Maximum",
+      "C": "Minimum",
+      "D": "Infinite"
+    },
+    "answer": "A",
+    "explanation": "By convention, gravitational potential energy at infinity is zero.",
+    "q": "The gravitational potential energy of a body at infinity is taken as:",
+    "a": "Zero",
+    "ans": "A"
+  },
+  {
+    "id": 389,
+    "topic": "Equilibrium of Forces",
+    "subtopic": "Rotational Equilibrium",
+    "question": "The condition for a body to be in rotational equilibrium is that the net:",
+    "options": {
+      "A": "Torque is zero",
+      "B": "Force is zero",
+      "C": "Momentum is zero",
+      "D": "Energy is zero"
+    },
+    "answer": "A",
+    "explanation": "For rotational equilibrium, the sum of all torques (moments) about any point must be zero.",
+    "q": "The condition for a body to be in rotational equilibrium is that the net:",
+    "a": "Torque is zero",
+    "ans": "A"
+  },
+  {
+    "id": 390,
+    "topic": "Work, Energy and Power",
+    "subtopic": "Work-Energy Theorem",
+    "question": "The work-energy theorem states that the work done on a body is equal to the change in its:",
+    "options": {
+      "A": "Kinetic energy",
+      "B": "Potential energy",
+      "C": "Total energy",
+      "D": "Momentum"
+    },
+    "answer": "A",
+    "explanation": "The work-energy theorem: W = ΔKE.",
+    "q": "The work-energy theorem states that the work done on a body is equal to the change in its:",
+    "a": "Kinetic energy",
+    "ans": "A"
+  },
+  {
+    "id": 391,
+    "topic": "Friction",
+    "subtopic": "Angle of Repose",
+    "question": "The angle of repose is equal to the:",
+    "options": {
+      "A": "Angle of friction",
+      "B": "Critical angle",
+      "C": "Angle of refraction",
+      "D": "Angle of deviation"
+    },
+    "answer": "A",
+    "explanation": "The angle of repose is the angle of inclination at which a body just begins to slide, and it equals the angle of friction.",
+    "q": "The angle of repose is equal to the:",
+    "a": "Angle of friction",
+    "ans": "A"
+  },
+  {
+    "id": 392,
+    "topic": "Simple Machines",
+    "subtopic": "Pulleys",
+    "question": "A single movable pulley has a velocity ratio of:",
+    "options": {
+      "A": "2",
+      "B": "1",
+      "C": "0.5",
+      "D": "3"
+    },
+    "answer": "A",
+    "explanation": "A single movable pulley has a velocity ratio of 2 because the effort moves twice the distance the load moves.",
+    "q": "A single movable pulley has a velocity ratio of:",
+    "a": "2",
+    "ans": "A"
+  },
+  {
+    "id": 393,
+    "topic": "Elasticity",
+    "subtopic": "Poisson's Ratio",
+    "question": "The ratio of lateral strain to longitudinal strain is called:",
+    "options": {
+      "A": "Poisson's ratio",
+      "B": "Young's modulus",
+      "C": "Bulk modulus",
+      "D": "Shear modulus"
+    },
+    "answer": "A",
+    "explanation": "Poisson's ratio = lateral strain / longitudinal strain.",
+    "q": "The ratio of lateral strain to longitudinal strain is called:",
+    "a": "Poisson's ratio",
+    "ans": "A"
+  },
+  {
+    "id": 394,
+    "topic": "Pressure",
+    "subtopic": "Archimedes' Principle",
+    "question": "The buoyant force on a body immersed in a fluid depends on:",
+    "options": {
+      "A": "Density of the fluid and volume displaced",
+      "B": "Mass of the body",
+      "C": "Shape of the body",
+      "D": "Depth of immersion"
+    },
+    "answer": "A",
+    "explanation": "Buoyant force = weight of fluid displaced = ρ_fluid × V_displaced × g.",
+    "q": "The buoyant force on a body immersed in a fluid depends on:",
+    "a": "Density of the fluid and volume displaced",
+    "ans": "A"
+  },
+  {
+    "id": 395,
+    "topic": "Temperature and Its Measurement",
+    "subtopic": "Temperature Scales",
+    "question": "The lower fixed point on the Fahrenheit scale is:",
+    "options": {
+      "A": "32 °F",
+      "B": "0 °F",
+      "C": "100 °F",
+      "D": "212 °F"
+    },
+    "answer": "A",
+    "explanation": "The lower fixed point (ice point) on the Fahrenheit scale is 32 °F.",
+    "q": "The lower fixed point on the Fahrenheit scale is:",
+    "a": "32 °F",
+    "ans": "A"
+  },
+  {
+    "id": 396,
+    "topic": "Thermal Expansion",
+    "subtopic": "Anomalous Expansion",
+    "question": "Water exhibits anomalous expansion between:",
+    "options": {
+      "A": "0 °C and 4 °C",
+      "B": "4 °C and 10 °C",
+      "C": "0 °C and 100 °C",
+      "D": "-4 °C and 0 °C"
+    },
+    "answer": "A",
+    "explanation": "Water contracts from 0 °C to 4 °C and expands above 4 °C; this is anomalous expansion.",
+    "q": "Water exhibits anomalous expansion between:",
+    "a": "0 °C and 4 °C",
+    "ans": "A"
+  },
+  {
+    "id": 397,
+    "topic": "Gas Laws",
+    "subtopic": "Ideal Gas Equation",
+    "question": "The ideal gas equation is:",
+    "options": {
+      "A": "PV = nRT",
+      "B": "PV = nR/T",
+      "C": "P/V = nRT",
+      "D": "V/T = nRP"
+    },
+    "answer": "A",
+    "explanation": "The ideal gas equation is PV = nRT.",
+    "q": "The ideal gas equation is:",
+    "a": "PV = nRT",
+    "ans": "A"
+  },
+  {
+    "id": 398,
+    "topic": "Heat Transfer",
+    "subtopic": "Convection",
+    "question": "The mode of heat transfer that involves the actual movement of molecules is:",
+    "options": {
+      "A": "Convection",
+      "B": "Conduction",
+      "C": "Radiation",
+      "D": "All of the above"
+    },
+    "answer": "A",
+    "explanation": "Convection transfers heat by the bulk movement of fluid molecules.",
+    "q": "The mode of heat transfer that involves the actual movement of molecules is:",
+    "a": "Convection",
+    "ans": "A"
+  },
+  {
+    "id": 399,
+    "topic": "Wave Motion",
+    "subtopic": "Wave Types",
+    "question": "A wave in which particles vibrate perpendicular to the direction of propagation is called a:",
+    "options": {
+      "A": "Transverse wave",
+      "B": "Longitudinal wave",
+      "C": "Stationary wave",
+      "D": "Progressive wave"
+    },
+    "answer": "A",
+    "explanation": "In a transverse wave, particle displacement is perpendicular to the wave direction.",
+    "q": "A wave in which particles vibrate perpendicular to the direction of propagation is called a:",
+    "a": "Transverse wave",
+    "ans": "A"
+  },
+  {
+    "id": 400,
+    "topic": "Sound Waves",
+    "subtopic": "Quality",
+    "question": "The quality of a musical note is determined by its:",
+    "options": {
+      "A": "Overtones",
+      "B": "Frequency",
+      "C": "Amplitude",
+      "D": "Speed"
+    },
+    "answer": "A",
+    "explanation": "Quality (timbre) depends on the number and relative intensity of overtones present.",
+    "q": "The quality of a musical note is determined by its:",
+    "a": "Overtones",
+    "ans": "A"
+  }
+]
