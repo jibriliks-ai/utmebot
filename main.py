@@ -1,13 +1,15 @@
 """
 main.py — UTME Success Coach Bot
 Persistent 6-item menu, Top Scorer banner, 180Q paid mock,
-DeepSeek tutor, Flutterwave checkout, 6s verdict delay.
+DeepSeek tutor, Flutterwave checkout, 6s verdict delay,
+viral invite share buttons.
 """
 import os
 import time
 import random
 import asyncio
 import threading
+from urllib.parse import quote
 
 from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup,
@@ -26,7 +28,7 @@ from user_manager import (
     get_mock_stats, record_top_score, get_top_scorer, get_top_scorers,
 )
 from tutor import ask_tutor, build_voice_inputfile, ping as tutor_ping
-from referrals import referral_message, parse_referral_arg
+from referrals import referral_message, parse_referral_arg, build_referral_link
 from channel_scheduler import register_jobs
 from payment import (
     PLANS, get_plan, create_payment_link, verify_transaction,
@@ -92,7 +94,6 @@ def plan_selection_keyboard():
 
 # ---------- TOP SCORER banner ----------
 def top_scorer_banner():
-    """Return a short string showing the current top scorer, or None."""
     top = get_top_scorer()
     if not top:
         return None
@@ -141,7 +142,7 @@ async def cmd_start(update, context):
     return MENU
 
 
-# ---------- menu actions ----------
+# ---------- helpers ----------
 async def _send(update, text, reply_markup=None, parse_mode="Markdown"):
     try:
         if update.callback_query:
@@ -159,23 +160,21 @@ async def _send(update, text, reply_markup=None, parse_mode="Markdown"):
             await update.message.reply_text(text, reply_markup=reply_markup)
 
 
+# ---------- menu actions ----------
 async def do_mock(update, context, uid):
     premium = is_premium(uid)
     allowed, wait = can_take_mock(uid)
 
-    # ---- PREMIUM: 180-question paid mock with Top Scorer banner ----
     if premium:
         banner = top_scorer_banner()
         text = "💎 *Paid Mock — 180 Questions*\n\n"
-        text += "This is the full UTME simulation. Your score will be recorded "
-        text += "and compared with other students.\n\n"
+        text += "Full UTME simulation. Your score will be recorded and compared.\n\n"
         if banner:
             text += banner + "\n\n"
         else:
             text += "🏆 *Be the first top scorer!*\n\n"
         text += f"📝 *{PAID_MOCK_SIZE} questions · All subjects · Timed*\n\n"
         text += "_Tap below to begin._"
-
         kb = InlineKeyboardMarkup([
             [InlineKeyboardButton("▶️ Start 180-Question Mock", callback_data="start_paid_mock")],
             [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
@@ -183,7 +182,6 @@ async def do_mock(update, context, uid):
         await _send(update, text, kb)
         return MENU
 
-    # ---- FREE user: 5-question mock with 24h limit ----
     if not allowed:
         text = (
             f"⏳ *You've used your free daily mock!*\n\n"
@@ -208,9 +206,7 @@ async def do_mock(update, context, uid):
         await _send(update, f"Could not start mock: {e}")
         return MENU
 
-    context.user_data["mock"] = {
-        "index": 0, "score": 0, "questions": qs, "type": "free",
-    }
+    context.user_data["mock"] = {"index": 0, "score": 0, "questions": qs, "type": "free"}
     await _send(update, "📝 *Loading your free mock...*")
     return await send_next_mock_question(update, context, via="message")
 
@@ -239,9 +235,7 @@ async def start_paid_mock(update, context):
         return MENU
 
     qs = random.sample(pool, PAID_MOCK_SIZE)
-    context.user_data["mock"] = {
-        "index": 0, "score": 0, "questions": qs, "type": "paid",
-    }
+    context.user_data["mock"] = {"index": 0, "score": 0, "questions": qs, "type": "paid"}
     await q.edit_message_text("📝 *Starting your 180-question mock...*", parse_mode="Markdown")
     return await send_next_mock_question(update, context, via="callback")
 
@@ -283,18 +277,63 @@ async def do_upgrade(update, context, uid):
 
 
 async def do_invite(update, context, uid):
+    """Invite friends page with viral share buttons."""
     bot_username = context.bot.username
-    msg = referral_message(bot_username, uid)
-    await _send(update, msg, back_to_menu())
+    link = build_referral_link(bot_username, uid)
+    count = get_referral_count(uid)
+
+    text = (
+        "🤝 *Invite Friends, Earn Rewards*\n\n"
+        "Share your personal link. Every friend who joins through you counts "
+        "towards your reward — *5 successful invites = 1 day of free Premium!*\n\n"
+        f"👥 Friends joined so far: *{count}*\n\n"
+        f"🔗 Your link:\n`{link}`\n\n"
+        "Tap any button below to share instantly 👇"
+    )
+
+    share_text = quote(
+        f"🎓 Join me on UTME Success Coach — the smartest JAMB prep bot!\n\n"
+        f"✅ Free daily mock exams\n"
+        f"✅ AI Tutor with voice explanations\n"
+        f"✅ 3,000+ past questions\n"
+        f"✅ Top Scorer Challenge\n\n"
+        f"Start here: {link}"
+    )
+
+    kb = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton(
+                "📲 Share on WhatsApp",
+                url=f"https://wa.me/?text={share_text}",
+            ),
+            InlineKeyboardButton(
+                "🐦 Share on X",
+                url=f"https://twitter.com/intent/tweet?text={share_text}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                "📘 Share on Facebook",
+                url=f"https://www.facebook.com/sharer/sharer.php?u={quote(link)}",
+            ),
+            InlineKeyboardButton(
+                "💬 Share on Telegram",
+                switch_inline_query=f"🎓 Join me on UTME Success Coach!\n\n{link}",
+            ),
+        ],
+        [InlineKeyboardButton("📋 Copy Link", callback_data="copy_link")],
+        [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
+    ])
+
+    await _send(update, text, kb)
     return MENU
 
 
 async def do_help(update, context, uid):
     text = (
         "❓ *Help & Support*\n\n"
-        "Need assistance? We're here to help!\n\n"
         "📩 *Chat with us on Telegram:* @UTMESUCCESS\n\n"
-        "You can reach us for:\n"
+        "Reach us for:\n"
         "• Payment issues\n"
         "• Premium activation\n"
         "• Bug reports\n"
@@ -322,7 +361,6 @@ async def do_stats(update, context, uid):
             f"📈 Average: *{avg}%*"
         )
 
-    # Top Scorer leaderboard
     leaders = get_top_scorers(limit=5)
     if leaders:
         lines = ["\n\n🏆 *Top Scorer Leaderboard*"]
@@ -372,6 +410,12 @@ async def menu_callback(update, context):
         )
         return MENU
 
+    if data == "copy_link":
+        bot_username = context.bot.username
+        link = build_referral_link(bot_username, uid)
+        await q.answer(f"Link copied! {link}", show_alert=True)
+        return MENU
+
     action = ACTION_MAP.get(data)
     if action:
         return await action(update, context, uid)
@@ -403,8 +447,7 @@ async def select_plan(update, context):
     checkout_url = f"{BASE_URL}/checkout?uid={uid}&plan={plan_id}"
     text = (
         f"🎯 *{plan['label']} Plan — ₦{plan['amount']:,}*\n\n"
-        "Tap the button below to see full benefits and complete your "
-        "secure payment via Flutterwave.\n\n"
+        "Tap below to see full benefits and complete your secure payment.\n\n"
         "_After paying, return here and tap *I've Paid* if Premium "
         "doesn't activate automatically._"
     )
@@ -471,7 +514,6 @@ async def send_next_mock_question(update, context, via="callback"):
     qd = mock["questions"][idx]
     mock_type = mock.get("type", "free")
 
-    # Show Top Scorer banner on the FIRST question of a paid mock
     prefix = ""
     if mock_type == "paid" and idx == 0:
         banner = top_scorer_banner()
@@ -531,7 +573,6 @@ async def finish_mock(update, context, via="callback"):
 
     record_mock_taken(uid, score=score, total=total, mock_type=mock_type)
 
-    # Record top score if paid mock
     top_msg = ""
     if mock_type == "paid":
         user = get_or_create_user(uid)
@@ -605,9 +646,7 @@ async def tutor_ask(update, context):
         except Exception as e:
             print(f"[tutor] voice send failed: {e}")
 
-    await update.message.reply_text(
-        "Ask another question, or tap a menu option below."
-    )
+    await update.message.reply_text("Ask another question, or tap a menu option below.")
     return TUTOR_ASK
 
 
@@ -712,7 +751,6 @@ def run_flask():
 def main():
     init_db()
 
-    # Verify DeepSeek at startup
     ok, msg = tutor_ping()
     if ok:
         print(f"[startup] DeepSeek tutor OK: {msg}")
