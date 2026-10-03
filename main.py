@@ -1,6 +1,6 @@
 """
 main.py — UTME Success Coach Bot
-6-item menu, professional payment, 6s verdict delay.
+6-item menu, dual pricing, professional checkout, 6s verdict delay.
 """
 import os
 import time
@@ -13,7 +13,7 @@ from telegram.ext import (
     Application, CommandHandler, MessageHandler, CallbackQueryHandler,
     ConversationHandler, filters,
 )
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect
 
 import cbt_engine
 from user_manager import (
@@ -25,14 +25,17 @@ from tutor import ask_tutor, build_voice_inputfile
 from referrals import referral_message, parse_referral_arg
 from channel_scheduler import register_jobs
 from payment import (
-    create_payment_link, verify_transaction,
+    PLANS, get_plan, create_payment_link, verify_transaction,
     verify_webhook_signature, extract_user_id_from_meta,
+    extract_plan_id_from_meta, days_for_plan,
 )
+from checkout_ui import checkout_page, success_page, pending_page, error_page
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-PREMIUM_PRICE_NGN = 500
+BOT_LINK = os.getenv("BOT_LINK", "https://t.me/UTMESUCCESS")
 FREE_MOCK_SIZE = 5
 VERDICT_DELAY_SECONDS = 6
+BASE_URL = os.getenv("BASE_URL", "https://utmebot.onrender.com")
 
 MENU, MOCK_A, TUTOR_ASK, AWAIT_TX_ID = range(4)
 
@@ -60,13 +63,12 @@ def back_to_menu():
     return InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")]])
 
 
-def upgrade_keyboard(link=None):
-    rows = []
-    if link:
-        rows.append([InlineKeyboardButton("💳 Pay ₦500 Securely", url=link)])
-    rows.append([InlineKeyboardButton("🔄 I've Paid — Verify Now", callback_data="verify_payment")])
-    rows.append([InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")])
-    return InlineKeyboardMarkup(rows)
+def plan_selection_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🎯 1 Month — ₦2,000", callback_data="plan_1m")],
+        [InlineKeyboardButton("🔥 6 Months — ₦6,000  (SAVE ₦6,000)", callback_data="plan_6m")],
+        [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
+    ])
 
 
 # ---------------- /start ----------------
@@ -180,7 +182,7 @@ async def menu_callback(update, context):
             "❓ *Help & Support*\n\n"
             "Need assistance? We're here to help!\n\n"
             "📩 *Chat with us on Telegram:* @UTMESUCCESS\n\n"
-            "You can also reach us for:\n"
+            "You can reach us for:\n"
             "• Payment issues\n"
             "• Premium activation\n"
             "• Bug reports\n"
@@ -276,10 +278,7 @@ async def mock_answer(update, context):
         await q.edit_message_text(text)
 
     mock["index"] += 1
-
-    # 6-second pause so the student can read the verdict + explanation
     await asyncio.sleep(VERDICT_DELAY_SECONDS)
-
     return await send_next_mock_question(update, context, via="callback")
 
 
@@ -355,32 +354,63 @@ async def cancel(update, context):
     return MENU
 
 
-# ---------------- upgrade / payment ----------------
+# ---------------- upgrade flow ----------------
 async def show_upgrade(update, context):
+    """Show plan selection screen."""
     uid = update.effective_user.id if update.effective_user else update.callback_query.from_user.id
-    link, tx_ref = create_payment_link(uid, amount_ngn=PREMIUM_PRICE_NGN)
 
-    if not link:
-        text = "⚠️ Payment link is temporarily unavailable. Please try again in a moment."
+    if is_premium(uid):
+        text = (
+            "💎 *You're already Premium!*\n\n"
+            "You have unlimited access to mocks, all subjects, and the AI Tutor.\n\n"
+            "Thanks for supporting UTME Success Coach 🙏"
+        )
         kb = back_to_menu()
     else:
         text = (
-            f"💎 *Upgrade to Premium — ₦{PREMIUM_PRICE_NGN} / 30 days*\n\n"
-            "✅ Unlimited mock exams\n"
-            "✅ All subjects unlocked\n"
-            "✅ Unlimited AI Tutor with voice\n"
-            "✅ No daily limits\n"
-            "✅ Priority support\n\n"
-            "🔒 *Secure payment via Flutterwave*\n"
-            "Cards • Bank Transfer • USSD\n\n"
-            "Tap the button below to pay 👇"
+            "💎 *Upgrade to Premium*\n\n"
+            "Choose a plan to unlock unlimited access:\n\n"
+            "🎯 *1 Month* — ₦2,000\n"
+            "   Perfect for a focused month of prep\n\n"
+            "🔥 *6 Months* — ₦6,000\n"
+            "   Best value — SAVE ₦6,000 (50% OFF)\n\n"
+            "_Tap a plan below to see full benefits and pay securely._"
         )
-        kb = upgrade_keyboard(link)
+        kb = plan_selection_keyboard()
 
     if update.callback_query:
         await update.callback_query.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
     else:
         await update.message.reply_text(text, parse_mode="Markdown", reply_markup=kb)
+    return MENU
+
+
+async def select_plan(update, context):
+    """User tapped a plan — send them to the professional checkout page."""
+    q = update.callback_query
+    await q.answer()
+    uid = q.from_user.id
+    plan_id = q.data.replace("plan_", "")
+    plan = get_plan(plan_id)
+    if not plan:
+        await q.edit_message_text("Unknown plan. Please try again.")
+        return MENU
+
+    checkout_url = f"{BASE_URL}/checkout?uid={uid}&plan={plan_id}"
+
+    text = (
+        f"🎯 *{plan['label']} Plan — ₦{plan['amount']:,}*\n\n"
+        "Tap the button below to see full benefits and complete your "
+        "secure payment via Flutterwave.\n\n"
+        "_After paying, return to this chat and tap *I've Paid* if Premium "
+        "doesn't activate automatically._"
+    )
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🚀 Open Secure Checkout", url=checkout_url)],
+        [InlineKeyboardButton("🔄 I've Paid — Verify Now", callback_data="verify_payment")],
+        [InlineKeyboardButton("⬅️ Main Menu", callback_data="menu_back")],
+    ])
+    await q.edit_message_text(text, parse_mode="Markdown", reply_markup=kb)
     return MENU
 
 
@@ -405,10 +435,13 @@ async def receive_tx_id(update, context):
 
     ok, data = verify_transaction(tx_id)
     if ok:
-        set_premium(uid, days=30)
+        plan_id = extract_plan_id_from_meta(data)
+        days = days_for_plan(plan_id)
+        set_premium(uid, days=days)
+        plan = get_plan(plan_id) or {"label": "Premium"}
         await update.message.reply_text(
-            "✅ *Payment confirmed! Premium is active for 30 days.*\n\n"
-            "Enjoy unlimited access 🎉",
+            f"✅ *Payment confirmed! {plan['label']} Premium is now active.*\n\n"
+            f"Enjoy unlimited access for {days} days 🎉",
             parse_mode="Markdown",
             reply_markup=main_menu_keyboard(),
         )
@@ -428,7 +461,7 @@ async def unknown(update, context):
     return MENU
 
 
-# ---------------- Flask webhook ----------------
+# ---------------- Flask: checkout + payment routes ----------------
 flask_app = Flask(__name__)
 
 
@@ -437,17 +470,64 @@ def health():
     return "UTME Bot is running ✅", 200
 
 
+@flask_app.route("/checkout", methods=["GET"])
+def checkout():
+    """Professional checkout page shown before Flutterwave."""
+    try:
+        uid = int(request.args.get("uid", "0"))
+    except ValueError:
+        return error_page("Invalid user ID.")
+
+    plan_id = request.args.get("plan", "1m")
+    plan = get_plan(plan_id)
+    if not plan or uid <= 0:
+        return error_page("Invalid plan or user.")
+
+    return checkout_page(plan, uid, bot_link=BOT_LINK)
+
+
+@flask_app.route("/checkout/pay", methods=["POST"])
+def checkout_pay():
+    """Create Flutterwave link and redirect the user to it."""
+    try:
+        uid = int(request.form.get("uid", "0"))
+    except ValueError:
+        return error_page("Invalid user ID.")
+
+    plan_id = request.form.get("plan", "1m")
+    plan = get_plan(plan_id)
+    if not plan or uid <= 0:
+        return error_page("Invalid plan or user.")
+
+    link, tx_ref = create_payment_link(uid, plan_id)
+    if not link:
+        return error_page(
+            "We couldn't reach the payment gateway right now. "
+            "Please try again in a moment, or contact @UTMESUCCESS."
+        )
+
+    print(f"[checkout] redirecting user {uid} plan {plan_id} to Flutterwave")
+    return redirect(link, code=302)
+
+
 @flask_app.route("/payment/callback", methods=["GET"])
 def payment_callback():
+    """Flutterwave redirects here after payment."""
     tx_id = request.args.get("transaction_id")
-    if tx_id:
-        ok, data = verify_transaction(tx_id)
-        if ok:
-            uid = extract_user_id_from_meta(data)
-            if uid:
-                set_premium(uid, days=30)
-                return "✅ Payment successful! Return to the bot. Premium is active.", 200
-    return "Payment received. Return to the bot to verify.", 200
+    if not tx_id:
+        return pending_page(bot_link=BOT_LINK)
+
+    ok, data = verify_transaction(tx_id)
+    if ok:
+        uid = extract_user_id_from_meta(data)
+        plan_id = extract_plan_id_from_meta(data)
+        plan = get_plan(plan_id)
+        if uid:
+            set_premium(uid, days=days_for_plan(plan_id))
+            print(f"[callback] premium activated for {uid} plan {plan_id}")
+        return success_page(plan, bot_link=BOT_LINK)
+
+    return pending_page(bot_link=BOT_LINK)
 
 
 @flask_app.route("/webhook/flutterwave", methods=["POST"])
@@ -456,10 +536,12 @@ def flutterwave_webhook():
         return jsonify({"status": "unauthorized"}), 401
     data = request.get_json(silent=True) or {}
     if data.get("event") == "charge.completed" and data.get("data", {}).get("status") == "successful":
-        uid = extract_user_id_from_meta(data.get("data", {}))
+        tx = data.get("data", {})
+        uid = extract_user_id_from_meta(tx)
+        plan_id = extract_plan_id_from_meta(tx)
         if uid:
-            set_premium(uid, days=30)
-            print(f"[webhook] premium activated for {uid}")
+            set_premium(uid, days=days_for_plan(plan_id))
+            print(f"[webhook] premium activated for {uid} plan {plan_id}")
     return jsonify({"status": "ok"}), 200
 
 
@@ -480,6 +562,7 @@ def main():
         states={
             MENU: [
                 CallbackQueryHandler(menu_callback, pattern="^menu_"),
+                CallbackQueryHandler(select_plan, pattern="^plan_"),
                 CallbackQueryHandler(verify_payment_entry, pattern="^verify_payment$"),
             ],
             MOCK_A: [CallbackQueryHandler(mock_answer, pattern="^ans_")],
