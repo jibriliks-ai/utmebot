@@ -1,11 +1,12 @@
 """
-UTME Success Bot v28 — FINAL LOCKED + AI TUTOR RAG
+UTME Success Bot v28 — FINAL LOCKED + AI TUTOR RAG + CHANNEL POSTER v2
 - Free: Quick 5Q mock only, once per 24h + 5 tutor/day
 - Premium: Subject mock (40Q) + Full mock (180Q) + unlimited tutor
-- AI Tutor: RAG-powered (BM25 retrieval from questions_*.json + DeepSeek)
+- AI Tutor: RAG-powered (BM25 retrieval + DeepSeek)
+- Channel: Auto-posts 3x daily at 8:00, 13:00, 20:00 Lagos time
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -70,6 +71,10 @@ except Exception as _e:
         "economics", "government", "commerce", "accounting",
         "literature", "crk",
     ]
+
+# Clean CHANNEL_ID (strip whitespace, ensure it's properly formatted)
+if CHANNEL_ID:
+    CHANNEL_ID = str(CHANNEL_ID).strip()
 
 SUBJECT_DISPLAY = {
     "english": "📖 English", "mathematics": "📐 Maths",
@@ -487,7 +492,6 @@ def _start_mock_session(uid, qs, subject_label, intro_text=""):
 
 
 def _mock_menu_kb(uid):
-    """BULLETPROOF: free users route premium buttons straight to upgrade."""
     if is_premium(uid):
         return [
             [InlineKeyboardButton("⚡ Quick 5 Qs", callback_data="mock_quick")],
@@ -718,6 +722,7 @@ async def cmd_help(update, context):
         f"/invite — Invite friends\n"
         f"/premium — Upgrade premium\n"
         f"/debug — Databank status\n"
+        f"/postnow — Force channel post (admin)\n"
         f"/help — This message\n\n"
         f"*Free plan:*\n"
         f"• {FREE_MOCK_QS_DAILY} mock questions per 24 hours\n"
@@ -742,6 +747,7 @@ async def cmd_debug(update, context):
         f"Subjects: *{len(AVAILABLE_SUBJECTS)}*",
         f"Engine: {'✅ loaded' if HAS_ENGINE else '❌ fallback'}",
         f"AI Tutor: {'✅ ready' if HAS_AI_TUTOR else '❌ not loaded'}",
+        f"Channel ID: `{CHANNEL_ID or '❌ NOT SET'}`",
         "",
     ]
     for s in AVAILABLE_SUBJECTS:
@@ -755,9 +761,8 @@ async def cmd_debug(update, context):
 
 
 async def cmd_kbstats(update, context):
-    """Debug: show AI Tutor knowledge base stats."""
-    stats = _get_kb_stats() or {}
-    ok, detail = _tutor_ping()
+    stats = _get_kb_stats() if HAS_AI_TUTOR else {}
+    ok, detail = _tutor_ping() if HAS_AI_TUTOR else (False, "not loaded")
     lines = [
         "🧠 *AI Tutor Status*",
         f"DeepSeek: {'✅' if ok else '❌'} {md(str(detail))}",
@@ -776,6 +781,38 @@ async def cmd_kbstats(update, context):
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
+
+
+async def cmd_postnow(update, context):
+    """Admin-only: force a channel post right now."""
+    uid = str(update.effective_user.id)
+    if str(uid) != str(ADMIN_ID):
+        await update.message.reply_text("🔒 This command is admin-only.")
+        return
+
+    if not CHANNEL_ID:
+        await update.message.reply_text(
+            "❌ *CHANNEL_ID is not set.*\n\n"
+            "Set it on Render → Environment, then redeploy.\n\n"
+            "Format: `-1001234567890` (starts with -100)",
+            parse_mode="Markdown")
+        return
+
+    await update.message.reply_text("📤 Sending post to channel…")
+    try:
+        await channel_post(context.application, slot="manual-/postnow")
+        await update.message.reply_text(
+            f"✅ *Posted successfully to* `{CHANNEL_ID}`",
+            parse_mode="Markdown")
+    except Exception as e:
+        await update.message.reply_text(
+            f"❌ *Post failed:*\n\n`{type(e).__name__}: {e}`\n\n"
+            f"*Checklist:*\n"
+            f"1. Bot must be admin in the channel\n"
+            f"2. Bot must have 'Post Messages' permission\n"
+            f"3. CHANNEL_ID must start with `-100`\n"
+            f"4. Bot must be the same one as `BOT_TOKEN`",
+            parse_mode="Markdown")
 
 
 # ============================================================
@@ -1147,7 +1184,6 @@ async def handle_msg(update, context):
     text = (update.message.text or "").strip()
     u = get_user(uid, update.effective_user.first_name or "")
 
-    # Bottom keyboard shortcuts
     if text == "📚 Past Questions":
         await cmd_past(update, context); return
     if text == "📝 Mock Exam":
@@ -1163,9 +1199,6 @@ async def handle_msg(update, context):
     if text == "📖 Study Plan":
         await cmd_study(update, context); return
 
-    # ───────────────────────────────────────────────
-    # TUTOR MODE — RAG-POWERED AI
-    # ───────────────────────────────────────────────
     session = USER_SESSIONS.get(uid, {})
     is_tutor = (session.get("mode") == "tutor" or "?" in text or len(text) > 8)
 
@@ -1174,7 +1207,6 @@ async def handle_msg(update, context):
                                         reply_markup=BOTTOM_KEYBOARD)
         return
 
-    # Quota check
     if not can_use_tutor(uid):
         msg, kb = upgrade_kb(uid)
         await update.message.reply_text(
@@ -1186,7 +1218,6 @@ async def handle_msg(update, context):
 
     consume_tutor(uid)
 
-    # Thinking indicator
     thinking_msg = None
     try:
         thinking_msg = await update.message.reply_text(
@@ -1194,11 +1225,9 @@ async def handle_msg(update, context):
     except Exception:
         pass
 
-    # Determine subject focus
     subj = session.get("subject") or u.get("study_subject") or ""
     display = SUBJECT_DISPLAY.get(subj, subj.title()) if subj else "JAMB"
 
-    # Call the RAG tutor (blocking → run in thread)
     try:
         if HAS_AI_TUTOR:
             answer_text = await asyncio.to_thread(_ask_tutor, text, subj)
@@ -1215,38 +1244,31 @@ async def handle_msg(update, context):
             "I couldn't process that question. Please try again in a moment."
         )
 
-    # Delete thinking message
     if thinking_msg is not None:
         try:
             await thinking_msg.delete()
         except Exception:
             pass
 
-    # Build final message
     header = f"💬 *{md(display)} Tutor*\n\n*Q:* {md(text[:300])}\n\n"
     footer = "\n\n_📚 Grounded in JAMB databank + DeepSeek reasoning_"
     final_msg = header + answer_text + footer
 
-    # Buttons under the answer
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎙️ Voice Explanation", callback_data="ask_tutor")],
         [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
     ])
 
-    # Send text answer
     try:
         await update.message.reply_text(final_msg[:4000], parse_mode="Markdown",
                                         reply_markup=kb)
     except Exception as e:
-        # Fallback: strip markdown if it breaks
         print(f"[tutor] Markdown send failed: {e}")
         try:
-            await update.message.reply_text(final_msg[:4000],
-                                            reply_markup=kb)
+            await update.message.reply_text(final_msg[:4000], reply_markup=kb)
         except Exception as e2:
             print(f"[tutor] Plain send also failed: {e2}")
 
-    # Auto-generate voice if TTS is available and answer is reasonable length
     if HAS_TTS and HAS_AI_TUTOR and len(answer_text) < 1200:
         try:
             voice_if = await asyncio.to_thread(_build_voice, answer_text)
@@ -1267,7 +1289,8 @@ flask_app = Flask(__name__)
 def home():
     return (f"UTME Bot v28 · Monthly {PREMIUM_PRICE_TEXT} · 6mo {PREMIUM_6MONTHS_TEXT} · "
             f"{len(ALL_QS)} Qs across {len(AVAILABLE_SUBJECTS)} subjects · "
-            f"AI Tutor: {'ON' if HAS_AI_TUTOR else 'OFF'} · Running")
+            f"AI Tutor: {'ON' if HAS_AI_TUTOR else 'OFF'} · "
+            f"Channel: {CHANNEL_ID or 'OFF'} · Running")
 
 
 @flask_app.route("/health")
@@ -1285,6 +1308,9 @@ def health():
                   "deepseek_ok": tutor_ok,
                   "detail": tutor_detail,
                   "kb_stats": kb_stats},
+        "channel": {"configured": bool(CHANNEL_ID),
+                    "channel_id": CHANNEL_ID[:15] + "..." if CHANNEL_ID else "NOT SET",
+                    "post_hours_lagos": [8, 13, 20]},
         "pricing": {"monthly": PREMIUM_PRICE_TEXT, "six_months": PREMIUM_6MONTHS_TEXT},
         "free_tier": {"mock_per_day": FREE_MOCK_QS_DAILY,
                       "tutor_per_day": FREE_TUTOR_PER_DAY},
@@ -1405,7 +1431,6 @@ const API = window.location.origin;
 console.log("[Payment] Page loaded");
 console.log("[Payment] User:", UID);
 console.log("[Payment] Public Key Prefix:", FLW_PK ? FLW_PK.substring(0,15) + "..." : "MISSING");
-console.log("[Payment] FlutterwaveCheckout available:", typeof FlutterwaveCheckout !== "undefined");
 
 function payNow(planKey, amount) {
   console.log("[Payment] payNow called:", planKey, amount);
@@ -1444,14 +1469,10 @@ function payNow(planKey, amount) {
         title: "UTME Success Bot Premium",
         description: planKey === "6months" ? "6 Months Premium Access" : "Monthly Premium Access",
       },
-      meta: {
-        user_id: UID,
-        plan: planKey,
-      },
+      meta: { user_id: UID, plan: planKey },
       callback: function (resp) {
         console.log("[Payment] Callback:", resp);
         status.textContent = "Verifying payment…";
-
         fetch(API + "/verify/flutterwave", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1464,37 +1485,30 @@ function payNow(planKey, amount) {
         })
         .then(r => r.json())
         .then(res => {
-          console.log("[Payment] Verification:", res);
           if (res.status === "success") {
-            status.textContent = "✅ Premium activated!";
-            alert("✅ Payment successful!\n\nYour Premium access is now active. Returning to bot…");
+            alert("✅ Payment successful!\\n\\nYour Premium access is now active.");
             window.location.href = "https://t.me/" + BOT;
           } else if (res.status === "duplicate_or_invalid") {
-            status.textContent = "ℹ️ Already processed.";
-            alert("ℹ️ This payment was already processed. Returning to bot…");
+            alert("ℹ️ This payment was already processed.");
             window.location.href = "https://t.me/" + BOT;
           } else {
-            status.textContent = "⚠️ Verification pending.";
-            alert("⚠️ We received your payment.\n\nPlease send this to support if not activated in 5 min:\nUser ID: " + UID + "\nTx Ref: " + txRef);
+            alert("⚠️ We received your payment.\\n\\nPlease send to support if not activated in 5 min:\\nUser ID: " + UID);
             window.location.href = "https://t.me/" + BOT;
           }
         })
-        .catch((err) => {
-          console.error("[Payment] Verify error:", err);
-          status.textContent = "⚠️ Network error.";
-          alert("⚠️ Network error while verifying.\n\nYour payment may still go through. Message the bot with:\nUser ID: " + UID);
+        .catch(() => {
+          alert("⚠️ Network error while verifying. Message the bot with User ID: " + UID);
           window.location.href = "https://t.me/" + BOT;
         });
       },
       onclose: function () {
-        console.log("[Payment] Modal closed by user");
+        console.log("[Payment] Modal closed");
         status.style.display = "none";
       },
     });
   } catch (err) {
     console.error("[Payment] Exception:", err);
-    status.textContent = "❌ Error opening payment.";
-    alert("❌ Could not open payment window.\n\nError: " + err.message);
+    alert("❌ Could not open payment window.\\n\\nError: " + err.message);
   }
 }
 </script></body></html>
@@ -1618,46 +1632,100 @@ def run_flask():
 
 
 # ============================================================
-# CHANNEL AUTO-POSTING
+# CHANNEL AUTO-POSTING (BULLETPROOF v3)
 # ============================================================
+POST_HOURS = (8, 13, 20)  # Lagos time (UTC+1)
+
+
+async def channel_post(app, slot="manual"):
+    """Build and send a single channel post. Raises on failure."""
+    if not CHANNEL_ID:
+        raise RuntimeError("CHANNEL_ID is not configured on the server")
+
+    q = get_random_question()
+    if not q:
+        raise RuntimeError("No questions available in databank")
+
+    intro = random.choice([
+        "🌅 *Good Morning Champions!*",
+        "☀️ *Afternoon Practice!*",
+        "🌙 *Evening Study Time!*",
+        "📚 *Daily JAMB Practice*",
+    ])
+
+    msg = (
+        f"{intro}\n\n"
+        f"*{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
+        f"{md(q.get('question','')[:320])}\n\n"
+        f"A) {md(q.get('option_a','')[:70])}\n"
+        f"B) {md(q.get('option_b','')[:70])}\n"
+        f"C) {md(q.get('option_c','')[:70])}\n"
+        f"D) {md(q.get('option_d','')[:70])}\n\n"
+        f"💡 Answer: *{md(q.get('answer',''))}*\n\n"
+        f"👉 More practice: https://t.me/{BOT_USERNAME}"
+    )
+
+    await app.bot.send_message(
+        chat_id=CHANNEL_ID,
+        text=msg,
+        parse_mode="Markdown",
+    )
+    print(f"[channel] ✅ Posted ({slot}) to {CHANNEL_ID}")
+    return True
+
+
 async def channel_posting_job(app):
-    posted_today = set()
+    """
+    Posts 3 times per day at 8:00, 13:00, 20:00 Lagos time (UTC+1).
+    Checks every 5 minutes for reliability.
+    Sends a startup test post so you can confirm it works immediately.
+    """
+    print("[channel] ⏰ Channel posting job started")
+    print(f"[channel]    CHANNEL_ID = {CHANNEL_ID or '❌ NOT SET'}")
+    print(f"[channel]    Schedule   = {POST_HOURS} Lagos time")
+
+    if not CHANNEL_ID:
+        print("[channel] ❌ CHANNEL_ID not set — auto-posting DISABLED")
+        return
+
+    # Startup test post
+    try:
+        await channel_post(app, slot="startup-test")
+    except Exception as e:
+        print(f"[channel] ❌ Startup post failed: {type(e).__name__}: {e}")
+        print("[channel]    Check: (1) bot is admin in channel, "
+              "(2) CHANNEL_ID is correct, (3) bot has 'Post Messages' permission")
+
+    posted_slots = set()
+
     while True:
         try:
-            now = datetime.now()
-            lagos_hour = (now.hour + 1) % 24
-            key = f"{now.date()}_{lagos_hour}"
-            if lagos_hour in (8, 13, 20) and key not in posted_today:
-                if not CHANNEL_ID:
-                    await asyncio.sleep(3600)
-                    continue
-                try:
-                    q = get_random_question()
-                    if not q:
-                        await asyncio.sleep(3600)
-                        continue
-                    intro = random.choice([
-                        "🌅 *Good Morning Champions!*",
-                        "☀️ *Rise and Shine!*",
-                        "🌙 *Evening Practice!*"])
-                    msg = (f"{intro}\n\n"
-                           f"*{md(q.get('subject','JAMB'))} | {md(str(q.get('year','')))}*\n\n"
-                           f"{md(q.get('question','')[:320])}\n\n"
-                           f"A) {md(q.get('option_a','')[:70])}\n"
-                           f"B) {md(q.get('option_b','')[:70])}\n"
-                           f"C) {md(q.get('option_c','')[:70])}\n"
-                           f"D) {md(q.get('option_d','')[:70])}\n\n"
-                           f"👉 https://t.me/{BOT_USERNAME}")
-                    await app.bot.send_message(chat_id=CHANNEL_ID, text=msg, parse_mode="Markdown")
-                    posted_today.add(key)
-                    if len(posted_today) > 10:
-                        posted_today.clear()
-                except Exception as e:
-                    print(f"Channel error: {e}")
-            await asyncio.sleep(1800)
+            lagos_now = datetime.now(timezone.utc) + timedelta(hours=1)
+            lagos_hour = lagos_now.hour
+            lagos_minute = lagos_now.minute
+            today = lagos_now.date().isoformat()
+
+            for target_hour in POST_HOURS:
+                slot_key = f"{today}_{target_hour}"
+                if (lagos_hour == target_hour and lagos_minute < 5
+                        and slot_key not in posted_slots):
+                    print(f"[channel] → Slot {target_hour}:00 reached "
+                          f"(Lagos {lagos_now.strftime('%H:%M')})")
+                    try:
+                        await channel_post(app, slot=f"{target_hour}:00")
+                        posted_slots.add(slot_key)
+                    except Exception as e:
+                        print(f"[channel] ❌ Slot {target_hour} failed: "
+                              f"{type(e).__name__}: {e}")
+
+            posted_slots = {k for k in posted_slots if k.startswith(today)}
+
+            await asyncio.sleep(300)  # check every 5 minutes
+
         except Exception as e:
-            print(f"Channel job error: {e}")
-            await asyncio.sleep(3600)
+            print(f"[channel] ❌ Job loop error: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            await asyncio.sleep(600)
 
 
 async def post_init(app):
@@ -1674,13 +1742,21 @@ async def post_init(app):
             BotCommand("premium", "💎 Upgrade Premium"),
             BotCommand("debug", "🔍 Databank Status"),
             BotCommand("kbstats", "🧠 AI Brain Status"),
+            BotCommand("postnow", "📤 Test channel post (admin)"),
             BotCommand("help", "❓ Help"),
         ]
         await app.bot.set_my_commands(commands)
         await app.bot.set_chat_menu_button(
             menu_button=MenuButtonCommands(text="📋 Menu"))
         print("✅ Bot commands registered")
-        asyncio.create_task(channel_posting_job(app))
+
+        # Start the channel poster task (retry on failure)
+        try:
+            asyncio.create_task(channel_posting_job(app))
+            print("✅ Channel poster task launched")
+        except Exception as e:
+            print(f"⚠️ Could not launch channel poster: {e}")
+
     except Exception as e:
         print(f"Menu setup failed: {e}")
 
@@ -1692,24 +1768,23 @@ def main():
     load_data()
     load_processed_tx()
 
-    # ── Build AI Tutor knowledge base ──────────────────
+    # ── Build AI Tutor knowledge base ──
     if HAS_AI_TUTOR:
         try:
             print("🧠 Building AI Tutor knowledge base…")
             _build_kb()
             ok, detail = _tutor_ping()
             print(f"🧠 AI Tutor ping: {detail}")
-            if not ok:
-                print("⚠️ AI Tutor may not respond correctly — check DEEPSEEK_API_KEY")
         except Exception as e:
             print(f"⚠️ AI Tutor init failed: {e}")
             traceback.print_exc()
     else:
-        print("⚠️ AI Tutor module not loaded — tutor will show fallback message")
+        print("⚠️ AI Tutor module not loaded")
 
     threading.Thread(target=run_flask, daemon=True).start()
     print(f"🌐 Flask on port {PORT}")
     print(f"📚 Loaded: {len(ALL_QS)} questions | {len(AVAILABLE_SUBJECTS)} subjects")
+    print(f"📢 Channel: {CHANNEL_ID or '❌ NOT CONFIGURED'}")
     for s in AVAILABLE_SUBJECTS:
         print(f"   {s}: {len(LOCAL_DATABANK.get(s, []))}")
 
@@ -1735,6 +1810,7 @@ def main():
         app.add_handler(CommandHandler("premium",  cmd_premium))
         app.add_handler(CommandHandler("debug",    cmd_debug))
         app.add_handler(CommandHandler("kbstats",  cmd_kbstats))
+        app.add_handler(CommandHandler("postnow",  cmd_postnow))
         app.add_handler(CommandHandler("help",     cmd_help))
 
         app.add_handler(CallbackQueryHandler(handle_callback))
