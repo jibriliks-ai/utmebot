@@ -1,7 +1,8 @@
 """
-UTME Success Bot v28 — FINAL
-- Free: Quick 5Q mock only + 5 tutor/day
+UTME Success Bot v28 — FINAL LOCKED
+- Free: Quick 5Q mock only, once per 24h + 5 tutor/day
 - Premium: Subject mock (40Q) + Full mock (180Q) + unlimited tutor
+- Free users CANNOT access Subject Mock or Full JAMB Mock under any circumstance.
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta
@@ -242,7 +243,6 @@ def can_use_mock(uid, c=1):
         return True
     u = get_user(uid)
     now = time.time()
-    # Reset if 24 hours (86400 seconds) have passed since first mock of the day
     if now - u.get("last_mock_time", 0) > 86400:
         u["daily_mock_count"] = 0
         u["last_mock_time"] = 0.0
@@ -256,11 +256,8 @@ def consume_mock(uid, c, ids=None):
     if now - u.get("last_mock_time", 0) > 86400:
         u["daily_mock_count"] = 0
         u["last_mock_time"] = 0.0
-    
-    # Set the timestamp on the very first question answered in this 24h window
     if u.get("daily_mock_count", 0) == 0:
         u["last_mock_time"] = now
-        
     u["daily_mock_count"] = u.get("daily_mock_count", 0) + c
     if ids:
         u["used_ids"].extend(ids)
@@ -457,36 +454,39 @@ def _start_mock_session(uid, qs, subject_label, intro_text=""):
 
 
 def _mock_menu_kb(uid):
-    """Build the mock menu based on user's premium status."""
-    rem = get_mock_remaining(uid)
+    """
+    BULLETPROOF: For free users, the Subject Mock and Full JAMB Mock buttons
+    call `premium_info` directly. This means the `mock_by_subject` and
+    `mock_full` handlers CAN NEVER be triggered by a free user.
+    """
     if is_premium(uid):
         return [
             [InlineKeyboardButton("⚡ Quick 5 Qs", callback_data="mock_quick")],
-            [InlineKeyboardButton("📚 Subject Mock (40 Qs)",
-                                  callback_data="mock_by_subject")],
-            [InlineKeyboardButton("🔥 Full JAMB Mock (180 Qs)",
-                                  callback_data="mock_full")],
+            [InlineKeyboardButton("📚 Subject Mock (40 Qs)", callback_data="mock_by_subject")],
+            [InlineKeyboardButton("🔥 Full JAMB Mock (180 Qs)", callback_data="mock_full")],
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
         ]
-        
-    # STRICT: If free user has 0 questions left, remove all mock buttons
-    if rem <= 0:
-        return [
-            [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")],
-            [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
-        ]
-        
-    return [
-        [InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left today)",
-                              callback_data="mock_quick")],
-        [InlineKeyboardButton("📚 Subject Mock 🔒",
-                              callback_data="mock_by_subject")],
-        [InlineKeyboardButton("🔥 Full JAMB Mock 🔒",
-                              callback_data="mock_full")],
-        [InlineKeyboardButton("💎 Upgrade Now",
-                              callback_data="premium_info")],
-        [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
-    ]
+    
+    rem = get_mock_remaining(uid)
+    kb = []
+    
+    # Only show Quick mock if they have questions left
+    if rem > 0:
+        kb.append([InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left today)",
+                                        callback_data="mock_quick")])
+    else:
+        kb.append([InlineKeyboardButton("🛑 Daily Free Limit Reached — 0 left",
+                                        callback_data="premium_info")])
+    
+    # Premium-only features -> straight to upgrade page (cannot be bypassed)
+    kb.append([InlineKeyboardButton("🔒 Subject Mock (40 Qs) — Premium Only",
+                                    callback_data="premium_info")])
+    kb.append([InlineKeyboardButton("🔒 Full JAMB Mock (180 Qs) — Premium Only",
+                                    callback_data="premium_info")])
+    kb.append([InlineKeyboardButton("💎 Upgrade to Premium",
+                                    callback_data="premium_info")])
+    kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
+    return kb
 
 
 def _mock_menu_text(uid):
@@ -503,7 +503,11 @@ def _mock_menu_text(uid):
         return (
             f"📝 *Mock Exam Menu*\n\n"
             f"🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\n\n"
-            f"💎 Upgrade to Premium to unlock all mock types and unlimited practice!"
+            f"🔒 *Premium Features:*\n"
+            f"📚 Subject Mock (40 Qs)\n"
+            f"🔥 Full JAMB Mock (180 Qs)\n"
+            f"♾️ Unlimited Quick Mocks\n\n"
+            f"💎 Upgrade to Premium to unlock everything!"
         )
     return (
         f"📝 *Mock Exam Menu*\n\n"
@@ -551,7 +555,7 @@ async def cmd_mock(update, context):
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
     
-    # STRICT BLOCK: If free user has exhausted their 5 questions in the last 24h
+    # If free user has 0 remaining, show upgrade straight away
     if not is_premium(uid) and get_mock_remaining(uid) <= 0:
         msg, kb = upgrade_kb(uid)
         await update.message.reply_text(
@@ -847,7 +851,7 @@ async def handle_callback(update, context):
             
             # STRICT: Free users ONLY get Upgrade + Main Menu buttons on completion
             if not is_premium(uid):
-                finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\nUpgrade to Premium to unlock full 40-question Subject Mocks, 180-question JAMB Mocks, and unlimited daily practice."
+                finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\n\nUpgrade to Premium to unlock:\n✅ Full 40-question Subject Mocks\n✅ Full 180-question JAMB Mocks\n✅ Unlimited daily practice"
                 buttons = [
                     [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")],
                     [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
@@ -867,7 +871,6 @@ async def handle_callback(update, context):
 
     # ---------- MOCK MENU ----------
     if data == "mock_menu":
-        # STRICT BLOCK: If free user has exhausted their 5 questions in the last 24h
         if not is_premium(uid) and get_mock_remaining(uid) <= 0:
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(
@@ -896,7 +899,6 @@ async def handle_callback(update, context):
                 parse_mode="Markdown", reply_markup=kb)
             return
 
-        # Determine how many questions to serve (max 5, or whatever they have left)
         if is_premium(uid):
             limit = 5
         else:
@@ -924,14 +926,14 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- SUBJECT MOCK (PREMIUM ONLY) ----------
+    # ---------- SUBJECT MOCK (PREMIUM ONLY — HARD BLOCK) ----------
     if data == "mock_by_subject":
         if not is_premium(uid):
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(
                 f"🔒 *Subject Mock — Premium Only*\n\n"
                 f"Subject Mock gives you *40 questions* from one subject "
-                f"of your choice.\n\n{msg}",
+                f"of your choice. This is a Premium feature.\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
         await query.message.reply_text(
@@ -967,14 +969,14 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- FULL MOCK (PREMIUM ONLY) ----------
+    # ---------- FULL MOCK (PREMIUM ONLY — HARD BLOCK) ----------
     if data == "mock_full":
         if not is_premium(uid):
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(
                 f"🔒 *Full JAMB Mock — Premium Only*\n\n"
                 f"Full Mock gives you 180 questions across multiple subjects "
-                f"like the real JAMB exam.\n\n{msg}",
+                f"like the real JAMB exam. This is a Premium feature.\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
         leader_name, leader_score = get_leading()
