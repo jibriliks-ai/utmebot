@@ -1,8 +1,8 @@
 """
-UTME Success Bot v28 — FINAL LOCKED
+UTME Success Bot v28 — FINAL LOCKED + AI TUTOR RAG
 - Free: Quick 5Q mock only, once per 24h + 5 tutor/day
 - Premium: Subject mock (40Q) + Full mock (180Q) + unlimited tutor
-- Free users CANNOT access Subject Mock or Full JAMB Mock under any circumstance.
+- AI Tutor: RAG-powered (BM25 retrieval from questions_*.json + DeepSeek)
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta
@@ -136,6 +136,38 @@ except Exception as _e:
 
 if not AVAILABLE_SUBJECTS:
     AVAILABLE_SUBJECTS = list(ALL_SUBJECTS)
+
+# ---------- AI Tutor (RAG) ----------
+HAS_AI_TUTOR = False
+try:
+    from tutor import (
+        ask_tutor as _ask_tutor,
+        build_voice_inputfile as _build_voice,
+        build_knowledge_base as _build_kb,
+        get_kb_stats as _get_kb_stats,
+        ping as _tutor_ping,
+    )
+    HAS_AI_TUTOR = True
+    print("[ssmain] ✅ AI Tutor module loaded")
+except Exception as _e:
+    print(f"[ssmain] ⚠️ AI Tutor unavailable: {_e}")
+    HAS_AI_TUTOR = False
+
+    def _ask_tutor(q, s=""):
+        return "⚠️ AI Tutor is not available right now."
+
+    def _build_voice(t):
+        return None
+
+    def _build_kb(force_rebuild=False):
+        return False
+
+    def _get_kb_stats():
+        return {}
+
+    def _tutor_ping():
+        return False, "not loaded"
+
 
 # ---------- Helpers ----------
 def md(s):
@@ -455,11 +487,7 @@ def _start_mock_session(uid, qs, subject_label, intro_text=""):
 
 
 def _mock_menu_kb(uid):
-    """
-    BULLETPROOF: For free users, the Subject Mock and Full JAMB Mock buttons
-    call `premium_info` directly. This means the `mock_by_subject` and
-    `mock_full` handlers CAN NEVER be triggered by a free user.
-    """
+    """BULLETPROOF: free users route premium buttons straight to upgrade."""
     if is_premium(uid):
         return [
             [InlineKeyboardButton("⚡ Quick 5 Qs", callback_data="mock_quick")],
@@ -467,17 +495,16 @@ def _mock_menu_kb(uid):
             [InlineKeyboardButton("🔥 Full JAMB Mock (180 Qs)", callback_data="mock_full")],
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
         ]
-    
+
     rem = get_mock_remaining(uid)
     kb = []
-    
     if rem > 0:
         kb.append([InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left today)",
                                         callback_data="mock_quick")])
     else:
         kb.append([InlineKeyboardButton("🛑 Daily Free Limit Reached — 0 left",
                                         callback_data="premium_info")])
-    
+
     kb.append([InlineKeyboardButton("🔒 Subject Mock (40 Qs) — Premium Only",
                                     callback_data="premium_info")])
     kb.append([InlineKeyboardButton("🔒 Full JAMB Mock (180 Qs) — Premium Only",
@@ -553,7 +580,7 @@ async def cmd_start(update, context):
 async def cmd_mock(update, context):
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
-    
+
     if not is_premium(uid) and get_mock_remaining(uid) <= 0:
         msg, kb = upgrade_kb(uid)
         await update.message.reply_text(
@@ -563,7 +590,7 @@ async def cmd_mock(update, context):
             f"Full JAMB Mock (180 Qs), and unlimited Tutor access.\n\n{msg}",
             parse_mode="Markdown", reply_markup=kb)
         return
-        
+
     await update.message.reply_text(
         _mock_menu_text(uid),
         parse_mode="Markdown",
@@ -628,11 +655,16 @@ async def cmd_tutor(update, context):
     else:
         used = u["tutor_counts"].get(str(date.today()), 0)
         remaining_text = f"{max(0, FREE_TUTOR_PER_DAY - used)}/{FREE_TUTOR_PER_DAY} left today"
+
+    brain_status = "🧠 *AI Brain: Active*" if HAS_AI_TUTOR else "🧠 *AI Brain: Limited*"
+
     await update.message.reply_text(
         f"💬 *Ask Tutor*\n\n"
-        f"I know {len(ALL_QS)} past questions + AI brain + Voice 🎙️.\n"
+        f"{brain_status}\n"
+        f"📚 {len(ALL_QS)} past questions in databank\n"
+        f"🎙️ Voice explanations available\n\n"
         f"Tutor questions: {remaining_text}\n\n"
-        f"Just type your question — any subject, any topic.",
+        f"Just type any question — any JAMB subject, any topic.",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
@@ -709,11 +741,36 @@ async def cmd_debug(update, context):
         f"Total: *{len(ALL_QS)}* questions",
         f"Subjects: *{len(AVAILABLE_SUBJECTS)}*",
         f"Engine: {'✅ loaded' if HAS_ENGINE else '❌ fallback'}",
+        f"AI Tutor: {'✅ ready' if HAS_AI_TUTOR else '❌ not loaded'}",
         "",
     ]
     for s in AVAILABLE_SUBJECTS:
         icon = "✅" if per_subject[s] > 0 else "❌"
         lines.append(f"{icon} {s}: {per_subject[s]}")
+    await update.message.reply_text(
+        "\n".join(lines),
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
+
+
+async def cmd_kbstats(update, context):
+    """Debug: show AI Tutor knowledge base stats."""
+    stats = _get_kb_stats() or {}
+    ok, detail = _tutor_ping()
+    lines = [
+        "🧠 *AI Tutor Status*",
+        f"DeepSeek: {'✅' if ok else '❌'} {md(str(detail))}",
+        f"KB ready: {stats.get('ready', False)}",
+        f"Chunks: {stats.get('total_chunks', 0)}",
+        f"BM25: {stats.get('bm25_ready', False)}",
+        f"Embeddings: {stats.get('embeddings_ready', False)}",
+    ]
+    subjects = stats.get("subjects", {})
+    if subjects:
+        lines.append("\n*Subjects in KB:*")
+        for s, n in sorted(subjects.items(), key=lambda x: -x[1])[:15]:
+            lines.append(f"  {md(s)}: {n}")
     await update.message.reply_text(
         "\n".join(lines),
         parse_mode="Markdown",
@@ -747,7 +804,8 @@ async def handle_callback(update, context):
         USER_SESSIONS[uid] = {"mode": "tutor", "subject": subj}
         count = len(LOCAL_DATABANK.get(subj, []))
         await query.message.reply_text(
-            f"📖 *Let's study {display}!*\nI know {count} Qs on {display}.",
+            f"📖 *Let's study {display}!*\nI know {count} Qs on {display}.\n\n"
+            f"Ask me any {display} question below 👇",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton(f"💬 Ask {display}", callback_data="ask_tutor")],
@@ -789,7 +847,7 @@ async def handle_callback(update, context):
                 f"Upgrade to Premium to unlock all mock types and unlimited practice.\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
-        limit = 5 if not is_premium(uid) else 5
+        limit = 5
         qs = fetcher.fetch(subj, None, min(limit, remaining if not is_premium(uid) else limit))
         if not qs:
             await query.message.reply_text(
@@ -828,7 +886,7 @@ async def handle_callback(update, context):
         if current_q.get("explanation"):
             feedback += f"\n\n💡 {md(current_q['explanation'][:350])}"
         await query.message.reply_text(feedback, parse_mode="Markdown")
-        
+
         if session["idx"] < len(qs):
             q = qs[session["idx"]]
             txt = format_question(q, session["idx"] + 1, len(qs))
@@ -843,9 +901,9 @@ async def handle_callback(update, context):
                 "score": score, "total": total, "percent": percent})
             save_data()
             leader_name, leader_score = get_leading()
-            
+
             finish_msg = f"🎉 *Mock Completed!*\n\nScore: *{score}/{total}* ({percent}%)\n🏆 Leader: {md(leader_name)} — {leader_score}/400"
-            
+
             if not is_premium(uid):
                 finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\n\nUpgrade to Premium to unlock:\n✅ Full 40-question Subject Mocks\n✅ Full 180-question JAMB Mocks\n✅ Unlimited daily practice"
                 buttons = [
@@ -857,7 +915,7 @@ async def handle_callback(update, context):
                     [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
                     [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
                 ]
-            
+
             await query.message.reply_text(
                 finish_msg,
                 parse_mode="Markdown",
@@ -875,7 +933,7 @@ async def handle_callback(update, context):
                 f"Upgrade to Premium to unlock all mock types and unlimited practice.\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
-            
+
         await query.message.reply_text(
             _mock_menu_text(uid),
             parse_mode="Markdown",
@@ -890,15 +948,11 @@ async def handle_callback(update, context):
             await query.message.reply_text(
                 f"🛑 *Daily Free Limit Reached*\n\n"
                 f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
-                f"Upgrade to Premium to unlock unlimited mocks, Subject Mock (40 Qs), "
-                f"Full JAMB Mock (180 Qs), and unlimited Tutor access.\n\n{msg}",
+                f"Upgrade to Premium to unlock unlimited mocks.\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
 
-        if is_premium(uid):
-            limit = 5
-        else:
-            limit = min(5, remaining)
+        limit = 5 if is_premium(uid) else min(5, remaining)
 
         pool = AVAILABLE_SUBJECTS or ALL_SUBJECTS
         sample = random.sample(pool, min(3, len(pool)))
@@ -907,17 +961,17 @@ async def handle_callback(update, context):
             qs.extend(fetcher.fetch(subj, None, 2))
         random.shuffle(qs)
         qs = qs[:limit]
-        
+
         if not qs:
             await query.message.reply_text("⚠️ No questions loaded. Try /debug")
             return
-            
+
         consume_mock(uid, len(qs), [q["id"] for q in qs])
-        
+
         intro_text = f"🚀 *Quick Mock ({len(qs)} Qs)*"
         if not is_premium(uid):
             intro_text += f"\n\n🆓 You have {max(0, remaining - len(qs))} free questions left today."
-            
+
         txt, kb = _start_mock_session(uid, qs, "mixed", intro_text=intro_text)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
@@ -1036,8 +1090,11 @@ async def handle_callback(update, context):
             used = u["tutor_counts"].get(str(date.today()), 0)
             remaining_text = f"{max(0, FREE_TUTOR_PER_DAY - used)}/{FREE_TUTOR_PER_DAY} left today"
         await query.message.reply_text(
-            f"💬 *Ask Tutor*\nI know {len(ALL_QS)} Qs + AI brain + Voice 🎙️.\n"
-            f"Tutor: {remaining_text}\nAsk anything:",
+            f"💬 *Ask Tutor*\n"
+            f"🧠 AI Brain: {'Active ✅' if HAS_AI_TUTOR else 'Limited'}\n"
+            f"📚 {len(ALL_QS)} past questions in databank\n"
+            f"Tutor questions: {remaining_text}\n\n"
+            f"Ask anything — any subject, any topic:",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
@@ -1082,7 +1139,7 @@ async def handle_callback(update, context):
 
 
 # ============================================================
-# TEXT HANDLER
+# TEXT HANDLER — AI TUTOR RAG INTEGRATION
 # ============================================================
 
 async def handle_msg(update, context):
@@ -1090,6 +1147,7 @@ async def handle_msg(update, context):
     text = (update.message.text or "").strip()
     u = get_user(uid, update.effective_user.first_name or "")
 
+    # Bottom keyboard shortcuts
     if text == "📚 Past Questions":
         await cmd_past(update, context); return
     if text == "📝 Mock Exam":
@@ -1105,72 +1163,98 @@ async def handle_msg(update, context):
     if text == "📖 Study Plan":
         await cmd_study(update, context); return
 
+    # ───────────────────────────────────────────────
+    # TUTOR MODE — RAG-POWERED AI
+    # ───────────────────────────────────────────────
     session = USER_SESSIONS.get(uid, {})
     is_tutor = (session.get("mode") == "tutor" or "?" in text or len(text) > 8)
-    if is_tutor:
-        if not can_use_tutor(uid):
-            msg, kb = upgrade_kb(uid)
-            await update.message.reply_text(
-                f"⏰ *Tutor Limit Reached*\n\n"
-                f"Free: {FREE_TUTOR_PER_DAY} tutor questions/day\n"
-                f"Upgrade for unlimited access.\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
-            return
-        consume_tutor(uid)
-        relevant = []
-        try:
-            subj_filter = session.get("subject") or u.get("study_subject")
-            relevant = search_databank(text, subject=subj_filter, limit=3)
-        except Exception:
-            relevant = []
-        subj = session.get("subject") or u.get("study_subject") or "general"
-        display = SUBJECT_DISPLAY.get(subj, subj.title()) if subj != "general" else "JAMB"
 
-        answer_text = f"💬 *{display} Tutor*\n\n*Q:* {md(text[:400])}\n\n"
-        if relevant:
-            answer_text += f"*📚 From Databank ({len(relevant)} found):*\n\n"
-            for i, rq in enumerate(relevant[:2], 1):
-                answer_text += (
-                    f"{i}. *{md(rq.get('subject',''))} {md(str(rq.get('year','')))}*\n"
-                    f"{md(rq.get('question','')[:180])}...\n"
-                    f"✅ Answer: *{md(rq.get('answer',''))}*\n")
-                if rq.get("explanation"):
-                    answer_text += f"💡 {md(rq.get('explanation')[:180])}...\n"
-                answer_text += "\n"
-        answer_text += f"*🧠 AI Brain ({display}):*\n\n"
-        answer_text += (f"Based on JAMB syllabus for {display}: core concept, "
-                        f"steps, example, trap to avoid.\n\n")
-        answer_text += "💡 Tip: Appears frequently in UTME."
-
-        await update.message.reply_text(
-            answer_text[:4000], parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🎙️ Voice", callback_data="ask_tutor")],
-                [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
-
-        if HAS_TTS:
-            try:
-                voice_text = f"Hello! Let's study {display}. Question: {text[:150]}. "
-                if relevant:
-                    rq = relevant[0]
-                    voice_text += (f"From past question: {rq.get('question','')[:100]}. "
-                                   f"Answer is {rq.get('answer','')}. ")
-                voice_text += "Keep practicing!"
-                voice_text = re.sub(r"[*_#`]", "", voice_text)[:600]
-                tts = gTTS(text=voice_text, lang="en", tld="com.ng", slow=True)
-                vp = f"/tmp/voice_{uid}_{int(time.time())}.mp3"
-                tts.save(vp)
-                with open(vp, "rb") as f:
-                    await update.message.reply_voice(voice=f, caption=f"🎙️ Voice — {display}")
-                try:
-                    os.remove(vp)
-                except Exception:
-                    pass
-            except Exception as e:
-                print(f"TTS error: {e}")
+    if not is_tutor:
+        await update.message.reply_text("Use the menu below 👇",
+                                        reply_markup=BOTTOM_KEYBOARD)
         return
 
-    await update.message.reply_text("Use the menu below 👇", reply_markup=BOTTOM_KEYBOARD)
+    # Quota check
+    if not can_use_tutor(uid):
+        msg, kb = upgrade_kb(uid)
+        await update.message.reply_text(
+            f"⏰ *Tutor Limit Reached*\n\n"
+            f"Free: {FREE_TUTOR_PER_DAY} tutor questions/day\n"
+            f"Upgrade for unlimited access.\n\n{msg}",
+            parse_mode="Markdown", reply_markup=kb)
+        return
+
+    consume_tutor(uid)
+
+    # Thinking indicator
+    thinking_msg = None
+    try:
+        thinking_msg = await update.message.reply_text(
+            "🧠 *AI Tutor is thinking…*", parse_mode="Markdown")
+    except Exception:
+        pass
+
+    # Determine subject focus
+    subj = session.get("subject") or u.get("study_subject") or ""
+    display = SUBJECT_DISPLAY.get(subj, subj.title()) if subj else "JAMB"
+
+    # Call the RAG tutor (blocking → run in thread)
+    try:
+        if HAS_AI_TUTOR:
+            answer_text = await asyncio.to_thread(_ask_tutor, text, subj)
+        else:
+            answer_text = (
+                "⚠️ *AI Tutor is not available right now.*\n\n"
+                "Please try again later or contact support."
+            )
+    except Exception as e:
+        print(f"[tutor] Call failed: {e}")
+        traceback.print_exc()
+        answer_text = (
+            "⚠️ *Tutor error*\n\n"
+            "I couldn't process that question. Please try again in a moment."
+        )
+
+    # Delete thinking message
+    if thinking_msg is not None:
+        try:
+            await thinking_msg.delete()
+        except Exception:
+            pass
+
+    # Build final message
+    header = f"💬 *{md(display)} Tutor*\n\n*Q:* {md(text[:300])}\n\n"
+    footer = "\n\n_📚 Grounded in JAMB databank + DeepSeek reasoning_"
+    final_msg = header + answer_text + footer
+
+    # Buttons under the answer
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🎙️ Voice Explanation", callback_data="ask_tutor")],
+        [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
+    ])
+
+    # Send text answer
+    try:
+        await update.message.reply_text(final_msg[:4000], parse_mode="Markdown",
+                                        reply_markup=kb)
+    except Exception as e:
+        # Fallback: strip markdown if it breaks
+        print(f"[tutor] Markdown send failed: {e}")
+        try:
+            await update.message.reply_text(final_msg[:4000],
+                                            reply_markup=kb)
+        except Exception as e2:
+            print(f"[tutor] Plain send also failed: {e2}")
+
+    # Auto-generate voice if TTS is available and answer is reasonable length
+    if HAS_TTS and HAS_AI_TUTOR and len(answer_text) < 1200:
+        try:
+            voice_if = await asyncio.to_thread(_build_voice, answer_text)
+            if voice_if is not None:
+                await update.message.reply_voice(
+                    voice=voice_if, caption=f"🎙️ Voice — {display}")
+        except Exception as e:
+            print(f"[tutor] Voice send failed: {e}")
 
 
 # ============================================================
@@ -1182,18 +1266,25 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     return (f"UTME Bot v28 · Monthly {PREMIUM_PRICE_TEXT} · 6mo {PREMIUM_6MONTHS_TEXT} · "
-            f"{len(ALL_QS)} Qs across {len(AVAILABLE_SUBJECTS)} subjects · Running")
+            f"{len(ALL_QS)} Qs across {len(AVAILABLE_SUBJECTS)} subjects · "
+            f"AI Tutor: {'ON' if HAS_AI_TUTOR else 'OFF'} · Running")
 
 
 @flask_app.route("/health")
 def health():
     per_subject = {s: len(LOCAL_DATABANK.get(s, [])) for s in AVAILABLE_SUBJECTS}
+    tutor_ok, tutor_detail = _tutor_ping() if HAS_AI_TUTOR else (False, "not loaded")
+    kb_stats = _get_kb_stats() if HAS_AI_TUTOR else {}
     return jsonify({
         "status": "ok", "version": "v28",
         "databank": {"total_questions": len(ALL_QS),
                      "available_subjects": AVAILABLE_SUBJECTS,
                      "engine_loaded": HAS_ENGINE,
                      "per_subject": per_subject},
+        "tutor": {"module_loaded": HAS_AI_TUTOR,
+                  "deepseek_ok": tutor_ok,
+                  "detail": tutor_detail,
+                  "kb_stats": kb_stats},
         "pricing": {"monthly": PREMIUM_PRICE_TEXT, "six_months": PREMIUM_6MONTHS_TEXT},
         "free_tier": {"mock_per_day": FREE_MOCK_QS_DAILY,
                       "tutor_per_day": FREE_TUTOR_PER_DAY},
@@ -1318,24 +1409,24 @@ console.log("[Payment] FlutterwaveCheckout available:", typeof FlutterwaveChecko
 
 function payNow(planKey, amount) {
   console.log("[Payment] payNow called:", planKey, amount);
-  
+
   if (typeof FlutterwaveCheckout === "undefined") {
     alert("❌ Payment gateway failed to load.\n\nPlease disable any ad-blocker and refresh this page.");
     return;
   }
-  
+
   if (!FLW_PK || FLW_PK.length < 20) {
     alert("❌ Payment is not configured.\n\nFLW_PUBLIC_KEY is missing on the server. Please contact support.");
     return;
   }
-  
+
   const status = document.getElementById("status");
   status.style.display = "block";
   status.textContent = "Opening secure payment…";
-  
+
   const txRef = "UTME-" + UID + "-" + Date.now();
   console.log("[Payment] tx_ref:", txRef);
-  
+
   try {
     FlutterwaveCheckout({
       public_key: FLW_PK,
@@ -1360,7 +1451,7 @@ function payNow(planKey, amount) {
       callback: function (resp) {
         console.log("[Payment] Callback:", resp);
         status.textContent = "Verifying payment…";
-        
+
         fetch(API + "/verify/flutterwave", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1416,13 +1507,13 @@ def upgrade_page(uid):
     six = _resolve_plan("6months")
     savings = PREMIUM_PRICE * 6 - PREMIUM_6MONTHS_PRICE
     savings_text = f"\u20a6{savings}" if savings > 0 else ""
-    
+
     invite_link = f"https://t.me/{BOT_USERNAME}?start=invite_{uid}"
     share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot — free JAMB practice!')}"
-    
+
     gateway_ready = bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY)
     test_mode = bool(FLW_PUBLIC_KEY and "TEST" in FLW_PUBLIC_KEY.upper())
-    
+
     return render_template_string(
         UPGRADE_PAGE,
         uid=uid,
@@ -1578,10 +1669,11 @@ async def post_init(app):
             BotCommand("study", "📖 Study Plan"),
             BotCommand("syllabus", "📋 JAMB Syllabus"),
             BotCommand("score", "📊 My Score"),
-            BotCommand("tutor", "💬 Ask Tutor"),
+            BotCommand("tutor", "💬 Ask AI Tutor"),
             BotCommand("invite", "👥 Invite Friends"),
             BotCommand("premium", "💎 Upgrade Premium"),
             BotCommand("debug", "🔍 Databank Status"),
+            BotCommand("kbstats", "🧠 AI Brain Status"),
             BotCommand("help", "❓ Help"),
         ]
         await app.bot.set_my_commands(commands)
@@ -1599,6 +1691,21 @@ async def post_init(app):
 def main():
     load_data()
     load_processed_tx()
+
+    # ── Build AI Tutor knowledge base ──────────────────
+    if HAS_AI_TUTOR:
+        try:
+            print("🧠 Building AI Tutor knowledge base…")
+            _build_kb()
+            ok, detail = _tutor_ping()
+            print(f"🧠 AI Tutor ping: {detail}")
+            if not ok:
+                print("⚠️ AI Tutor may not respond correctly — check DEEPSEEK_API_KEY")
+        except Exception as e:
+            print(f"⚠️ AI Tutor init failed: {e}")
+            traceback.print_exc()
+    else:
+        print("⚠️ AI Tutor module not loaded — tutor will show fallback message")
 
     threading.Thread(target=run_flask, daemon=True).start()
     print(f"🌐 Flask on port {PORT}")
@@ -1627,6 +1734,7 @@ def main():
         app.add_handler(CommandHandler("invite",   cmd_invite))
         app.add_handler(CommandHandler("premium",  cmd_premium))
         app.add_handler(CommandHandler("debug",    cmd_debug))
+        app.add_handler(CommandHandler("kbstats",  cmd_kbstats))
         app.add_handler(CommandHandler("help",     cmd_help))
 
         app.add_handler(CallbackQueryHandler(handle_callback))
