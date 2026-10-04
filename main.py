@@ -787,9 +787,19 @@ async def handle_callback(update, context):
                 "score": score, "total": total, "percent": percent})
             save_data()
             leader_name, leader_score = get_leading()
+            
+            # Check if free user just finished their daily limit
+            finish_msg = f"🎉 *Mock Completed!*\n\nScore: *{score}/{total}* ({percent}%)\n🏆 Leader: {md(leader_name)} — {leader_score}/400"
+            
+            if not is_premium(uid):
+                rem = get_mock_remaining(uid)
+                if rem <= 0:
+                    finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for today.*\nUpgrade to Premium to continue practicing with unlimited questions, Subject Mocks (40 Qs), and Full JAMB Mocks (180 Qs)."
+                else:
+                    finish_msg += f"\n\n🆓 You have {rem} free questions left today."
+                    
             await query.message.reply_text(
-                f"🎉 *Mock Completed!*\n\nScore: *{score}/{total}* ({percent}%)\n"
-                f"🏆 Leader: {md(leader_name)} — {leader_score}/400",
+                finish_msg,
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
@@ -807,23 +817,42 @@ async def handle_callback(update, context):
 
     # ---------- QUICK MOCK (free + premium) ----------
     if data == "mock_quick":
-        if not can_use_mock(uid, 5):
+        remaining = get_mock_remaining(uid)
+        if remaining <= 0 and not is_premium(uid):
             msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
+            await query.message.reply_text(
+                f"🛑 *Daily Free Limit Reached*\n\n"
+                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for today. "
+                f"Upgrade to Premium to unlock unlimited mocks, Subject Mock (40 Qs), "
+                f"Full JAMB Mock (180 Qs), and unlimited Tutor access.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
             return
+
+        # Determine how many questions to serve (max 5, or whatever they have left)
+        if is_premium(uid):
+            limit = 5
+        else:
+            limit = min(5, remaining)
+
         pool = AVAILABLE_SUBJECTS or ALL_SUBJECTS
         sample = random.sample(pool, min(3, len(pool)))
         qs = []
         for subj in sample:
             qs.extend(fetcher.fetch(subj, None, 2))
         random.shuffle(qs)
-        qs = qs[:5]
+        qs = qs[:limit]
+        
         if not qs:
             await query.message.reply_text("⚠️ No questions loaded. Try /debug")
             return
+            
         consume_mock(uid, len(qs), [q["id"] for q in qs])
-        txt, kb = _start_mock_session(uid, qs, "mixed",
-                                      intro_text="🚀 *Quick Mock 5 Qs*")
+        
+        intro_text = f"🚀 *Quick Mock ({len(qs)} Qs)*"
+        if not is_premium(uid):
+            intro_text += f"\n\n🆓 You have {max(0, remaining - len(qs))} free questions left today."
+            
+        txt, kb = _start_mock_session(uid, qs, "mixed", intro_text=intro_text)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
