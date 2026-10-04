@@ -1,9 +1,9 @@
 """
-UTME Success Bot v28 — FINAL LOCKED + AI TUTOR RAG + CHANNEL POSTER v2
+UTME Success Bot v28 — FINAL LOCKED + AI TUTOR RAG + CHANNEL POSTER v4
 - Free: Quick 5Q mock only, once per 24h + 5 tutor/day
 - Premium: Subject mock (40Q) + Full mock (180Q) + unlimited tutor
 - AI Tutor: RAG-powered (BM25 retrieval + DeepSeek)
-- Channel: Auto-posts 3x daily at 8:00, 13:00, 20:00 Lagos time
+- Channel: Auto-posts 3x daily (08:30, 13:00, 20:00 Lagos) with unique styles
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -45,7 +45,7 @@ try:
 except Exception as _e:
     print(f"[config] using env defaults ({_e})")
     BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
-    BOT_USERNAME = os.getenv("BOT_USERNAME", "YourBot")
+    BOT_USERNAME = os.getenv("BOT_USERNAME", "UTMESucessBot")
     ADMIN_ID = os.getenv("ADMIN_ID", "")
     PAYMENT_URL = os.getenv("PAYMENT_URL", "https://your-app.onrender.com")
     PORT = int(os.getenv("PORT", "5000"))
@@ -72,7 +72,10 @@ except Exception as _e:
         "literature", "crk",
     ]
 
-# Clean CHANNEL_ID (strip whitespace, ensure it's properly formatted)
+# ── HARD-ENFORCE your bot username ──
+BOT_USERNAME = "UTMESucessBot"
+
+# Clean CHANNEL_ID
 if CHANNEL_ID:
     CHANNEL_ID = str(CHANNEL_ID).strip()
 
@@ -722,7 +725,7 @@ async def cmd_help(update, context):
         f"/invite — Invite friends\n"
         f"/premium — Upgrade premium\n"
         f"/debug — Databank status\n"
-        f"/postnow — Force channel post (admin)\n"
+        f"/postnow [morning|afternoon|evening] — Test channel post (admin)\n"
         f"/help — This message\n\n"
         f"*Free plan:*\n"
         f"• {FREE_MOCK_QS_DAILY} mock questions per 24 hours\n"
@@ -733,6 +736,7 @@ async def cmd_help(update, context):
         f"• Full JAMB Mock (180Q)\n"
         f"• Unlimited tutor\n\n"
         f"Channel: @{md(CHANNEL_USERNAME)}\n"
+        f"Bot: @{md(BOT_USERNAME)}\n"
         f"Your ID: `{uid}`",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
@@ -747,6 +751,7 @@ async def cmd_debug(update, context):
         f"Subjects: *{len(AVAILABLE_SUBJECTS)}*",
         f"Engine: {'✅ loaded' if HAS_ENGINE else '❌ fallback'}",
         f"AI Tutor: {'✅ ready' if HAS_AI_TUTOR else '❌ not loaded'}",
+        f"Bot: @{md(BOT_USERNAME)}",
         f"Channel ID: `{CHANNEL_ID or '❌ NOT SET'}`",
         "",
     ]
@@ -784,7 +789,13 @@ async def cmd_kbstats(update, context):
 
 
 async def cmd_postnow(update, context):
-    """Admin-only: force a channel post right now."""
+    """Admin-only: force a channel post right now.
+    Usage:
+      /postnow              → random slot
+      /postnow morning      → 8:30 AM style
+      /postnow afternoon    → 1:00 PM style
+      /postnow evening      → 8:00 PM style (with explanation)
+    """
     uid = str(update.effective_user.id)
     if str(uid) != str(ADMIN_ID):
         await update.message.reply_text("🔒 This command is admin-only.")
@@ -793,16 +804,31 @@ async def cmd_postnow(update, context):
     if not CHANNEL_ID:
         await update.message.reply_text(
             "❌ *CHANNEL_ID is not set.*\n\n"
-            "Set it on Render → Environment, then redeploy.\n\n"
-            "Format: `-1001234567890` (starts with -100)",
+            "Set it on Render → Environment, then redeploy.\n"
+            "Format: `-1001234567890`",
             parse_mode="Markdown")
         return
 
-    await update.message.reply_text("📤 Sending post to channel…")
+    slot_arg = "random"
+    if context.args:
+        slot_arg = context.args[0].lower()
+
+    valid_slots = {"morning", "afternoon", "evening"}
+    if slot_arg == "random" or slot_arg not in valid_slots:
+        slot_arg = random.choice(list(valid_slots))
+
+    await update.message.reply_text(
+        f"📤 Sending *{slot_arg}* style post to channel…",
+        parse_mode="Markdown")
     try:
-        await channel_post(context.application, slot="manual-/postnow")
+        await channel_post(context.application, slot_name=slot_arg,
+                           slot_label="manual-/postnow")
         await update.message.reply_text(
-            f"✅ *Posted successfully to* `{CHANNEL_ID}`",
+            f"✅ *Posted `{slot_arg}` successfully to* `{CHANNEL_ID}`\n\n"
+            f"Try:\n"
+            f"`/postnow morning`\n"
+            f"`/postnow afternoon`\n"
+            f"`/postnow evening`",
             parse_mode="Markdown")
     except Exception as e:
         await update.message.reply_text(
@@ -810,8 +836,7 @@ async def cmd_postnow(update, context):
             f"*Checklist:*\n"
             f"1. Bot must be admin in the channel\n"
             f"2. Bot must have 'Post Messages' permission\n"
-            f"3. CHANNEL_ID must start with `-100`\n"
-            f"4. Bot must be the same one as `BOT_TOKEN`",
+            f"3. CHANNEL_ID must start with `-100`",
             parse_mode="Markdown")
 
 
@@ -1290,6 +1315,7 @@ def home():
     return (f"UTME Bot v28 · Monthly {PREMIUM_PRICE_TEXT} · 6mo {PREMIUM_6MONTHS_TEXT} · "
             f"{len(ALL_QS)} Qs across {len(AVAILABLE_SUBJECTS)} subjects · "
             f"AI Tutor: {'ON' if HAS_AI_TUTOR else 'OFF'} · "
+            f"Bot: @{BOT_USERNAME} · "
             f"Channel: {CHANNEL_ID or 'OFF'} · Running")
 
 
@@ -1300,6 +1326,7 @@ def health():
     kb_stats = _get_kb_stats() if HAS_AI_TUTOR else {}
     return jsonify({
         "status": "ok", "version": "v28",
+        "bot_username": BOT_USERNAME,
         "databank": {"total_questions": len(ALL_QS),
                      "available_subjects": AVAILABLE_SUBJECTS,
                      "engine_loaded": HAS_ENGINE,
@@ -1310,7 +1337,7 @@ def health():
                   "kb_stats": kb_stats},
         "channel": {"configured": bool(CHANNEL_ID),
                     "channel_id": CHANNEL_ID[:15] + "..." if CHANNEL_ID else "NOT SET",
-                    "post_hours_lagos": [8, 13, 20]},
+                    "post_schedule_lagos": ["08:30 morning", "13:00 afternoon", "20:00 evening"]},
         "pricing": {"monthly": PREMIUM_PRICE_TEXT, "six_months": PREMIUM_6MONTHS_TEXT},
         "free_tier": {"mock_per_day": FREE_MOCK_QS_DAILY,
                       "tutor_per_day": FREE_TUTOR_PER_DAY},
@@ -1430,6 +1457,7 @@ const API = window.location.origin;
 
 console.log("[Payment] Page loaded");
 console.log("[Payment] User:", UID);
+console.log("[Payment] Bot:", BOT);
 console.log("[Payment] Public Key Prefix:", FLW_PK ? FLW_PK.substring(0,15) + "..." : "MISSING");
 
 function payNow(planKey, amount) {
@@ -1632,12 +1660,106 @@ def run_flask():
 
 
 # ============================================================
-# CHANNEL AUTO-POSTING (BULLETPROOF v3)
+# CHANNEL AUTO-POSTING (v4 — unique post per slot)
 # ============================================================
-POST_HOURS = (8, 13, 20)  # Lagos time (UTC+1)
+# Each slot: (hour, minute, slot_name)
+POST_SLOTS = (
+    (8,  30, "morning"),
+    (13, 0,  "afternoon"),
+    (20, 0,  "evening"),
+)
+POST_WINDOW_MIN = 30  # fire within 30 minutes after target time
 
 
-async def channel_post(app, slot="manual"):
+def _now_lagos():
+    """Lagos time = UTC+1 (no DST)."""
+    return datetime.now(timezone.utc) + timedelta(hours=1)
+
+
+def _build_morning_post(q):
+    """8:30 AM — Motivational morning challenge."""
+    intro = random.choice([
+        "🌅 *Good Morning, Champion!*",
+        "🌅 *Rise and Grind!*",
+        "🌅 *Morning Dose of JAMB Practice*",
+    ])
+    return (
+        f"{intro}\n\n"
+        f"Start today strong with this one:\n\n"
+        f"📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
+        f"{md(q.get('question','')[:340])}\n\n"
+        f"A) {md(q.get('option_a','')[:80])}\n"
+        f"B) {md(q.get('option_b','')[:80])}\n"
+        f"C) {md(q.get('option_c','')[:80])}\n"
+        f"D) {md(q.get('option_d','')[:80])}\n\n"
+        f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
+        f"🎯 You've got this. Keep pushing!\n"
+        f"👉 Full practice: https://t.me/{BOT_USERNAME}"
+    )
+
+
+def _build_afternoon_post(q):
+    """1:00 PM — Quick focused practice."""
+    intro = random.choice([
+        "☀️ *Afternoon Quick Practice*",
+        "☀️ *Midday JAMB Challenge*",
+        "☀️ *Sharpen Your Skills*",
+    ])
+    return (
+        f"{intro}\n\n"
+        f"Take 30 seconds — solve this:\n\n"
+        f"📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
+        f"{md(q.get('question','')[:340])}\n\n"
+        f"A) {md(q.get('option_a','')[:80])}\n"
+        f"B) {md(q.get('option_b','')[:80])}\n"
+        f"C) {md(q.get('option_c','')[:80])}\n"
+        f"D) {md(q.get('option_d','')[:80])}\n\n"
+        f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
+        f"⚡ Stay sharp — you're doing great!\n"
+        f"👉 More practice: https://t.me/{BOT_USERNAME}"
+    )
+
+
+def _build_evening_post(q):
+    """8:00 PM — Deep study + explanation."""
+    intro = random.choice([
+        "🌙 *Evening Study Session*",
+        "🌙 *End the Day Strong*",
+        "🌙 *Tonight's JAMB Practice*",
+    ])
+    body = (
+        f"{intro}\n\n"
+        f"Let's close the day with a solid one:\n\n"
+        f"📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
+        f"{md(q.get('question','')[:340])}\n\n"
+        f"A) {md(q.get('option_a','')[:80])}\n"
+        f"B) {md(q.get('option_b','')[:80])}\n"
+        f"C) {md(q.get('option_c','')[:80])}\n"
+        f"D) {md(q.get('option_d','')[:80])}\n\n"
+        f"💡 *Answer:* {md(q.get('answer',''))}\n"
+    )
+    expl = (q.get("explanation") or "").strip()
+    if expl:
+        body += f"\n📖 *Why?* {md(expl[:350])}\n"
+    body += (
+        f"\n🛌 Sleep well — review again tomorrow.\n"
+        f"👉 Full practice: https://t.me/{BOT_USERNAME}"
+    )
+    return body
+
+
+def _build_post(q, slot_name):
+    """Route to the correct template."""
+    if slot_name == "morning":
+        return _build_morning_post(q)
+    if slot_name == "afternoon":
+        return _build_afternoon_post(q)
+    if slot_name == "evening":
+        return _build_evening_post(q)
+    return _build_morning_post(q)
+
+
+async def channel_post(app, slot_name="morning", slot_label="manual"):
     """Build and send a single channel post. Raises on failure."""
     if not CHANNEL_ID:
         raise RuntimeError("CHANNEL_ID is not configured on the server")
@@ -1646,81 +1768,68 @@ async def channel_post(app, slot="manual"):
     if not q:
         raise RuntimeError("No questions available in databank")
 
-    intro = random.choice([
-        "🌅 *Good Morning Champions!*",
-        "☀️ *Afternoon Practice!*",
-        "🌙 *Evening Study Time!*",
-        "📚 *Daily JAMB Practice*",
-    ])
-
-    msg = (
-        f"{intro}\n\n"
-        f"*{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
-        f"{md(q.get('question','')[:320])}\n\n"
-        f"A) {md(q.get('option_a','')[:70])}\n"
-        f"B) {md(q.get('option_b','')[:70])}\n"
-        f"C) {md(q.get('option_c','')[:70])}\n"
-        f"D) {md(q.get('option_d','')[:70])}\n\n"
-        f"💡 Answer: *{md(q.get('answer',''))}*\n\n"
-        f"👉 More practice: https://t.me/{BOT_USERNAME}"
-    )
+    msg = _build_post(q, slot_name)
 
     await app.bot.send_message(
         chat_id=CHANNEL_ID,
         text=msg,
         parse_mode="Markdown",
     )
-    print(f"[channel] ✅ Posted ({slot}) to {CHANNEL_ID}")
+    print(f"[channel] ✅ Posted ({slot_name}/{slot_label}) to {CHANNEL_ID}")
     return True
 
 
 async def channel_posting_job(app):
     """
-    Posts 3 times per day at 8:00, 13:00, 20:00 Lagos time (UTC+1).
-    Checks every 5 minutes for reliability.
-    Sends a startup test post so you can confirm it works immediately.
+    Posts 3 times daily (Lagos time):
+      • 08:30 → morning (motivational)
+      • 13:00 → afternoon (quick practice)
+      • 20:00 → evening (deep study + explanation)
     """
     print("[channel] ⏰ Channel posting job started")
     print(f"[channel]    CHANNEL_ID = {CHANNEL_ID or '❌ NOT SET'}")
-    print(f"[channel]    Schedule   = {POST_HOURS} Lagos time")
+    print(f"[channel]    Schedule   = 08:30, 13:00, 20:00 Lagos time")
+    print(f"[channel]    Bot        = @{BOT_USERNAME}")
+    print(f"[channel]    Mode       = unique post per slot")
 
     if not CHANNEL_ID:
         print("[channel] ❌ CHANNEL_ID not set — auto-posting DISABLED")
         return
 
-    # Startup test post
+    # Startup test (morning style)
     try:
-        await channel_post(app, slot="startup-test")
+        await channel_post(app, slot_name="morning", slot_label="startup-test")
     except Exception as e:
         print(f"[channel] ❌ Startup post failed: {type(e).__name__}: {e}")
-        print("[channel]    Check: (1) bot is admin in channel, "
-              "(2) CHANNEL_ID is correct, (3) bot has 'Post Messages' permission")
+        print("[channel]    Check: (1) bot is admin, (2) CHANNEL_ID, "
+              "(3) 'Post Messages' permission")
 
     posted_slots = set()
 
     while True:
         try:
-            lagos_now = datetime.now(timezone.utc) + timedelta(hours=1)
-            lagos_hour = lagos_now.hour
-            lagos_minute = lagos_now.minute
-            today = lagos_now.date().isoformat()
+            now = _now_lagos()
+            now_total = now.hour * 60 + now.minute
+            today = now.date().isoformat()
 
-            for target_hour in POST_HOURS:
-                slot_key = f"{today}_{target_hour}"
-                if (lagos_hour == target_hour and lagos_minute < 5
+            for (h, m, slot_name) in POST_SLOTS:
+                slot_key = f"{today}_{h:02d}{m:02d}"
+                target_total = h * 60 + m
+
+                if (target_total <= now_total < target_total + POST_WINDOW_MIN
                         and slot_key not in posted_slots):
-                    print(f"[channel] → Slot {target_hour}:00 reached "
-                          f"(Lagos {lagos_now.strftime('%H:%M')})")
+                    print(f"[channel] → Slot {slot_name} reached "
+                          f"(Lagos {now.strftime('%H:%M')})")
                     try:
-                        await channel_post(app, slot=f"{target_hour}:00")
+                        await channel_post(app, slot_name=slot_name,
+                                           slot_label=f"{h:02d}:{m:02d}")
                         posted_slots.add(slot_key)
                     except Exception as e:
-                        print(f"[channel] ❌ Slot {target_hour} failed: "
+                        print(f"[channel] ❌ Slot {slot_name} failed: "
                               f"{type(e).__name__}: {e}")
 
             posted_slots = {k for k in posted_slots if k.startswith(today)}
-
-            await asyncio.sleep(300)  # check every 5 minutes
+            await asyncio.sleep(300)
 
         except Exception as e:
             print(f"[channel] ❌ Job loop error: {type(e).__name__}: {e}")
@@ -1750,7 +1859,6 @@ async def post_init(app):
             menu_button=MenuButtonCommands(text="📋 Menu"))
         print("✅ Bot commands registered")
 
-        # Start the channel poster task (retry on failure)
         try:
             asyncio.create_task(channel_posting_job(app))
             print("✅ Channel poster task launched")
@@ -1767,6 +1875,8 @@ async def post_init(app):
 def main():
     load_data()
     load_processed_tx()
+
+    print(f"🤖 Bot username locked to: @{BOT_USERNAME}")
 
     # ── Build AI Tutor knowledge base ──
     if HAS_AI_TUTOR:
