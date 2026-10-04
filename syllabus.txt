@@ -1,0 +1,14 @@
+your-repo/
+├── syllabus/
+│   ├── english.txt
+│   ├── mathematics.txt
+│   ├── biology.txt
+│   ├── physics.txt
+│   ├── chemistry.txt
+│   ├── economics.txt
+│   ├── government.txt
+│   └── ...
+├── questions_*.json
+├── tutor.py
+├── main.py
+└── requirements.txt
