@@ -448,11 +448,11 @@ def _mock_menu_kb(uid):
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
         ]
     return [
-        [InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left)",
+        [InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left today)",
                               callback_data="mock_quick")],
-        [InlineKeyboardButton("📚 Subject Mock (40 Qs)",
+        [InlineKeyboardButton("📚 Subject Mock 🔒",
                               callback_data="mock_by_subject")],
-        [InlineKeyboardButton("🔥 Full JAMB Mock (180 Qs)",
+        [InlineKeyboardButton("🔥 Full JAMB Mock 🔒",
                               callback_data="mock_full")],
         [InlineKeyboardButton("💎 Upgrade Now",
                               callback_data="premium_info")],
@@ -473,10 +473,11 @@ def _mock_menu_text(uid):
     return (
         f"📝 *Mock Exam Menu*\n\n"
         f"🆓 *Free Plan:* {rem}/{FREE_MOCK_QS_DAILY} questions left today\n"
-        f"⚡ Quick 5 Qs\n"
+        f"⚡ Quick 5 Qs\n\n"
+        f"🔒 *Premium Only:*\n"
         f"📚 Subject Mock (40 Qs)\n"
         f"🔥 Full JAMB Mock (180 Qs)\n\n"
-        f"💎 Upgrade to Premium to unlock full mocks and unlimited daily practice!"
+        f"💎 Upgrade to Premium to unlock all mock types!"
     )
 
 
@@ -638,7 +639,7 @@ async def cmd_help(update, context):
         f"/debug — Databank status\n"
         f"/help — This message\n\n"
         f"*Free plan:*\n"
-        f"• {FREE_MOCK_QS_DAILY} mock questions/day (Quick, Subject, or Full)\n"
+        f"• Quick 5Q mock — {FREE_MOCK_QS_DAILY}/day\n"
         f"• Tutor — {FREE_TUTOR_PER_DAY}/day\n\n"
         f"*Premium:*\n"
         f"• All mock types unlimited\n"
@@ -793,19 +794,26 @@ async def handle_callback(update, context):
             
             finish_msg = f"🎉 *Mock Completed!*\n\nScore: *{score}/{total}* ({percent}%)\n🏆 Leader: {md(leader_name)} — {leader_score}/400"
             
-            # Check if free user just finished their daily limit
+            # Strict check for free users
             if not is_premium(uid):
                 rem = get_mock_remaining(uid)
                 if rem <= 0:
                     finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for today.*\nUpgrade to Premium to unlock full 40-question Subject Mocks, 180-question JAMB Mocks, and unlimited daily practice."
+                    buttons = [
+                        [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")],
+                        [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
+                    ]
                 else:
                     finish_msg += f"\n\n🆓 You have {rem} free questions left today."
-                    
-            buttons = []
-            if not is_premium(uid) and get_mock_remaining(uid) <= 0:
-                buttons.append([InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")])
-            buttons.append([InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")])
-            buttons.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
+                    buttons = [
+                        [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
+                        [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
+                    ]
+            else:
+                buttons = [
+                    [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
+                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
+                ]
             
             await query.message.reply_text(
                 finish_msg,
@@ -863,16 +871,15 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- SUBJECT MOCK (FREE TRIAL OR PREMIUM) ----------
+    # ---------- SUBJECT MOCK (PREMIUM ONLY) ----------
     if data == "mock_by_subject":
         if not is_premium(uid):
+            msg, kb = upgrade_kb(uid)
             await query.message.reply_text(
-                "📚 *Choose Subject*\n\n"
-                "🆓 *Free Plan:* You can only answer up to 5 questions total today.\n"
-                "💎 *Premium:* Get full 40-question subject mocks.\n\n"
-                "Select a subject to start:",
-                reply_markup=subjects_kb("mock_subject"),
-                parse_mode="Markdown")
+                f"🔒 *Subject Mock — Premium Only*\n\n"
+                f"Subject Mock gives you *40 questions* from one subject "
+                f"of your choice.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
             return
         await query.message.reply_text(
             "📚 *Choose Subject for your 40Q Mock:*",
@@ -882,22 +889,15 @@ async def handle_callback(update, context):
 
     if data.startswith("mock_subject_"):
         subj = data.replace("mock_subject_", "")
-        remaining = get_mock_remaining(uid)
-        
-        if not is_premium(uid) and remaining <= 0:
+        if not is_premium(uid):
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(
-                f"🛑 *Daily Free Limit Reached*\n\n"
-                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for today. "
-                f"Upgrade to Premium to unlock full 40-question Subject Mocks, "
-                f"180-question JAMB Mocks, and unlimited daily practice.\n\n{msg}",
+                f"🔒 *Subject Mock — Premium Only*\n\n"
+                f"Upgrade to unlock 40-question subject mocks.\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
-            
-        limit = 40 if is_premium(uid) else min(5, remaining)
-        qs = fetcher.fetch(subj, None, limit)
-        
-        if len(qs) < 1:
+        qs = fetcher.fetch(subj, None, 40)
+        if len(qs) < 5:
             await query.message.reply_text(
                 f"⚠️ Not enough questions for "
                 f"{SUBJECT_DISPLAY.get(subj, subj)} yet.\n"
@@ -907,33 +907,22 @@ async def handle_callback(update, context):
                     [InlineKeyboardButton("🏠 Main Menu",
                                           callback_data="main_menu")]]))
             return
-            
-        consume_mock(uid, len(qs), [q["id"] for q in qs])
         display = SUBJECT_DISPLAY.get(subj, subj.title())
-        
-        intro = (f"📚 *{display} Subject Mock*\n")
-        if not is_premium(uid):
-            intro += f"🆓 *Free Plan:* {len(qs)} questions (Max 5/day)\n"
-        else:
-            intro += f"{len(qs)} questions · Good luck!"
-            
+        intro = (f"📚 *{display} Subject Mock*\n"
+                 f"{len(qs)} questions · Good luck!")
         txt, kb = _start_mock_session(uid, qs, f"subject_{subj}", intro_text=intro)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- FULL MOCK (FREE TRIAL OR PREMIUM) ----------
+    # ---------- FULL MOCK (PREMIUM ONLY) ----------
     if data == "mock_full":
         if not is_premium(uid):
+            msg, kb = upgrade_kb(uid)
             await query.message.reply_text(
-                "🔥 *Full JAMB Mock*\n\n"
-                "🆓 *Free Plan:* You can only answer up to 5 questions total today.\n"
-                "💎 *Premium:* Get the full 180-question JAMB simulation.\n\n"
-                "Start your free 5-question trial?",
-                parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🚀 Start 5 Questions", callback_data="mock_full_start")],
-                    [InlineKeyboardButton("💎 Upgrade for 180 Qs", callback_data="premium_info")],
-                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
+                f"🔒 *Full JAMB Mock — Premium Only*\n\n"
+                f"Full Mock gives you 180 questions across multiple subjects "
+                f"like the real JAMB exam.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
             return
         leader_name, leader_score = get_leading()
         await query.message.reply_text(
@@ -946,34 +935,24 @@ async def handle_callback(update, context):
         return
 
     if data == "mock_full_start":
-        remaining = get_mock_remaining(uid)
-        if not is_premium(uid) and remaining <= 0:
+        if not is_premium(uid):
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
-            
-        limit = 180 if is_premium(uid) else min(5, remaining)
-        
-        qs = fetcher.fetch("english", None, limit)
+        qs = fetcher.fetch("english", None, 60)
         for subj in ["mathematics", "biology", "physics", "chemistry"]:
-            if subj in LOCAL_DATABANK and len(qs) < limit:
-                qs += fetcher.fetch(subj, None, limit - len(qs))
+            if subj in LOCAL_DATABANK:
+                qs += fetcher.fetch(subj, None, 40)
         random.shuffle(qs)
-        qs = qs[:limit]
-        
+        qs = qs[:180]
+        if len(qs) < 5:
+            qs = fetcher.fetch("english", None, 20)
         if not qs:
             await query.message.reply_text("⚠️ No questions loaded. Try /debug")
             return
-            
-        consume_mock(uid, len(qs), [q["id"] for q in qs])
         leader_name, leader_score = get_leading()
-        
-        intro = (f"🚀 *Full Mock ({len(qs)} Qs)*\n")
-        if not is_premium(uid):
-            intro += "🆓 *Free Plan:* Trial questions\n"
-        else:
-            intro += f"🏆 To beat: {md(leader_name)} — {leader_score}/400"
-            
+        intro = (f"🚀 *Full Mock {len(qs)}Q*\n"
+                 f"🏆 To beat: {md(leader_name)} — {leader_score}/400")
         txt, kb = _start_mock_session(uid, qs, "full_mock", intro_text=intro)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
