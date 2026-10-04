@@ -7,6 +7,7 @@ UTME Success Bot v28 — FINAL LOCKED
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from urllib.parse import quote
 
 import requests
 from flask import Flask, render_template_string, jsonify, request
@@ -470,7 +471,6 @@ def _mock_menu_kb(uid):
     rem = get_mock_remaining(uid)
     kb = []
     
-    # Only show Quick mock if they have questions left
     if rem > 0:
         kb.append([InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left today)",
                                         callback_data="mock_quick")])
@@ -478,7 +478,6 @@ def _mock_menu_kb(uid):
         kb.append([InlineKeyboardButton("🛑 Daily Free Limit Reached — 0 left",
                                         callback_data="premium_info")])
     
-    # Premium-only features -> straight to upgrade page (cannot be bypassed)
     kb.append([InlineKeyboardButton("🔒 Subject Mock (40 Qs) — Premium Only",
                                     callback_data="premium_info")])
     kb.append([InlineKeyboardButton("🔒 Full JAMB Mock (180 Qs) — Premium Only",
@@ -555,7 +554,6 @@ async def cmd_mock(update, context):
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
     
-    # If free user has 0 remaining, show upgrade straight away
     if not is_premium(uid) and get_mock_remaining(uid) <= 0:
         msg, kb = upgrade_kb(uid)
         await update.message.reply_text(
@@ -645,14 +643,14 @@ async def cmd_invite(update, context):
     u = get_user(uid, update.effective_user.first_name or "")
     link = f"https://t.me/{BOT_USERNAME}?start=invite_{u['invite_code']}"
     invites = u.get("invites", 0)
+    share_url = f"https://t.me/share/url?url={quote(link)}&text={quote('Join UTME Success Bot — free JAMB practice!')}"
     await update.message.reply_text(
         f"👥 *Invite Friends — VIRAL BONUS!*\n\n"
         f"🎁 Invite {REFERRAL_REQUIRED} = {REFERRAL_REWARD_DAYS} days FREE!\n\n"
         f"Your link:\n`{link}`\n\nProgress: {invites}/{REFERRAL_REQUIRED}",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("📤 Share Link",
-                url=f"https://t.me/share/url?url={link}&text=Join UTME Success Bot!")],
+            [InlineKeyboardButton("📤 Share Link", url=share_url)],
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
 
 
@@ -836,7 +834,6 @@ async def handle_callback(update, context):
             txt = format_question(q, session["idx"] + 1, len(qs))
             await query.message.reply_text(txt, reply_markup=_answer_keyboard(q))
         else:
-            # MOCK FINISHED
             score = session["score"]
             total = len(qs)
             percent = score * 100 // total if total else 0
@@ -849,7 +846,6 @@ async def handle_callback(update, context):
             
             finish_msg = f"🎉 *Mock Completed!*\n\nScore: *{score}/{total}* ({percent}%)\n🏆 Leader: {md(leader_name)} — {leader_score}/400"
             
-            # STRICT: Free users ONLY get Upgrade + Main Menu buttons on completion
             if not is_premium(uid):
                 finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\n\nUpgrade to Premium to unlock:\n✅ Full 40-question Subject Mocks\n✅ Full 180-question JAMB Mocks\n✅ Unlimited daily practice"
                 buttons = [
@@ -886,7 +882,7 @@ async def handle_callback(update, context):
             reply_markup=InlineKeyboardMarkup(_mock_menu_kb(uid)))
         return
 
-    # ---------- QUICK MOCK (free + premium) ----------
+    # ---------- QUICK MOCK ----------
     if data == "mock_quick":
         remaining = get_mock_remaining(uid)
         if remaining <= 0 and not is_premium(uid):
@@ -926,7 +922,7 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- SUBJECT MOCK (PREMIUM ONLY — HARD BLOCK) ----------
+    # ---------- SUBJECT MOCK (PREMIUM ONLY) ----------
     if data == "mock_by_subject":
         if not is_premium(uid):
             msg, kb = upgrade_kb(uid)
@@ -969,7 +965,7 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- FULL MOCK (PREMIUM ONLY — HARD BLOCK) ----------
+    # ---------- FULL MOCK (PREMIUM ONLY) ----------
     if data == "mock_full":
         if not is_premium(uid):
             msg, kb = upgrade_kb(uid)
@@ -1064,14 +1060,14 @@ async def handle_callback(update, context):
     if data == "invite_friends":
         link = f"https://t.me/{BOT_USERNAME}?start=invite_{u['invite_code']}"
         invites = u.get("invites", 0)
+        share_url = f"https://t.me/share/url?url={quote(link)}&text={quote('Join UTME Success Bot — free JAMB practice!')}"
         await query.message.reply_text(
             f"👥 *Invite Friends — VIRAL BONUS!*\n\n"
             f"🎁 Invite {REFERRAL_REQUIRED} = {REFERRAL_REWARD_DAYS} days FREE!\n\n"
             f"Your link:\n`{link}`\n\nProgress: {invites}/{REFERRAL_REQUIRED}",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("📤 Share Link",
-                    url=f"https://t.me/share/url?url={link}&text=Join UTME Success Bot!")],
+                [InlineKeyboardButton("📤 Share Link", url=share_url)],
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
         return
 
@@ -1109,7 +1105,6 @@ async def handle_msg(update, context):
     if text == "📖 Study Plan":
         await cmd_study(update, context); return
 
-    # Tutor mode
     session = USER_SESSIONS.get(uid, {})
     is_tutor = (session.get("mode") == "tutor" or "?" in text or len(text) > 8)
     if is_tutor:
@@ -1260,22 +1255,32 @@ UPGRADE_PAGE = r"""
  .plan-price{font-size:26px;font-weight:800;color:var(--bg3)}
  .plan-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
  .plan-sub s{color:#cbd5e1;margin-right:6px}
- .pay{display:block;width:100%;padding:15px 20px;border:none;border-radius:12px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--bg3),var(--bg2));box-shadow:0 8px 20px -6px rgba(124,58,237,.6)}
+ .pay{display:block;width:100%;padding:15px 20px;border:none;border-radius:12px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--bg3),var(--bg2));box-shadow:0 8px 20px -6px rgba(124,58,237,.6);transition:opacity .2s,transform .1s}
  .plan.best .pay{background:linear-gradient(135deg,var(--accent),#d97706);box-shadow:0 8px 20px -6px rgba(245,158,11,.6)}
  .pay:active{transform:translateY(2px)}
  .pay[disabled]{opacity:.5;cursor:not-allowed;box-shadow:none}
  .alt{text-align:center;margin-top:6px;padding-top:18px;border-top:1px dashed var(--line)}
  .alt-title{font-size:13px;color:var(--muted);margin-bottom:10px}
- .btn-alt{display:block;padding:14px 20px;border-radius:12px;text-decoration:none;font-weight:700;color:#fff;font-size:15px;background:linear-gradient(135deg,var(--success),#059669);box-shadow:0 8px 20px -6px rgba(16,185,129,.5)}
+ .btn-alt{display:block;padding:14px 20px;border-radius:12px;text-decoration:none;font-weight:700;color:#fff;font-size:15px;background:linear-gradient(135deg,var(--success),#059669);box-shadow:0 8px 20px -6px rgba(16,185,129,.5);text-align:center}
  .trust{text-align:center;font-size:11.5px;color:rgba(255,255,255,.7);margin-top:20px;line-height:1.7}
  .trust a{color:rgba(255,255,255,.9);text-decoration:underline}
  .user-badge{text-align:center;color:#fff;font-size:12px;opacity:.75;margin-bottom:16px;font-family:monospace;background:rgba(0,0,0,.2);padding:6px 14px;border-radius:20px;display:inline-block}
  .user-wrap{text-align:center;margin-bottom:6px}
  .alert{background:#fef2f2;color:#991b1b;padding:12px 16px;border-radius:12px;font-size:13px;border-left:4px solid #dc2626;margin-bottom:16px;line-height:1.5}
+ .testmode{background:#fef3c7;color:#92400e;padding:8px 14px;border-radius:10px;font-size:12px;text-align:center;font-weight:600;margin-bottom:14px}
+ .status{display:none;background:#dbeafe;color:#1e40af;padding:12px 16px;border-radius:12px;font-size:13px;text-align:center;margin-top:12px;font-weight:600}
 </style></head>
 <body><div class="wrap">
  <div class="hero"><div class="crown">👑</div><h1>Upgrade to Premium</h1><p>Unlock everything. Score higher in UTME.</p></div>
- {% if not gateway_ready %}<div class="alert">⚠️ Payment gateway not configured yet.</div>{% endif %}
+ 
+ {% if not gateway_ready %}
+ <div class="alert">⚠️ Payment gateway not configured. Please contact support or try again later.<br><br>Missing: {% if not flw_public_key %}FLW_PUBLIC_KEY {% endif %}{% if not flw_secret_key %}FLW_SECRET_KEY{% endif %}</div>
+ {% endif %}
+ 
+ {% if test_mode %}
+ <div class="testmode">🧪 TEST MODE — Using Flutterwave test keys (no real money charged)</div>
+ {% endif %}
+ 
  <div class="user-wrap"><span class="user-badge">User ID: {{ uid }}</span></div>
  <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span class="badge">PREMIUM BENEFITS</span></div>
  <ul class="benefits">
@@ -1290,36 +1295,116 @@ UPGRADE_PAGE = r"""
  <div class="card"><div style="text-align:center;margin-bottom:14px"><div class="badge">CHOOSE YOUR PLAN</div></div>
   <div class="plan"><div class="plan-head"><span class="plan-name">Monthly</span><span class="plan-price">{{ monthly_price_text }}</span></div>
    <div class="plan-sub">{{ monthly_days }} days of full access</div>
-   <button class="pay" onclick="payNow('monthly', {{ monthly_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay {{ monthly_price_text }} — Monthly</button></div>
+   <button class="pay" id="pay-monthly" onclick="payNow('monthly', {{ monthly_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay {{ monthly_price_text }} — Monthly</button></div>
   <div class="plan best"><div class="plan-head"><span class="plan-name">6 Months</span><span class="plan-price">{{ six_months_text }}</span></div>
    <div class="plan-sub"><s>{{ monthly_price_text }} × 6</s> <b style="color:#d97706">Save {{ savings_text }}!</b> · {{ six_months_days }} days</div>
-   <button class="pay" onclick="payNow('6months', {{ six_months_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay {{ six_months_text }} — Save {{ savings_text }}</button></div>
+   <button class="pay" id="pay-6months" onclick="payNow('6months', {{ six_months_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay {{ six_months_text }} — Save {{ savings_text }}</button></div>
+  <div class="status" id="status">Opening secure payment…</div>
  </div>
  <div class="card"><div class="alt"><div class="alt-title">💚 Invite {{ referral_required }} friends → <b>{{ referral_reward_days }} days FREE</b></div>
-  <a class="btn-alt" href="{{ invite_link }}">👥 Invite {{ referral_required }} Friends — Get {{ referral_reward_days }} Days FREE</a></div></div>
+  <a class="btn-alt" href="{{ share_link }}">👥 Share Invite Link — Get {{ referral_reward_days }} Days FREE</a></div></div>
  <div class="trust">🔒 Secured by Flutterwave · <a href="https://t.me/{{ bot_username }}">Return to Bot</a></div>
 </div>
 <script>
-const UID="{{ uid }}"; const BOT="{{ bot_username }}"; const FLW_PK="{{ flw_public_key }}"; const API=window.location.origin;
-function payNow(planKey, amount){
- if(!FLW_PK){alert("Payment gateway not configured.");return;}
- const txRef="UTME-"+UID+"-"+Date.now();
- FlutterwaveCheckout({
-  public_key:FLW_PK, tx_ref:txRef, amount:amount, currency:"NGN",
-  payment_options:"card,banktransfer,ussd,account",
-  customer:{email:"user"+UID+"@utmebot.com", name:"UTME User "+UID},
-  customizations:{title:"UTME Success Bot Premium", description:planKey==="6months"?"6 Months Premium":"Monthly Premium"},
-  meta:{user_id:UID, plan:planKey},
-  callback:function(resp){
-   fetch(API+"/verify/flutterwave",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({transaction_id:resp.transaction_id,tx_ref:resp.tx_ref,expected_uid:UID,plan:planKey})})
-   .then(r=>r.json()).then(res=>{
-    if(res.status==="success"){alert("✅ Premium activated!");window.location.href="https://t.me/"+BOT;}
-    else if(res.status==="duplicate_or_invalid"){alert("ℹ️ Already processed.");window.location.href="https://t.me/"+BOT;}
-    else{alert("⚠️ Received. Message bot with ID: "+UID);window.location.href="https://t.me/"+BOT;}
-   }).catch(()=>{alert("⚠️ Network error.");window.location.href="https://t.me/"+BOT;});
+const UID = "{{ uid }}";
+const BOT = "{{ bot_username }}";
+const FLW_PK = "{{ flw_public_key }}";
+const API = window.location.origin;
+
+console.log("[Payment] Page loaded");
+console.log("[Payment] User:", UID);
+console.log("[Payment] Public Key Prefix:", FLW_PK ? FLW_PK.substring(0,15) + "..." : "MISSING");
+console.log("[Payment] FlutterwaveCheckout available:", typeof FlutterwaveCheckout !== "undefined");
+
+function payNow(planKey, amount) {
+  console.log("[Payment] payNow called:", planKey, amount);
+  
+  if (typeof FlutterwaveCheckout === "undefined") {
+    alert("❌ Payment gateway failed to load.\n\nPlease disable any ad-blocker and refresh this page.");
+    return;
   }
- });
+  
+  if (!FLW_PK || FLW_PK.length < 20) {
+    alert("❌ Payment is not configured.\n\nFLW_PUBLIC_KEY is missing on the server. Please contact support.");
+    return;
+  }
+  
+  const status = document.getElementById("status");
+  status.style.display = "block";
+  status.textContent = "Opening secure payment…";
+  
+  const txRef = "UTME-" + UID + "-" + Date.now();
+  console.log("[Payment] tx_ref:", txRef);
+  
+  try {
+    FlutterwaveCheckout({
+      public_key: FLW_PK,
+      tx_ref: txRef,
+      amount: amount,
+      currency: "NGN",
+      payment_options: "card,banktransfer,ussd,account",
+      redirect_url: API + "/payment/complete?uid=" + UID,
+      customer: {
+        email: "user" + UID + "@utmebot.com",
+        phone_number: "",
+        name: "UTME User " + UID,
+      },
+      customizations: {
+        title: "UTME Success Bot Premium",
+        description: planKey === "6months" ? "6 Months Premium Access" : "Monthly Premium Access",
+      },
+      meta: {
+        user_id: UID,
+        plan: planKey,
+      },
+      callback: function (resp) {
+        console.log("[Payment] Callback:", resp);
+        status.textContent = "Verifying payment…";
+        
+        fetch(API + "/verify/flutterwave", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            transaction_id: resp.transaction_id,
+            tx_ref: resp.tx_ref,
+            expected_uid: UID,
+            plan: planKey,
+          }),
+        })
+        .then(r => r.json())
+        .then(res => {
+          console.log("[Payment] Verification:", res);
+          if (res.status === "success") {
+            status.textContent = "✅ Premium activated!";
+            alert("✅ Payment successful!\n\nYour Premium access is now active. Returning to bot…");
+            window.location.href = "https://t.me/" + BOT;
+          } else if (res.status === "duplicate_or_invalid") {
+            status.textContent = "ℹ️ Already processed.";
+            alert("ℹ️ This payment was already processed. Returning to bot…");
+            window.location.href = "https://t.me/" + BOT;
+          } else {
+            status.textContent = "⚠️ Verification pending.";
+            alert("⚠️ We received your payment.\n\nPlease send this to support if not activated in 5 min:\nUser ID: " + UID + "\nTx Ref: " + txRef);
+            window.location.href = "https://t.me/" + BOT;
+          }
+        })
+        .catch((err) => {
+          console.error("[Payment] Verify error:", err);
+          status.textContent = "⚠️ Network error.";
+          alert("⚠️ Network error while verifying.\n\nYour payment may still go through. Message the bot with:\nUser ID: " + UID);
+          window.location.href = "https://t.me/" + BOT;
+        });
+      },
+      onclose: function () {
+        console.log("[Payment] Modal closed by user");
+        status.style.display = "none";
+      },
+    });
+  } catch (err) {
+    console.error("[Payment] Exception:", err);
+    status.textContent = "❌ Error opening payment.";
+    alert("❌ Could not open payment window.\n\nError: " + err.message);
+  }
 }
 </script></body></html>
 """
@@ -1331,18 +1416,54 @@ def upgrade_page(uid):
     six = _resolve_plan("6months")
     savings = PREMIUM_PRICE * 6 - PREMIUM_6MONTHS_PRICE
     savings_text = f"\u20a6{savings}" if savings > 0 else ""
+    
     invite_link = f"https://t.me/{BOT_USERNAME}?start=invite_{uid}"
+    share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot — free JAMB practice!')}"
+    
     gateway_ready = bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY)
+    test_mode = bool(FLW_PUBLIC_KEY and "TEST" in FLW_PUBLIC_KEY.upper())
+    
     return render_template_string(
-        UPGRADE_PAGE, uid=uid, bot_username=BOT_USERNAME,
-        flw_public_key=FLW_PUBLIC_KEY, gateway_ready=gateway_ready,
+        UPGRADE_PAGE,
+        uid=uid,
+        bot_username=BOT_USERNAME,
+        flw_public_key=FLW_PUBLIC_KEY,
+        flw_secret_key=FLW_SECRET_KEY,
+        gateway_ready=gateway_ready,
+        test_mode=test_mode,
         total_qs=len(ALL_QS),
-        monthly_price=monthly["price"], monthly_price_text=monthly["price_text"],
-        monthly_days=monthly["days"], six_months_price=six["price"],
-        six_months_text=six["price_text"], six_months_days=six["days"],
-        savings_text=savings_text, referral_required=REFERRAL_REQUIRED,
-        referral_reward_days=REFERRAL_REWARD_DAYS, invite_link=invite_link,
+        monthly_price=monthly["price"],
+        monthly_price_text=monthly["price_text"],
+        monthly_days=monthly["days"],
+        six_months_price=six["price"],
+        six_months_text=six["price_text"],
+        six_months_days=six["days"],
+        savings_text=savings_text,
+        referral_required=REFERRAL_REQUIRED,
+        referral_reward_days=REFERRAL_REWARD_DAYS,
+        invite_link=invite_link,
+        share_link=share_link,
     )
+
+
+@flask_app.route("/payment/complete")
+def payment_complete():
+    uid = request.args.get("uid", "")
+    return f"""
+    <!DOCTYPE html><html><head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payment Complete</title>
+    <style>body{{font-family:-apple-system,sans-serif;text-align:center;padding:60px 20px;background:#f8fafc;margin:0}}
+    .box{{max-width:400px;margin:0 auto;background:#fff;padding:40px 24px;border-radius:20px;box-shadow:0 10px 30px -10px rgba(0,0,0,.15)}}
+    h1{{color:#10b981;margin:0 0 12px;font-size:24px}}p{{color:#64748b;line-height:1.6;font-size:14px}}
+    a{{display:inline-block;margin-top:24px;padding:14px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:12px;font-weight:700;font-size:15px}}</style>
+    </head><body><div class="box">
+    <h1>✅ Payment Received</h1>
+    <p>Your payment has been received.<br>Premium activation is processing.</p>
+    <p>If it doesn't activate in 2 minutes, message the bot with your ID: <b>{uid}</b></p>
+    <a href="https://t.me/{BOT_USERNAME}">Return to Bot</a>
+    </div></body></html>
+    """
 
 
 @flask_app.route("/verify/flutterwave", methods=["POST"])
