@@ -29,7 +29,7 @@ PREMIUM_6MONTHS_DAYS  = int(os.getenv("PREMIUM_6MONTHS_DAYS", "180"))
 
 # Free tier
 FREE_MOCK_QS_DAILY = int(os.getenv("FREE_MOCK_QS_DAILY", "5"))
-FREE_TUTOR_PER_DAY = int(os.getenv("FREE_TUTOR_PER_DAY", "10"))
+FREE_TUTOR_PER_DAY = int(os.getenv("FREE_TUTOR_PER_DAY", "5"))
 
 # Referrals
 REFERRAL_REQUIRED    = int(os.getenv("REFERRAL_REQUIRED", "3"))
@@ -47,7 +47,7 @@ FLUTTERWAVE_6MONTHS_LINK = os.getenv("FLUTTERWAVE_6MONTHS_LINK", "")
 PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY", "")
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY", "")
 
-# Subject list — must match your question files' subject_key values
+# Subjects
 ALL_SUBJECTS = [
     "english", "mathematics", "biology", "physics", "chemistry",
     "economics", "government", "commerce", "accounting",
