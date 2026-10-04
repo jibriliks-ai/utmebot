@@ -206,7 +206,8 @@ def get_user(uid, username=""):
     uid = str(uid)
     if uid not in USER_DATA:
         USER_DATA[uid] = {
-            "mock_counts": {}, "tutor_counts": {}, "used_ids": [],
+            "daily_mock_count": 0, "last_mock_time": 0.0,
+            "tutor_counts": {}, "used_ids": [],
             "is_premium": False, "premium_until": None, "premium_plan": None,
             "joined": str(date.today()), "history": [],
             "invite_code": hashlib.md5(uid.encode()).hexdigest()[:6].upper(),
@@ -240,13 +241,27 @@ def can_use_mock(uid, c=1):
     if is_premium(uid):
         return True
     u = get_user(uid)
-    return u["mock_counts"].get(str(date.today()), 0) + c <= FREE_MOCK_QS_DAILY
+    now = time.time()
+    # Reset if 24 hours (86400 seconds) have passed since first mock of the day
+    if now - u.get("last_mock_time", 0) > 86400:
+        u["daily_mock_count"] = 0
+        u["last_mock_time"] = 0.0
+        save_data()
+    return u.get("daily_mock_count", 0) + c <= FREE_MOCK_QS_DAILY
 
 
 def consume_mock(uid, c, ids=None):
     u = get_user(uid)
-    today = str(date.today())
-    u["mock_counts"][today] = u["mock_counts"].get(today, 0) + c
+    now = time.time()
+    if now - u.get("last_mock_time", 0) > 86400:
+        u["daily_mock_count"] = 0
+        u["last_mock_time"] = 0.0
+    
+    # Set the timestamp on the very first question answered in this 24h window
+    if u.get("daily_mock_count", 0) == 0:
+        u["last_mock_time"] = now
+        
+    u["daily_mock_count"] = u.get("daily_mock_count", 0) + c
     if ids:
         u["used_ids"].extend(ids)
         u["used_ids"] = list(dict.fromkeys(u["used_ids"]))[-2000:]
@@ -257,14 +272,20 @@ def get_mock_remaining(uid):
     if is_premium(uid):
         return 999
     u = get_user(uid)
-    return max(0, FREE_MOCK_QS_DAILY - u["mock_counts"].get(str(date.today()), 0))
+    now = time.time()
+    if now - u.get("last_mock_time", 0) > 86400:
+        u["daily_mock_count"] = 0
+        u["last_mock_time"] = 0.0
+        save_data()
+    return max(0, FREE_MOCK_QS_DAILY - u.get("daily_mock_count", 0))
 
 
 def can_use_tutor(uid):
     if is_premium(uid):
         return True
     u = get_user(uid)
-    return u["tutor_counts"].get(str(date.today()), 0) < FREE_TUTOR_PER_DAY
+    today = str(date.today())
+    return u["tutor_counts"].get(today, 0) < FREE_TUTOR_PER_DAY
 
 
 def consume_tutor(uid):
@@ -353,7 +374,7 @@ def plan_buttons(uid):
 def upgrade_kb(uid):
     msg = (
         f"⏰ *Limit Reached / Premium Feature*\n\n"
-        f"Free plan: {FREE_MOCK_QS_DAILY} mock/day + {FREE_TUTOR_PER_DAY} tutor/day\n\n"
+        f"Free plan: {FREE_MOCK_QS_DAILY} mock questions per 24 hours + {FREE_TUTOR_PER_DAY} tutor/day\n\n"
         f"💎 *Premium Plans:*\n"
         f"• Monthly — {PREMIUM_PRICE_TEXT} / {PREMIUM_DAYS} days\n"
         f"• 6 Months — {PREMIUM_6MONTHS_TEXT} / {PREMIUM_6MONTHS_DAYS} days\n\n"
@@ -376,7 +397,7 @@ def main_menu_text_kb(uid):
     leader_name, leader_score = get_leading()
     text = (
         f"🎓 *UTME Success Bot*\n\n"
-        f"📊 {rem}/{FREE_MOCK_QS_DAILY} mocks today | {prem}\n"
+        f"📊 {rem}/{FREE_MOCK_QS_DAILY} mocks available today | {prem}\n"
         f"🏆 Top: {md(leader_name)} — {leader_score}/400\n\n"
         f"📚 *{len(ALL_QS)} questions* across {len(AVAILABLE_SUBJECTS)} subjects\n\n"
         f"👥 *VIRAL:* Invite {REFERRAL_REQUIRED}={REFERRAL_REWARD_DAYS} days FREE!\n\n"
@@ -515,6 +536,18 @@ async def cmd_start(update, context):
 async def cmd_mock(update, context):
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
+    
+    # STRICT BLOCK: If free user has exhausted their 5 questions in the last 24h
+    if not is_premium(uid) and get_mock_remaining(uid) <= 0:
+        msg, kb = upgrade_kb(uid)
+        await update.message.reply_text(
+            f"🛑 *Daily Free Limit Reached*\n\n"
+            f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
+            f"Upgrade to Premium to unlock unlimited mocks, Subject Mock (40 Qs), "
+            f"Full JAMB Mock (180 Qs), and unlimited Tutor access.\n\n{msg}",
+            parse_mode="Markdown", reply_markup=kb)
+        return
+        
     await update.message.reply_text(
         _mock_menu_text(uid),
         parse_mode="Markdown",
@@ -639,7 +672,7 @@ async def cmd_help(update, context):
         f"/debug — Databank status\n"
         f"/help — This message\n\n"
         f"*Free plan:*\n"
-        f"• Quick 5Q mock — {FREE_MOCK_QS_DAILY}/day\n"
+        f"• {FREE_MOCK_QS_DAILY} mock questions per 24 hours\n"
         f"• Tutor — {FREE_TUTOR_PER_DAY}/day\n\n"
         f"*Premium:*\n"
         f"• All mock types unlimited\n"
@@ -734,7 +767,11 @@ async def handle_callback(update, context):
         remaining = get_mock_remaining(uid)
         if not is_premium(uid) and remaining <= 0:
             msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
+            await query.message.reply_text(
+                f"🛑 *Daily Free Limit Reached*\n\n"
+                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
+                f"Upgrade to Premium to unlock all mock types and unlimited practice.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
             return
         limit = 5 if not is_premium(uid) else 5
         qs = fetcher.fetch(subj, None, min(limit, remaining if not is_premium(uid) else limit))
@@ -794,11 +831,11 @@ async def handle_callback(update, context):
             
             finish_msg = f"🎉 *Mock Completed!*\n\nScore: *{score}/{total}* ({percent}%)\n🏆 Leader: {md(leader_name)} — {leader_score}/400"
             
-            # Strict check for free users
+            # STRICT BLOCK: Check if free user just finished their daily limit
             if not is_premium(uid):
                 rem = get_mock_remaining(uid)
                 if rem <= 0:
-                    finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for today.*\nUpgrade to Premium to unlock full 40-question Subject Mocks, 180-question JAMB Mocks, and unlimited daily practice."
+                    finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\nUpgrade to Premium to unlock full 40-question Subject Mocks, 180-question JAMB Mocks, and unlimited daily practice."
                     buttons = [
                         [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")],
                         [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
@@ -824,6 +861,16 @@ async def handle_callback(update, context):
 
     # ---------- MOCK MENU ----------
     if data == "mock_menu":
+        # STRICT BLOCK: If free user has exhausted their 5 questions in the last 24h
+        if not is_premium(uid) and get_mock_remaining(uid) <= 0:
+            msg, kb = upgrade_kb(uid)
+            await query.message.reply_text(
+                f"🛑 *Daily Free Limit Reached*\n\n"
+                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
+                f"Upgrade to Premium to unlock all mock types and unlimited practice.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
+            return
+            
         await query.message.reply_text(
             _mock_menu_text(uid),
             parse_mode="Markdown",
@@ -837,7 +884,7 @@ async def handle_callback(update, context):
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(
                 f"🛑 *Daily Free Limit Reached*\n\n"
-                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for today. "
+                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
                 f"Upgrade to Premium to unlock unlimited mocks, Subject Mock (40 Qs), "
                 f"Full JAMB Mock (180 Qs), and unlimited Tutor access.\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
