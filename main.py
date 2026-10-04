@@ -468,6 +468,14 @@ def _mock_menu_kb(uid):
                                   callback_data="mock_full")],
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
         ]
+        
+    # STRICT: If free user has 0 questions left, remove all mock buttons
+    if rem <= 0:
+        return [
+            [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")],
+            [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
+        ]
+        
     return [
         [InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left today)",
                               callback_data="mock_quick")],
@@ -491,6 +499,12 @@ def _mock_menu_text(uid):
             f"Choose mock type:"
         )
     rem = get_mock_remaining(uid)
+    if rem <= 0:
+        return (
+            f"📝 *Mock Exam Menu*\n\n"
+            f"🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\n\n"
+            f"💎 Upgrade to Premium to unlock all mock types and unlimited practice!"
+        )
     return (
         f"📝 *Mock Exam Menu*\n\n"
         f"🆓 *Free Plan:* {rem}/{FREE_MOCK_QS_DAILY} questions left today\n"
@@ -831,21 +845,13 @@ async def handle_callback(update, context):
             
             finish_msg = f"🎉 *Mock Completed!*\n\nScore: *{score}/{total}* ({percent}%)\n🏆 Leader: {md(leader_name)} — {leader_score}/400"
             
-            # STRICT BLOCK: Check if free user just finished their daily limit
+            # STRICT: Free users ONLY get Upgrade + Main Menu buttons on completion
             if not is_premium(uid):
-                rem = get_mock_remaining(uid)
-                if rem <= 0:
-                    finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\nUpgrade to Premium to unlock full 40-question Subject Mocks, 180-question JAMB Mocks, and unlimited daily practice."
-                    buttons = [
-                        [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")],
-                        [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
-                    ]
-                else:
-                    finish_msg += f"\n\n🆓 You have {rem} free questions left today."
-                    buttons = [
-                        [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
-                        [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
-                    ]
+                finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\nUpgrade to Premium to unlock full 40-question Subject Mocks, 180-question JAMB Mocks, and unlimited daily practice."
+                buttons = [
+                    [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")],
+                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
+                ]
             else:
                 buttons = [
                     [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
