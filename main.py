@@ -1,6 +1,7 @@
 """
-UTME Success Bot v27 — FINAL
-Every /command works. Bot + Flask + payments, one process.
+UTME Success Bot v28 — FINAL
+- Free: Quick 5Q mock only + 5 tutor/day
+- Premium: Subject mock (40Q) + Full mock (180Q) + unlimited tutor
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta
@@ -52,7 +53,7 @@ except Exception as _e:
     PREMIUM_DAYS = int(os.getenv("PREMIUM_DAYS", "30"))
     PREMIUM_6MONTHS_DAYS = int(os.getenv("PREMIUM_6MONTHS_DAYS", "180"))
     FREE_MOCK_QS_DAILY = int(os.getenv("FREE_MOCK_QS_DAILY", "5"))
-    FREE_TUTOR_PER_DAY = int(os.getenv("FREE_TUTOR_PER_DAY", "10"))
+    FREE_TUTOR_PER_DAY = int(os.getenv("FREE_TUTOR_PER_DAY", "5"))
     REFERRAL_REQUIRED = int(os.getenv("REFERRAL_REQUIRED", "3"))
     REFERRAL_REWARD_DAYS = int(os.getenv("REFERRAL_REWARD_DAYS", "7"))
     CHANNEL_ID = os.getenv("CHANNEL_ID", "")
@@ -339,7 +340,7 @@ def _grant_from_verified(tx_ref, plan_key):
     return uid
 
 
-# ---------- Shared UI builders ----------
+# ---------- UI builders ----------
 def plan_buttons(uid):
     return [
         [InlineKeyboardButton(f"💳 Monthly — {PREMIUM_PRICE_TEXT}",
@@ -351,12 +352,12 @@ def plan_buttons(uid):
 
 def upgrade_kb(uid):
     msg = (
-        f"⏰ *Daily Limit Reached!*\n\n"
-        f"Free: {FREE_MOCK_QS_DAILY} mock/day + {FREE_TUTOR_PER_DAY} tutor/day\n\n"
+        f"⏰ *Limit Reached / Premium Feature*\n\n"
+        f"Free plan: {FREE_MOCK_QS_DAILY} mock/day + {FREE_TUTOR_PER_DAY} tutor/day\n\n"
         f"💎 *Premium Plans:*\n"
         f"• Monthly — {PREMIUM_PRICE_TEXT} / {PREMIUM_DAYS} days\n"
         f"• 6 Months — {PREMIUM_6MONTHS_TEXT} / {PREMIUM_6MONTHS_DAYS} days\n\n"
-        f"✅ Unlimited mocks\n✅ Full 180Q CBT\n"
+        f"✅ Unlimited mocks\n✅ Subject Mock (40Q)\n✅ Full JAMB Mock (180Q)\n"
         f"✅ Unlimited tutor + Voice 🎙️\n✅ {len(ALL_QS)} Qs"
     )
     kb = plan_buttons(uid)
@@ -434,14 +435,59 @@ def _start_mock_session(uid, qs, subject_label, intro_text=""):
     return txt, _answer_keyboard(q)
 
 
+def _mock_menu_kb(uid):
+    """Build the mock menu based on user's premium status."""
+    rem = get_mock_remaining(uid)
+    if is_premium(uid):
+        return [
+            [InlineKeyboardButton("⚡ Quick 5 Qs", callback_data="mock_quick")],
+            [InlineKeyboardButton("📚 Subject Mock (40 Qs)",
+                                  callback_data="mock_by_subject")],
+            [InlineKeyboardButton("🔥 Full JAMB Mock (180 Qs)",
+                                  callback_data="mock_full")],
+            [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
+        ]
+    return [
+        [InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left)",
+                              callback_data="mock_quick")],
+        [InlineKeyboardButton("📚 Subject Mock 🔒",
+                              callback_data="mock_by_subject")],
+        [InlineKeyboardButton("🔥 Full JAMB Mock 🔒",
+                              callback_data="mock_full")],
+        [InlineKeyboardButton("💎 Upgrade Now",
+                              callback_data="premium_info")],
+        [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
+    ]
+
+
+def _mock_menu_text(uid):
+    if is_premium(uid):
+        leader_name, leader_score = get_leading()
+        return (
+            f"📝 *Mock Exam Menu*\n"
+            f"💎 Premium — Full Access\n"
+            f"🏆 Top: {md(leader_name)} — {leader_score}/400\n\n"
+            f"Choose mock type:"
+        )
+    rem = get_mock_remaining(uid)
+    return (
+        f"📝 *Mock Exam Menu*\n\n"
+        f"🆓 *Free Plan:*\n"
+        f"⚡ Quick 5 Qs — {rem}/{FREE_MOCK_QS_DAILY} left today\n\n"
+        f"🔒 *Premium Only:*\n"
+        f"📚 Subject Mock (40 Qs)\n"
+        f"🔥 Full JAMB Mock (180 Qs)\n\n"
+        f"💎 Upgrade to unlock all mock types!"
+    )
+
+
 # ============================================================
-# COMMAND HANDLERS — each one does its own specific thing
+# COMMAND HANDLERS
 # ============================================================
 
 async def cmd_start(update, context):
     uid = str(update.effective_user.id)
     username = update.effective_user.first_name or ""
-    # Handle referral deep-link
     if context.args and context.args[0].startswith("invite_"):
         code = context.args[0].replace("invite_", "")
         u = get_user(uid, username)
@@ -453,7 +499,8 @@ async def cmd_start(update, context):
                         inv_data["invites"] = inv_data.get("invites", 0) + 1
                         inv_data.setdefault("invited_users", []).append(uid)
                         if inv_data["invites"] >= REFERRAL_REQUIRED:
-                            add_premium(inviter_id, days=REFERRAL_REWARD_DAYS, plan="referral")
+                            add_premium(inviter_id, days=REFERRAL_REWARD_DAYS,
+                                        plan="referral")
                             inv_data["invites"] = 0
                         save_data()
                     break
@@ -468,27 +515,10 @@ async def cmd_start(update, context):
 async def cmd_mock(update, context):
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
-    rem = get_mock_remaining(uid)
-    if is_premium(uid):
-        leader_name, leader_score = get_leading()
-        await update.message.reply_text(
-            f"📝 *Mock — Premium*\n🏆 {md(leader_name)} — {leader_score}/400\n✅ Unlimited",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("⚡ Quick 5 Qs", callback_data="mock_quick")],
-                [InlineKeyboardButton("🔥 Full 180Q", callback_data="mock_full")],
-                [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
-    else:
-        await update.message.reply_text(
-            f"📝 *Mock — Free {rem}/{FREE_MOCK_QS_DAILY} today*\n"
-            f"Invite {REFERRAL_REQUIRED}={REFERRAL_REWARD_DAYS} days FREE!",
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left)",
-                                      callback_data="mock_quick")],
-                [InlineKeyboardButton(f"👥 Invite {REFERRAL_REQUIRED}=FREE",
-                                      callback_data="invite_friends")],
-                [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
+    await update.message.reply_text(
+        _mock_menu_text(uid),
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(_mock_menu_kb(uid)))
 
 
 async def cmd_study(update, context):
@@ -523,7 +553,7 @@ async def cmd_score(update, context):
         await update.message.reply_text(
             "📊 No scores yet. Take a mock to see your stats!",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("📝 Take Mock", callback_data="mock_quick")],
+                [InlineKeyboardButton("📝 Take Mock", callback_data="mock_menu")],
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
         return
     avg = sum(h["score"] * 400 // h["total"] for h in hist if h["total"]) / len(hist)
@@ -535,7 +565,7 @@ async def cmd_score(update, context):
         f"🏆 Leader: {md(leader_name)} — {leader_score}/400",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("📝 New Mock", callback_data="mock_quick"),
+            [InlineKeyboardButton("📝 New Mock", callback_data="mock_menu"),
              InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
 
 
@@ -544,9 +574,15 @@ async def cmd_tutor(update, context):
     u = get_user(uid, update.effective_user.first_name or "")
     prev = USER_SESSIONS.get(uid, {}).get("subject") or u.get("study_subject")
     USER_SESSIONS[uid] = {"mode": "tutor", "subject": prev}
+    if is_premium(uid):
+        remaining_text = "Unlimited"
+    else:
+        used = u["tutor_counts"].get(str(date.today()), 0)
+        remaining_text = f"{max(0, FREE_TUTOR_PER_DAY - used)}/{FREE_TUTOR_PER_DAY} left today"
     await update.message.reply_text(
         f"💬 *Ask Tutor*\n\n"
-        f"I know {len(ALL_QS)} past questions + AI brain + Voice 🎙️.\n\n"
+        f"I know {len(ALL_QS)} past questions + AI brain + Voice 🎙️.\n"
+        f"Tutor questions: {remaining_text}\n\n"
         f"Just type your question — any subject, any topic.",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
@@ -580,7 +616,7 @@ async def cmd_premium(update, context):
         f"💎 *Premium Plans*\n\n"
         f"*Monthly — {PREMIUM_PRICE_TEXT}* / {PREMIUM_DAYS} days\n"
         f"*6 Months — {PREMIUM_6MONTHS_TEXT}* / {PREMIUM_6MONTHS_DAYS} days *(BEST VALUE)*\n\n"
-        f"✅ Unlimited mocks\n✅ Full 180Q CBT\n"
+        f"✅ Unlimited mocks\n✅ Subject Mock (40Q)\n✅ Full JAMB Mock (180Q)\n"
         f"✅ Unlimited tutor + Voice 🎙️\n✅ {len(ALL_QS)} Qs",
         parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
 
@@ -590,7 +626,7 @@ async def cmd_help(update, context):
     get_user(uid, update.effective_user.first_name or "")
     await update.message.reply_text(
         f"❓ *Help — UTME Success Bot*\n\n"
-        f"*Available commands:*\n"
+        f"*Commands:*\n"
         f"/start — Main menu\n"
         f"/mock — Start mock exam\n"
         f"/past — Past questions by subject\n"
@@ -598,10 +634,18 @@ async def cmd_help(update, context):
         f"/syllabus — JAMB syllabus\n"
         f"/score — Your scores\n"
         f"/tutor — Ask tutor\n"
-        f"/invite — Invite friends (get free premium)\n"
-        f"/premium — Upgrade to premium\n"
+        f"/invite — Invite friends\n"
+        f"/premium — Upgrade premium\n"
         f"/debug — Databank status\n"
         f"/help — This message\n\n"
+        f"*Free plan:*\n"
+        f"• Quick 5Q mock — {FREE_MOCK_QS_DAILY}/day\n"
+        f"• Tutor — {FREE_TUTOR_PER_DAY}/day\n\n"
+        f"*Premium:*\n"
+        f"• All mock types unlimited\n"
+        f"• Subject Mock (40Q)\n"
+        f"• Full JAMB Mock (180Q)\n"
+        f"• Unlimited tutor\n\n"
         f"Channel: @{md(CHANNEL_USERNAME)}\n"
         f"Your ID: `{uid}`",
         parse_mode="Markdown",
@@ -629,7 +673,7 @@ async def cmd_debug(update, context):
 
 
 # ============================================================
-# CALLBACK HANDLER (inline button clicks)
+# CALLBACK HANDLER
 # ============================================================
 
 async def handle_callback(update, context):
@@ -639,6 +683,7 @@ async def handle_callback(update, context):
     data = query.data
     u = get_user(uid, query.from_user.first_name or "")
 
+    # ---------- STUDY / SYLLABUS / PAST ----------
     if data == "study_plan":
         await query.message.reply_text("📖 *Study Plan — Choose Subject:*",
                                        reply_markup=subjects_kb("study_subject"),
@@ -703,6 +748,7 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, reply_markup=kb)
         return
 
+    # ---------- ANSWER HANDLER ----------
     if data.startswith("ans:"):
         ans = data.split(":")[1]
         session = USER_SESSIONS.get(uid)
@@ -746,35 +792,20 @@ async def handle_callback(update, context):
                 f"🏆 Leader: {md(leader_name)} — {leader_score}/400",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🔄 Try Again", callback_data="mock_quick")],
+                    [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
                     [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
             USER_SESSIONS.pop(uid, None)
         return
 
+    # ---------- MOCK MENU ----------
     if data == "mock_menu":
-        rem = get_mock_remaining(uid)
-        if is_premium(uid):
-            leader_name, leader_score = get_leading()
-            await query.message.reply_text(
-                f"📝 *Mock — Premium*\n🏆 {md(leader_name)} — {leader_score}/400\n✅ Unlimited",
-                parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("⚡ Quick 5 Qs", callback_data="mock_quick")],
-                    [InlineKeyboardButton("🔥 Full 180Q", callback_data="mock_full")],
-                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
-        else:
-            await query.message.reply_text(
-                f"📝 *Mock — Free {rem}/{FREE_MOCK_QS_DAILY} today*\n"
-                f"Invite {REFERRAL_REQUIRED}={REFERRAL_REWARD_DAYS} days FREE!",
-                parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left)",
-                                          callback_data="mock_quick")],
-                    [InlineKeyboardButton(f"👥 Invite {REFERRAL_REQUIRED}=FREE",
-                                          callback_data="invite_friends")],
-                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
+        await query.message.reply_text(
+            _mock_menu_text(uid),
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(_mock_menu_kb(uid)))
         return
 
+    # ---------- QUICK MOCK (free + premium) ----------
     if data == "mock_quick":
         if not can_use_mock(uid, 5):
             msg, kb = upgrade_kb(uid)
@@ -791,19 +822,68 @@ async def handle_callback(update, context):
             await query.message.reply_text("⚠️ No questions loaded. Try /debug")
             return
         consume_mock(uid, len(qs), [q["id"] for q in qs])
-        txt, kb = _start_mock_session(uid, qs, "mixed", intro_text="🚀 *Quick Mock 5 Qs*")
+        txt, kb = _start_mock_session(uid, qs, "mixed",
+                                      intro_text="🚀 *Quick Mock 5 Qs*")
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
+    # ---------- SUBJECT MOCK (PREMIUM ONLY) ----------
+    if data == "mock_by_subject":
+        if not is_premium(uid):
+            msg, kb = upgrade_kb(uid)
+            await query.message.reply_text(
+                f"🔒 *Subject Mock — Premium Only*\n\n"
+                f"Subject Mock gives you *40 questions* from one subject "
+                f"of your choice.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
+            return
+        await query.message.reply_text(
+            "📚 *Choose Subject for your 40Q Mock:*",
+            reply_markup=subjects_kb("mock_subject"),
+            parse_mode="Markdown")
+        return
+
+    if data.startswith("mock_subject_"):
+        subj = data.replace("mock_subject_", "")
+        if not is_premium(uid):
+            msg, kb = upgrade_kb(uid)
+            await query.message.reply_text(
+                f"🔒 *Subject Mock — Premium Only*\n\n"
+                f"Upgrade to unlock 40-question subject mocks.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
+            return
+        qs = fetcher.fetch(subj, None, 40)
+        if len(qs) < 5:
+            await query.message.reply_text(
+                f"⚠️ Not enough questions for "
+                f"{SUBJECT_DISPLAY.get(subj, subj)} yet.\n"
+                f"Only {len(qs)} available.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("⬅️ Back", callback_data="mock_by_subject")],
+                    [InlineKeyboardButton("🏠 Main Menu",
+                                          callback_data="main_menu")]]))
+            return
+        display = SUBJECT_DISPLAY.get(subj, subj.title())
+        intro = (f"📚 *{display} Subject Mock*\n"
+                 f"{len(qs)} questions · Good luck!")
+        txt, kb = _start_mock_session(uid, qs, f"subject_{subj}", intro_text=intro)
+        await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
+        return
+
+    # ---------- FULL MOCK (PREMIUM ONLY) ----------
     if data == "mock_full":
         if not is_premium(uid):
             msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(f"🔒 *Full Mock Premium Only*\n\n{msg}",
-                                           parse_mode="Markdown", reply_markup=kb)
+            await query.message.reply_text(
+                f"🔒 *Full JAMB Mock — Premium Only*\n\n"
+                f"Full Mock gives you 180 questions across multiple subjects "
+                f"like the real JAMB exam.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
             return
         leader_name, leader_score = get_leading()
         await query.message.reply_text(
-            f"🏆 *Leader: {md(leader_name)} — {leader_score}/400*\n\nFull Mock 180Q · 2hrs",
+            f"🏆 *Leader: {md(leader_name)} — {leader_score}/400*\n\n"
+            f"Full Mock 180Q · 2hrs",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🚀 Start 180Q", callback_data="mock_full_start")],
@@ -833,13 +913,14 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
+    # ---------- SCORE / TUTOR / PREMIUM / INVITE / HELP ----------
     if data == "my_score":
         hist = u.get("history", [])
         if not hist:
             await query.message.reply_text(
                 "📊 No scores yet",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("📝 Mock", callback_data="mock_quick")]]))
+                    [InlineKeyboardButton("📝 Mock", callback_data="mock_menu")]]))
             return
         avg = sum(h["score"] * 400 // h["total"] for h in hist if h["total"]) / len(hist)
         leader_name, leader_score = get_leading()
@@ -854,8 +935,14 @@ async def handle_callback(update, context):
     if data == "ask_tutor":
         prev = USER_SESSIONS.get(uid, {}).get("subject") or u.get("study_subject")
         USER_SESSIONS[uid] = {"mode": "tutor", "subject": prev}
+        if is_premium(uid):
+            remaining_text = "Unlimited"
+        else:
+            used = u["tutor_counts"].get(str(date.today()), 0)
+            remaining_text = f"{max(0, FREE_TUTOR_PER_DAY - used)}/{FREE_TUTOR_PER_DAY} left today"
         await query.message.reply_text(
-            f"💬 *Ask Tutor*\nI know {len(ALL_QS)} Qs + AI brain + Voice 🎙️.\nAsk anything:",
+            f"💬 *Ask Tutor*\nI know {len(ALL_QS)} Qs + AI brain + Voice 🎙️.\n"
+            f"Tutor: {remaining_text}\nAsk anything:",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
@@ -870,7 +957,7 @@ async def handle_callback(update, context):
             f"💎 *Premium Plans*\n\n"
             f"*Monthly — {PREMIUM_PRICE_TEXT}* / {PREMIUM_DAYS} days\n"
             f"*6 Months — {PREMIUM_6MONTHS_TEXT}* / {PREMIUM_6MONTHS_DAYS} days *(BEST VALUE)*\n\n"
-            f"✅ Unlimited mocks\n✅ Full 180Q CBT\n"
+            f"✅ Unlimited mocks\n✅ Subject Mock (40Q)\n✅ Full JAMB Mock (180Q)\n"
             f"✅ Unlimited tutor + Voice 🎙️\n✅ {len(ALL_QS)} Qs",
             parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
         return
@@ -900,7 +987,7 @@ async def handle_callback(update, context):
 
 
 # ============================================================
-# BOTTOM KEYBOARD TEXT HANDLER
+# TEXT HANDLER
 # ============================================================
 
 async def handle_msg(update, context):
@@ -908,28 +995,20 @@ async def handle_msg(update, context):
     text = (update.message.text or "").strip()
     u = get_user(uid, update.effective_user.first_name or "")
 
-    # Bottom keyboard buttons
     if text == "📚 Past Questions":
-        await cmd_past(update, context)
-        return
+        await cmd_past(update, context); return
     if text == "📝 Mock Exam":
-        await cmd_mock(update, context)
-        return
+        await cmd_mock(update, context); return
     if text == "📊 My Score":
-        await cmd_score(update, context)
-        return
+        await cmd_score(update, context); return
     if text == "💬 Ask Tutor":
-        await cmd_tutor(update, context)
-        return
+        await cmd_tutor(update, context); return
     if text == "💎 Premium":
-        await cmd_premium(update, context)
-        return
+        await cmd_premium(update, context); return
     if text == "👥 Invite Friends":
-        await cmd_invite(update, context)
-        return
+        await cmd_invite(update, context); return
     if text == "📖 Study Plan":
-        await cmd_study(update, context)
-        return
+        await cmd_study(update, context); return
 
     # Tutor mode
     session = USER_SESSIONS.get(uid, {})
@@ -937,7 +1016,11 @@ async def handle_msg(update, context):
     if is_tutor:
         if not can_use_tutor(uid):
             msg, kb = upgrade_kb(uid)
-            await update.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
+            await update.message.reply_text(
+                f"⏰ *Tutor Limit Reached*\n\n"
+                f"Free: {FREE_TUTOR_PER_DAY} tutor questions/day\n"
+                f"Upgrade for unlimited access.\n\n{msg}",
+                parse_mode="Markdown", reply_markup=kb)
             return
         consume_tutor(uid)
         relevant = []
@@ -1004,7 +1087,7 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v27 · Monthly {PREMIUM_PRICE_TEXT} · 6mo {PREMIUM_6MONTHS_TEXT} · "
+    return (f"UTME Bot v28 · Monthly {PREMIUM_PRICE_TEXT} · 6mo {PREMIUM_6MONTHS_TEXT} · "
             f"{len(ALL_QS)} Qs across {len(AVAILABLE_SUBJECTS)} subjects · Running")
 
 
@@ -1012,12 +1095,14 @@ def home():
 def health():
     per_subject = {s: len(LOCAL_DATABANK.get(s, [])) for s in AVAILABLE_SUBJECTS}
     return jsonify({
-        "status": "ok", "version": "v27",
+        "status": "ok", "version": "v28",
         "databank": {"total_questions": len(ALL_QS),
                      "available_subjects": AVAILABLE_SUBJECTS,
                      "engine_loaded": HAS_ENGINE,
                      "per_subject": per_subject},
         "pricing": {"monthly": PREMIUM_PRICE_TEXT, "six_months": PREMIUM_6MONTHS_TEXT},
+        "free_tier": {"mock_per_day": FREE_MOCK_QS_DAILY,
+                      "tutor_per_day": FREE_TUTOR_PER_DAY},
         "gateways": {"flutterwave": bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY)},
         "users": len(USER_DATA),
     })
@@ -1095,8 +1180,9 @@ UPGRADE_PAGE = r"""
  <div class="user-wrap"><span class="user-badge">User ID: {{ uid }}</span></div>
  <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span class="badge">PREMIUM BENEFITS</span></div>
  <ul class="benefits">
-  <li><span class="check">✓</span><div><b>Unlimited mocks</b> — no daily limits</div></li>
-  <li><span class="check">✓</span><div><b>Full 180Q CBT</b> — real JAMB simulation</div></li>
+  <li><span class="check">✓</span><div><b>Unlimited Quick mocks</b> — no daily limits</div></li>
+  <li><span class="check">✓</span><div><b>Subject Mock</b> — 40 questions from any single subject</div></li>
+  <li><span class="check">✓</span><div><b>Full JAMB Mock</b> — 180 questions, real exam simulation</div></li>
   <li><span class="check">✓</span><div><b>Unlimited AI Tutor</b> — any subject, any time</div></li>
   <li><span class="check">✓</span><div><b>Voice explanations 🎙️</b></div></li>
   <li><span class="check">✓</span><div><b>{{ total_qs }}+ past questions</b> — full databank</div></li>
@@ -1308,7 +1394,6 @@ def main():
     try:
         app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-        # Register every command with its OWN handler
         app.add_handler(CommandHandler("start",    cmd_start))
         app.add_handler(CommandHandler("menu",     cmd_start))
         app.add_handler(CommandHandler("mock",     cmd_mock))
@@ -1332,7 +1417,7 @@ def main():
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
 
         app.post_init = post_init
-        print(f"✅ Bot v27 running | {len(ALL_QS)} Qs | {len(AVAILABLE_SUBJECTS)} subjects")
+        print(f"✅ Bot v28 running | {len(ALL_QS)} Qs | {len(AVAILABLE_SUBJECTS)} subjects")
         app.run_polling()
     except Exception as e:
         print(f"❌ Bot failed: {e}")
