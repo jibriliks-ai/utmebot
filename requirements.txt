@@ -4,3 +4,7 @@ requests==2.32.3
 gTTS==2.5.1
 openai>=1.40.0
 pytz==2024.2
+rank_bm25==0.2.2
+# Optional (uncomment to enable semantic search):
+# sentence-transformers>=2.2.0
+# numpy>=1.24.0
