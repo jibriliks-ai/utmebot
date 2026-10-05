@@ -1,7 +1,7 @@
 """
 UTME Success Bot v28 — HARD-LOCKED FREE PLAN + AI TUTOR + CHANNEL v4
-Free users are STRICTLY limited to 5 mock questions per 24 hours.
-Subject Mock (40Q) and Full JAMB Mock (180Q) are HARD-BLOCKED for free users.
+Free users STRICTLY limited to 5 mock questions per 24 hours.
+Subject Mock (40Q) and Full JAMB Mock (180Q) HARD-BLOCKED for free users.
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -269,14 +269,12 @@ def get_user(uid, username=""):
 def is_premium(uid):
     """HARD GATE. Returns True ONLY if user is genuinely premium."""
     u = get_user(uid)
-    # Admin always treated as premium (for testing) — BUT log it
     if ADMIN_ID and str(uid) == str(ADMIN_ID):
         return True
     return bool(u.get("is_premium", False))
 
 
 def _reset_mock_if_24h_passed(u):
-    """Internal: reset daily_mock_count if 24h passed."""
     now = time.time()
     if now - u.get("last_mock_time", 0) > 86400:
         u["daily_mock_count"] = 0
@@ -298,7 +296,6 @@ def consume_mock(uid, c, ids=None):
 
 
 def get_mock_remaining(uid):
-    """Returns how many free questions remain in the current 24h window."""
     if is_premium(uid):
         return 999
     u = get_user(uid)
@@ -510,7 +507,6 @@ def _mock_menu_kb(uid):
         kb.append([InlineKeyboardButton("🛑 Free Mock Completed — Upgrade for more",
                                         callback_data="premium_info")])
 
-    # These callbacks go to `premium_info`, NOT to the mock handlers
     kb.append([InlineKeyboardButton("🔒 Subject Mock (40 Qs) — Upgrade to unlock",
                                     callback_data="premium_info")])
     kb.append([InlineKeyboardButton("🔒 Full JAMB Mock (180 Qs) — Upgrade to unlock",
@@ -587,7 +583,6 @@ async def cmd_mock(update, context):
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
 
-    # HARD GATE: Free user with 0 remaining gets upgraded immediately
     if not is_premium(uid) and get_mock_remaining(uid) <= 0:
         print(f"[GATE] cmd_mock blocked → uid={uid} (free user, 0 remaining)")
         msg, kb = upgrade_kb(uid)
@@ -704,9 +699,11 @@ async def cmd_premium(update, context):
 
 
 async def cmd_help(update, context):
+    """FIXED: works from both /help command AND help_menu button click."""
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
-    await update.message.reply_text(
+
+    help_text = (
         f"❓ *Help — UTME Success Bot*\n\n"
         f"*Commands:*\n"
         f"/start — Main menu\n"
@@ -727,10 +724,20 @@ async def cmd_help(update, context):
         f"• Subject Mock (40Q)\n"
         f"• Full JAMB Mock (180Q)\n"
         f"• Unlimited tutor\n\n"
-        f"💬 *Chat Mindtech Solutions on Telegram {SUPPORT_HANDLE} for assistance.*",
-        parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
+        f"💬 *Chat Mindtech Solutions on Telegram {SUPPORT_HANDLE} for assistance.*"
+    )
+
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
+    ])
+
+    # Works from BOTH /help command AND help_menu button click
+    if update.callback_query:
+        await update.callback_query.message.reply_text(
+            help_text, parse_mode="Markdown", reply_markup=kb)
+    else:
+        await update.message.reply_text(
+            help_text, parse_mode="Markdown", reply_markup=kb)
 
 
 async def cmd_debug(update, context):
@@ -882,14 +889,12 @@ async def handle_callback(update, context):
 
     if data.startswith("past_subject_"):
         subj = data.replace("past_subject_", "")
-        # HARD GATE: free user with 0 remaining
         remaining = get_mock_remaining(uid)
         if not is_premium(uid) and remaining <= 0:
             print(f"[GATE] BLOCKED past_subject_{subj} for free user uid={uid}")
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
-        # Free users get 5 max, premium gets 5 as well for Past Questions practice
         limit = min(5, remaining) if not is_premium(uid) else 5
         qs = fetcher.fetch(subj, None, limit)
         if not qs:
@@ -905,7 +910,7 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # ANSWER HANDLER — with hard stop at 5 for free users
+    # ANSWER HANDLER
     # ══════════════════════════════════════════════════════
     if data.startswith("ans:"):
         ans = data.split(":")[1]
@@ -933,13 +938,12 @@ async def handle_callback(update, context):
             feedback += f"\n\n💡 {md(current_q['explanation'][:350])}"
         await query.message.reply_text(feedback, parse_mode="Markdown")
 
-        # Continue with next question OR finish mock
         if session["idx"] < len(qs):
             q = qs[session["idx"]]
             txt = format_question(q, session["idx"] + 1, len(qs))
             await query.message.reply_text(txt, reply_markup=_answer_keyboard(q))
         else:
-            # ═══════ MOCK COMPLETED ═══════
+            # MOCK COMPLETED
             score = session["score"]
             total = len(qs)
             percent = score * 100 // total if total else 0
@@ -950,7 +954,6 @@ async def handle_callback(update, context):
             save_data()
             leader_name, leader_score = get_leading()
 
-            # HARD CHECK: Determine if free user has any remaining questions
             is_free = not is_premium(uid)
             rem_after = get_mock_remaining(uid)
 
@@ -959,7 +962,6 @@ async def handle_callback(update, context):
                           f"🏆 Leader: {md(leader_name)} — {leader_score}/400\n\n")
 
             if is_free and rem_after <= 0:
-                # ═══════ FREE USER — LIMIT REACHED → FORCE UPGRADE ═══════
                 print(f"[GATE] Free user {uid} completed daily mock. Forcing upgrade.")
                 finish_msg += (
                     f"🛑 *Your free mock for the next 24 hours is complete.*\n\n"
@@ -976,7 +978,6 @@ async def handle_callback(update, context):
                     [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
                 ]
             elif is_free:
-                # Free user still has some remaining today (partial mock)
                 finish_msg += (f"🆓 You still have *{rem_after}* free questions "
                                f"left today.")
                 buttons = [
@@ -985,7 +986,6 @@ async def handle_callback(update, context):
                     [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
                 ]
             else:
-                # Premium user
                 buttons = [
                     [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
                     [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
@@ -1018,14 +1018,12 @@ async def handle_callback(update, context):
     # ══════════════════════════════════════════════════════
     if data == "mock_quick":
         remaining = get_mock_remaining(uid)
-        # HARD GATE: free user with 0 remaining
         if not is_premium(uid) and remaining <= 0:
             print(f"[GATE] BLOCKED mock_quick for free user uid={uid}")
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
 
-        # Cap questions: free = min(5, remaining), premium = 5
         limit = 5 if is_premium(uid) else min(5, remaining)
 
         pool = AVAILABLE_SUBJECTS or ALL_SUBJECTS
@@ -1052,7 +1050,7 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # SUBJECT MOCK (PREMIUM ONLY — already gated above)
+    # SUBJECT MOCK (PREMIUM ONLY)
     # ══════════════════════════════════════════════════════
     if data == "mock_by_subject":
         await query.message.reply_text(
@@ -1079,7 +1077,7 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # FULL MOCK (PREMIUM ONLY — already gated above)
+    # FULL MOCK (PREMIUM ONLY)
     # ══════════════════════════════════════════════════════
     if data == "mock_full":
         leader_name, leader_score = get_leading()
@@ -1179,6 +1177,7 @@ async def handle_callback(update, context):
         return
 
     if data == "help_menu":
+        # FIXED: cmd_help now handles callback query correctly
         await cmd_help(update, context)
         return
 
@@ -1462,7 +1461,7 @@ def flutterwave_webhook():
 
 
 # ============================================================
-# CHANNEL AUTO-POSTING (v4 — unique per slot)
+# CHANNEL AUTO-POSTING
 # ============================================================
 POST_SLOTS = ((8, 30, "morning"), (13, 0, "afternoon"), (20, 0, "evening"))
 POST_WINDOW_MIN = 30
