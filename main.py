@@ -1,9 +1,7 @@
 """
-UTME Success Bot v28 — FINAL LOCKED + AI TUTOR RAG + CHANNEL POSTER v4
-- Free: Quick 5Q mock only, once per 24h + 5 tutor/day
-- Premium: Subject mock (40Q) + Full mock (180Q) + unlimited tutor
-- AI Tutor: RAG-powered (BM25 retrieval + DeepSeek)
-- Channel: Auto-posts 3x daily (08:30, 13:00, 20:00 Lagos) with unique styles
+UTME Success Bot v28 — HARD-LOCKED FREE PLAN + AI TUTOR + CHANNEL v4
+Free users are STRICTLY limited to 5 mock questions per 24 hours.
+Subject Mock (40Q) and Full JAMB Mock (180Q) are HARD-BLOCKED for free users.
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -72,8 +70,9 @@ except Exception as _e:
         "literature", "crk",
     ]
 
-# ── HARD-ENFORCE your bot username ──
+# ── HARD-ENFORCE bot username ──
 BOT_USERNAME = "UTMESucessBot"
+SUPPORT_HANDLE = "@UTMESUCCESS"
 
 # Clean CHANNEL_ID
 if CHANNEL_ID:
@@ -163,16 +162,12 @@ except Exception as _e:
 
     def _ask_tutor(q, s=""):
         return "⚠️ AI Tutor is not available right now."
-
     def _build_voice(t):
         return None
-
     def _build_kb(force_rebuild=False):
         return False
-
     def _get_kb_stats():
         return {}
-
     def _tutor_ping():
         return False, "not loaded"
 
@@ -184,6 +179,7 @@ def md(s):
     s = str(s)
     return (s.replace("\\", "\\\\").replace("_", "\\_").replace("*", "\\*")
              .replace("`", "\\`").replace("[", "\\["))
+
 
 # ---------- Storage ----------
 DATA_FILE = Path(USER_DATA_FILE)
@@ -235,9 +231,7 @@ def save_processed_tx():
 
 
 def mark_processed(tx_ref):
-    if not tx_ref:
-        return False
-    if tx_ref in PROCESSED_TX:
+    if not tx_ref or tx_ref in PROCESSED_TX:
         return False
     PROCESSED_TX.add(tx_ref)
     save_processed_tx()
@@ -273,32 +267,29 @@ def get_user(uid, username=""):
 
 
 def is_premium(uid):
+    """HARD GATE. Returns True ONLY if user is genuinely premium."""
     u = get_user(uid)
-    if str(uid) == str(ADMIN_ID):
+    # Admin always treated as premium (for testing) — BUT log it
+    if ADMIN_ID and str(uid) == str(ADMIN_ID):
         return True
-    return bool(u.get("is_premium"))
+    return bool(u.get("is_premium", False))
 
 
-def can_use_mock(uid, c=1):
-    if is_premium(uid):
-        return True
-    u = get_user(uid)
+def _reset_mock_if_24h_passed(u):
+    """Internal: reset daily_mock_count if 24h passed."""
     now = time.time()
     if now - u.get("last_mock_time", 0) > 86400:
         u["daily_mock_count"] = 0
         u["last_mock_time"] = 0.0
-        save_data()
-    return u.get("daily_mock_count", 0) + c <= FREE_MOCK_QS_DAILY
+        return True
+    return False
 
 
 def consume_mock(uid, c, ids=None):
     u = get_user(uid)
-    now = time.time()
-    if now - u.get("last_mock_time", 0) > 86400:
-        u["daily_mock_count"] = 0
-        u["last_mock_time"] = 0.0
+    _reset_mock_if_24h_passed(u)
     if u.get("daily_mock_count", 0) == 0:
-        u["last_mock_time"] = now
+        u["last_mock_time"] = time.time()
     u["daily_mock_count"] = u.get("daily_mock_count", 0) + c
     if ids:
         u["used_ids"].extend(ids)
@@ -307,13 +298,11 @@ def consume_mock(uid, c, ids=None):
 
 
 def get_mock_remaining(uid):
+    """Returns how many free questions remain in the current 24h window."""
     if is_premium(uid):
         return 999
     u = get_user(uid)
-    now = time.time()
-    if now - u.get("last_mock_time", 0) > 86400:
-        u["daily_mock_count"] = 0
-        u["last_mock_time"] = 0.0
+    if _reset_mock_if_24h_passed(u):
         save_data()
     return max(0, FREE_MOCK_QS_DAILY - u.get("daily_mock_count", 0))
 
@@ -322,8 +311,7 @@ def can_use_tutor(uid):
     if is_premium(uid):
         return True
     u = get_user(uid)
-    today = str(date.today())
-    return u["tutor_counts"].get(today, 0) < FREE_TUTOR_PER_DAY
+    return u["tutor_counts"].get(str(date.today()), 0) < FREE_TUTOR_PER_DAY
 
 
 def consume_tutor(uid):
@@ -411,13 +399,19 @@ def plan_buttons(uid):
 
 def upgrade_kb(uid):
     msg = (
-        f"⏰ *Limit Reached / Premium Feature*\n\n"
-        f"Free plan: {FREE_MOCK_QS_DAILY} mock questions per 24 hours + {FREE_TUTOR_PER_DAY} tutor/day\n\n"
-        f"💎 *Premium Plans:*\n"
+        f"🔒 *Upgrade Required*\n\n"
+        f"Free plan: *{FREE_MOCK_QS_DAILY} mock questions per 24 hours*\n\n"
+        f"💎 *Unlock Premium for:*\n"
+        f"• ♾️ Unlimited mocks\n"
+        f"• 📚 Subject Mock (40 Qs)\n"
+        f"• 🔥 Full JAMB Mock (180 Qs)\n"
+        f"• 💬 Unlimited AI Tutor\n"
+        f"• 🎙️ Voice explanations\n"
+        f"• 📊 Full databank access\n\n"
+        f"*Plans:*\n"
         f"• Monthly — {PREMIUM_PRICE_TEXT} / {PREMIUM_DAYS} days\n"
         f"• 6 Months — {PREMIUM_6MONTHS_TEXT} / {PREMIUM_6MONTHS_DAYS} days\n\n"
-        f"✅ Unlimited mocks\n✅ Subject Mock (40Q)\n✅ Full JAMB Mock (180Q)\n"
-        f"✅ Unlimited tutor + Voice 🎙️\n✅ {len(ALL_QS)} Qs"
+        f"👉 Choose your plan below to unlock everything!"
     )
     kb = plan_buttons(uid)
     kb.append([InlineKeyboardButton(f"👥 Invite {REFERRAL_REQUIRED}=FREE",
@@ -495,6 +489,10 @@ def _start_mock_session(uid, qs, subject_label, intro_text=""):
 
 
 def _mock_menu_kb(uid):
+    """
+    HARD-LOCKED: Free users see ONLY Quick 5 Qs (if remaining) + Upgrade.
+    Subject Mock and Full Mock buttons are routed straight to premium_info.
+    """
     if is_premium(uid):
         return [
             [InlineKeyboardButton("⚡ Quick 5 Qs", callback_data="mock_quick")],
@@ -506,17 +504,18 @@ def _mock_menu_kb(uid):
     rem = get_mock_remaining(uid)
     kb = []
     if rem > 0:
-        kb.append([InlineKeyboardButton(f"⚡ Quick 5 Qs ({rem} left today)",
+        kb.append([InlineKeyboardButton(f"⚡ Free Quick Mock ({rem} Qs left today)",
                                         callback_data="mock_quick")])
     else:
-        kb.append([InlineKeyboardButton("🛑 Daily Free Limit Reached — 0 left",
+        kb.append([InlineKeyboardButton("🛑 Free Mock Completed — Upgrade for more",
                                         callback_data="premium_info")])
 
-    kb.append([InlineKeyboardButton("🔒 Subject Mock (40 Qs) — Premium Only",
+    # These callbacks go to `premium_info`, NOT to the mock handlers
+    kb.append([InlineKeyboardButton("🔒 Subject Mock (40 Qs) — Upgrade to unlock",
                                     callback_data="premium_info")])
-    kb.append([InlineKeyboardButton("🔒 Full JAMB Mock (180 Qs) — Premium Only",
+    kb.append([InlineKeyboardButton("🔒 Full JAMB Mock (180 Qs) — Upgrade to unlock",
                                     callback_data="premium_info")])
-    kb.append([InlineKeyboardButton("💎 Upgrade to Premium",
+    kb.append([InlineKeyboardButton("💎 Upgrade to Premium Now",
                                     callback_data="premium_info")])
     kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
     return kb
@@ -535,26 +534,26 @@ def _mock_menu_text(uid):
     if rem <= 0:
         return (
             f"📝 *Mock Exam Menu*\n\n"
-            f"🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\n\n"
-            f"🔒 *Premium Features:*\n"
+            f"🛑 *Your free mock for the next 24 hours is complete.*\n\n"
+            f"🔒 *Unlock with Premium:*\n"
             f"📚 Subject Mock (40 Qs)\n"
             f"🔥 Full JAMB Mock (180 Qs)\n"
             f"♾️ Unlimited Quick Mocks\n\n"
-            f"💎 Upgrade to Premium to unlock everything!"
+            f"💎 Tap Upgrade below to unlock instantly!"
         )
     return (
         f"📝 *Mock Exam Menu*\n\n"
         f"🆓 *Free Plan:* {rem}/{FREE_MOCK_QS_DAILY} questions left today\n"
-        f"⚡ Quick 5 Qs\n\n"
+        f"⚡ Free Quick Mock — {rem} Qs\n\n"
         f"🔒 *Premium Only:*\n"
         f"📚 Subject Mock (40 Qs)\n"
         f"🔥 Full JAMB Mock (180 Qs)\n\n"
-        f"💎 Upgrade to Premium to unlock all mock types!"
+        f"💎 Upgrade to unlock all mock types!"
     )
 
 
 # ============================================================
-# COMMAND HANDLERS
+# COMMANDS
 # ============================================================
 
 async def cmd_start(update, context):
@@ -588,14 +587,11 @@ async def cmd_mock(update, context):
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
 
+    # HARD GATE: Free user with 0 remaining gets upgraded immediately
     if not is_premium(uid) and get_mock_remaining(uid) <= 0:
+        print(f"[GATE] cmd_mock blocked → uid={uid} (free user, 0 remaining)")
         msg, kb = upgrade_kb(uid)
-        await update.message.reply_text(
-            f"🛑 *Daily Free Limit Reached*\n\n"
-            f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
-            f"Upgrade to Premium to unlock unlimited mocks, Subject Mock (40 Qs), "
-            f"Full JAMB Mock (180 Qs), and unlimited Tutor access.\n\n{msg}",
-            parse_mode="Markdown", reply_markup=kb)
+        await update.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
         return
 
     await update.message.reply_text(
@@ -662,9 +658,7 @@ async def cmd_tutor(update, context):
     else:
         used = u["tutor_counts"].get(str(date.today()), 0)
         remaining_text = f"{max(0, FREE_TUTOR_PER_DAY - used)}/{FREE_TUTOR_PER_DAY} left today"
-
     brain_status = "🧠 *AI Brain: Active*" if HAS_AI_TUTOR else "🧠 *AI Brain: Limited*"
-
     await update.message.reply_text(
         f"💬 *Ask Tutor*\n\n"
         f"{brain_status}\n"
@@ -724,8 +718,6 @@ async def cmd_help(update, context):
         f"/tutor — Ask tutor\n"
         f"/invite — Invite friends\n"
         f"/premium — Upgrade premium\n"
-        f"/debug — Databank status\n"
-        f"/postnow [morning|afternoon|evening] — Test channel post (admin)\n"
         f"/help — This message\n\n"
         f"*Free plan:*\n"
         f"• {FREE_MOCK_QS_DAILY} mock questions per 24 hours\n"
@@ -735,9 +727,7 @@ async def cmd_help(update, context):
         f"• Subject Mock (40Q)\n"
         f"• Full JAMB Mock (180Q)\n"
         f"• Unlimited tutor\n\n"
-        f"Channel: @{md(CHANNEL_USERNAME)}\n"
-        f"Bot: @{md(BOT_USERNAME)}\n"
-        f"Your ID: `{uid}`",
+        f"💬 *Chat Mindtech Solutions on Telegram {SUPPORT_HANDLE} for assistance.*",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
@@ -776,11 +766,6 @@ async def cmd_kbstats(update, context):
         f"BM25: {stats.get('bm25_ready', False)}",
         f"Embeddings: {stats.get('embeddings_ready', False)}",
     ]
-    subjects = stats.get("subjects", {})
-    if subjects:
-        lines.append("\n*Subjects in KB:*")
-        for s, n in sorted(subjects.items(), key=lambda x: -x[1])[:15]:
-            lines.append(f"  {md(s)}: {n}")
     await update.message.reply_text(
         "\n".join(lines),
         parse_mode="Markdown",
@@ -789,59 +774,32 @@ async def cmd_kbstats(update, context):
 
 
 async def cmd_postnow(update, context):
-    """Admin-only: force a channel post right now.
-    Usage:
-      /postnow              → random slot
-      /postnow morning      → 8:30 AM style
-      /postnow afternoon    → 1:00 PM style
-      /postnow evening      → 8:00 PM style (with explanation)
-    """
     uid = str(update.effective_user.id)
     if str(uid) != str(ADMIN_ID):
         await update.message.reply_text("🔒 This command is admin-only.")
         return
-
     if not CHANNEL_ID:
         await update.message.reply_text(
-            "❌ *CHANNEL_ID is not set.*\n\n"
-            "Set it on Render → Environment, then redeploy.\n"
-            "Format: `-1001234567890`",
-            parse_mode="Markdown")
+            "❌ *CHANNEL_ID is not set.*", parse_mode="Markdown")
         return
-
-    slot_arg = "random"
-    if context.args:
-        slot_arg = context.args[0].lower()
-
+    slot_arg = context.args[0].lower() if context.args else "random"
     valid_slots = {"morning", "afternoon", "evening"}
     if slot_arg == "random" or slot_arg not in valid_slots:
         slot_arg = random.choice(list(valid_slots))
-
     await update.message.reply_text(
-        f"📤 Sending *{slot_arg}* style post to channel…",
-        parse_mode="Markdown")
+        f"📤 Sending *{slot_arg}* style post…", parse_mode="Markdown")
     try:
         await channel_post(context.application, slot_name=slot_arg,
                            slot_label="manual-/postnow")
         await update.message.reply_text(
-            f"✅ *Posted `{slot_arg}` successfully to* `{CHANNEL_ID}`\n\n"
-            f"Try:\n"
-            f"`/postnow morning`\n"
-            f"`/postnow afternoon`\n"
-            f"`/postnow evening`",
-            parse_mode="Markdown")
+            f"✅ Posted `{slot_arg}` to `{CHANNEL_ID}`", parse_mode="Markdown")
     except Exception as e:
         await update.message.reply_text(
-            f"❌ *Post failed:*\n\n`{type(e).__name__}: {e}`\n\n"
-            f"*Checklist:*\n"
-            f"1. Bot must be admin in the channel\n"
-            f"2. Bot must have 'Post Messages' permission\n"
-            f"3. CHANNEL_ID must start with `-100`",
-            parse_mode="Markdown")
+            f"❌ Failed: `{type(e).__name__}: {e}`", parse_mode="Markdown")
 
 
 # ============================================================
-# CALLBACK HANDLER
+# CALLBACK HANDLER — with HARD GATES
 # ============================================================
 
 async def handle_callback(update, context):
@@ -851,7 +809,32 @@ async def handle_callback(update, context):
     data = query.data
     u = get_user(uid, query.from_user.first_name or "")
 
-    # ---------- STUDY / SYLLABUS / PAST ----------
+    # ══════════════════════════════════════════════════════
+    # HARD-GATE: BLOCK NON-PREMIUM FROM PREMIUM MOCK HANDLERS
+    # ══════════════════════════════════════════════════════
+    if data in ("mock_by_subject", "mock_full", "mock_full_start") \
+            and not is_premium(uid):
+        print(f"[GATE] BLOCKED {data} for free user uid={uid}")
+        msg, kb = upgrade_kb(uid)
+        await query.message.reply_text(
+            f"🔒 *Premium Feature*\n\n"
+            f"*Subject Mock (40 Qs)* and *Full JAMB Mock (180 Qs)* are "
+            f"exclusive to Premium members.\n\n"
+            f"Free plan: {FREE_MOCK_QS_DAILY} mock questions per 24 hours.\n\n{msg}",
+            parse_mode="Markdown", reply_markup=kb)
+        return
+
+    if data.startswith("mock_subject_") and not is_premium(uid):
+        print(f"[GATE] BLOCKED mock_subject_{data} for free user uid={uid}")
+        msg, kb = upgrade_kb(uid)
+        await query.message.reply_text(
+            f"🔒 *Subject Mock — Premium Only*\n\n{msg}",
+            parse_mode="Markdown", reply_markup=kb)
+        return
+
+    # ══════════════════════════════════════════════════════
+    # STUDY / SYLLABUS / PAST
+    # ══════════════════════════════════════════════════════
     if data == "study_plan":
         await query.message.reply_text("📖 *Study Plan — Choose Subject:*",
                                        reply_markup=subjects_kb("study_subject"),
@@ -866,8 +849,7 @@ async def handle_callback(update, context):
         USER_SESSIONS[uid] = {"mode": "tutor", "subject": subj}
         count = len(LOCAL_DATABANK.get(subj, []))
         await query.message.reply_text(
-            f"📖 *Let's study {display}!*\nI know {count} Qs on {display}.\n\n"
-            f"Ask me any {display} question below 👇",
+            f"📖 *Let's study {display}!*\nI know {count} Qs on {display}.",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton(f"💬 Ask {display}", callback_data="ask_tutor")],
@@ -900,17 +882,16 @@ async def handle_callback(update, context):
 
     if data.startswith("past_subject_"):
         subj = data.replace("past_subject_", "")
+        # HARD GATE: free user with 0 remaining
         remaining = get_mock_remaining(uid)
         if not is_premium(uid) and remaining <= 0:
+            print(f"[GATE] BLOCKED past_subject_{subj} for free user uid={uid}")
             msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(
-                f"🛑 *Daily Free Limit Reached*\n\n"
-                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
-                f"Upgrade to Premium to unlock all mock types and unlimited practice.\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
+            await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
-        limit = 5
-        qs = fetcher.fetch(subj, None, min(limit, remaining if not is_premium(uid) else limit))
+        # Free users get 5 max, premium gets 5 as well for Past Questions practice
+        limit = min(5, remaining) if not is_premium(uid) else 5
+        qs = fetcher.fetch(subj, None, limit)
         if not qs:
             await query.message.reply_text(
                 f"⚠️ No questions for {SUBJECT_DISPLAY.get(subj, subj)}.",
@@ -923,7 +904,9 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, reply_markup=kb)
         return
 
-    # ---------- ANSWER HANDLER ----------
+    # ══════════════════════════════════════════════════════
+    # ANSWER HANDLER — with hard stop at 5 for free users
+    # ══════════════════════════════════════════════════════
     if data.startswith("ans:"):
         ans = data.split(":")[1]
         session = USER_SESSIONS.get(uid)
@@ -943,17 +926,20 @@ async def handle_callback(update, context):
         if is_correct:
             session["score"] += 1
         session["idx"] += 1
+
         feedback = ("✅ *Correct!* 🎉" if is_correct
                     else f"❌ *Wrong.* Answer is *{md(correct)}*")
         if current_q.get("explanation"):
             feedback += f"\n\n💡 {md(current_q['explanation'][:350])}"
         await query.message.reply_text(feedback, parse_mode="Markdown")
 
+        # Continue with next question OR finish mock
         if session["idx"] < len(qs):
             q = qs[session["idx"]]
             txt = format_question(q, session["idx"] + 1, len(qs))
             await query.message.reply_text(txt, reply_markup=_answer_keyboard(q))
         else:
+            # ═══════ MOCK COMPLETED ═══════
             score = session["score"]
             total = len(qs)
             percent = score * 100 // total if total else 0
@@ -964,18 +950,45 @@ async def handle_callback(update, context):
             save_data()
             leader_name, leader_score = get_leading()
 
-            finish_msg = f"🎉 *Mock Completed!*\n\nScore: *{score}/{total}* ({percent}%)\n🏆 Leader: {md(leader_name)} — {leader_score}/400"
+            # HARD CHECK: Determine if free user has any remaining questions
+            is_free = not is_premium(uid)
+            rem_after = get_mock_remaining(uid)
 
-            if not is_premium(uid):
-                finish_msg += f"\n\n🛑 *You have reached your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours.*\n\nUpgrade to Premium to unlock:\n✅ Full 40-question Subject Mocks\n✅ Full 180-question JAMB Mocks\n✅ Unlimited daily practice"
+            finish_msg = (f"🎉 *Mock Completed!*\n\n"
+                          f"Score: *{score}/{total}* ({percent}%)\n"
+                          f"🏆 Leader: {md(leader_name)} — {leader_score}/400\n\n")
+
+            if is_free and rem_after <= 0:
+                # ═══════ FREE USER — LIMIT REACHED → FORCE UPGRADE ═══════
+                print(f"[GATE] Free user {uid} completed daily mock. Forcing upgrade.")
+                finish_msg += (
+                    f"🛑 *Your free mock for the next 24 hours is complete.*\n\n"
+                    f"🔒 *To continue practicing, upgrade to Premium:*\n"
+                    f"✅ Subject Mock (40 Qs)\n"
+                    f"✅ Full JAMB Mock (180 Qs)\n"
+                    f"✅ Unlimited Quick Mocks\n"
+                    f"✅ Unlimited AI Tutor\n\n"
+                    f"👉 Tap below to unlock instantly!"
+                )
                 buttons = [
-                    [InlineKeyboardButton("💎 Upgrade to Premium", callback_data="premium_info")],
-                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
+                    [InlineKeyboardButton("💎 Upgrade to Premium Now",
+                                          callback_data="premium_info")],
+                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
+                ]
+            elif is_free:
+                # Free user still has some remaining today (partial mock)
+                finish_msg += (f"🆓 You still have *{rem_after}* free questions "
+                               f"left today.")
+                buttons = [
+                    [InlineKeyboardButton("⚡ Continue Free Mock",
+                                          callback_data="mock_quick")],
+                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
                 ]
             else:
+                # Premium user
                 buttons = [
                     [InlineKeyboardButton("🔄 Another Mock", callback_data="mock_menu")],
-                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]
+                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
                 ]
 
             await query.message.reply_text(
@@ -985,35 +998,34 @@ async def handle_callback(update, context):
             USER_SESSIONS.pop(uid, None)
         return
 
-    # ---------- MOCK MENU ----------
+    # ══════════════════════════════════════════════════════
+    # MOCK MENU
+    # ══════════════════════════════════════════════════════
     if data == "mock_menu":
         if not is_premium(uid) and get_mock_remaining(uid) <= 0:
+            print(f"[GATE] BLOCKED mock_menu for free user uid={uid}")
             msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(
-                f"🛑 *Daily Free Limit Reached*\n\n"
-                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
-                f"Upgrade to Premium to unlock all mock types and unlimited practice.\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
+            await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
-
         await query.message.reply_text(
             _mock_menu_text(uid),
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(_mock_menu_kb(uid)))
         return
 
-    # ---------- QUICK MOCK ----------
+    # ══════════════════════════════════════════════════════
+    # QUICK MOCK
+    # ══════════════════════════════════════════════════════
     if data == "mock_quick":
         remaining = get_mock_remaining(uid)
-        if remaining <= 0 and not is_premium(uid):
+        # HARD GATE: free user with 0 remaining
+        if not is_premium(uid) and remaining <= 0:
+            print(f"[GATE] BLOCKED mock_quick for free user uid={uid}")
             msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(
-                f"🛑 *Daily Free Limit Reached*\n\n"
-                f"You have completed your {FREE_MOCK_QS_DAILY} free questions for the last 24 hours. "
-                f"Upgrade to Premium to unlock unlimited mocks.\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
+            await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
 
+        # Cap questions: free = min(5, remaining), premium = 5
         limit = 5 if is_premium(uid) else min(5, remaining)
 
         pool = AVAILABLE_SUBJECTS or ALL_SUBJECTS
@@ -1032,22 +1044,17 @@ async def handle_callback(update, context):
 
         intro_text = f"🚀 *Quick Mock ({len(qs)} Qs)*"
         if not is_premium(uid):
-            intro_text += f"\n\n🆓 You have {max(0, remaining - len(qs))} free questions left today."
+            after = max(0, remaining - len(qs))
+            intro_text += f"\n\n🆓 Free plan: *{after}* question(s) left today."
 
         txt, kb = _start_mock_session(uid, qs, "mixed", intro_text=intro_text)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- SUBJECT MOCK (PREMIUM ONLY) ----------
+    # ══════════════════════════════════════════════════════
+    # SUBJECT MOCK (PREMIUM ONLY — already gated above)
+    # ══════════════════════════════════════════════════════
     if data == "mock_by_subject":
-        if not is_premium(uid):
-            msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(
-                f"🔒 *Subject Mock — Premium Only*\n\n"
-                f"Subject Mock gives you *40 questions* from one subject "
-                f"of your choice. This is a Premium feature.\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
-            return
         await query.message.reply_text(
             "📚 *Choose Subject for your 40Q Mock:*",
             reply_markup=subjects_kb("mock_subject"),
@@ -1056,41 +1063,25 @@ async def handle_callback(update, context):
 
     if data.startswith("mock_subject_"):
         subj = data.replace("mock_subject_", "")
-        if not is_premium(uid):
-            msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(
-                f"🔒 *Subject Mock — Premium Only*\n\n"
-                f"Upgrade to unlock 40-question subject mocks.\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
-            return
         qs = fetcher.fetch(subj, None, 40)
         if len(qs) < 5:
             await query.message.reply_text(
-                f"⚠️ Not enough questions for "
-                f"{SUBJECT_DISPLAY.get(subj, subj)} yet.\n"
+                f"⚠️ Not enough questions for {SUBJECT_DISPLAY.get(subj, subj)}. "
                 f"Only {len(qs)} available.",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("⬅️ Back", callback_data="mock_by_subject")],
-                    [InlineKeyboardButton("🏠 Main Menu",
-                                          callback_data="main_menu")]]))
+                    [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
             return
         display = SUBJECT_DISPLAY.get(subj, subj.title())
-        intro = (f"📚 *{display} Subject Mock*\n"
-                 f"{len(qs)} questions · Good luck!")
+        intro = f"📚 *{display} Subject Mock*\n{len(qs)} questions · Good luck!"
         txt, kb = _start_mock_session(uid, qs, f"subject_{subj}", intro_text=intro)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- FULL MOCK (PREMIUM ONLY) ----------
+    # ══════════════════════════════════════════════════════
+    # FULL MOCK (PREMIUM ONLY — already gated above)
+    # ══════════════════════════════════════════════════════
     if data == "mock_full":
-        if not is_premium(uid):
-            msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(
-                f"🔒 *Full JAMB Mock — Premium Only*\n\n"
-                f"Full Mock gives you 180 questions across multiple subjects "
-                f"like the real JAMB exam. This is a Premium feature.\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
-            return
         leader_name, leader_score = get_leading()
         await query.message.reply_text(
             f"🏆 *Leader: {md(leader_name)} — {leader_score}/400*\n\n"
@@ -1102,10 +1093,6 @@ async def handle_callback(update, context):
         return
 
     if data == "mock_full_start":
-        if not is_premium(uid):
-            msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
-            return
         qs = fetcher.fetch("english", None, 60)
         for subj in ["mathematics", "biology", "physics", "chemistry"]:
             if subj in LOCAL_DATABANK:
@@ -1124,7 +1111,9 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ---------- SCORE / TUTOR / PREMIUM / INVITE / HELP ----------
+    # ══════════════════════════════════════════════════════
+    # SCORE / TUTOR / PREMIUM / INVITE / HELP
+    # ══════════════════════════════════════════════════════
     if data == "my_score":
         hist = u.get("history", [])
         if not hist:
@@ -1154,7 +1143,6 @@ async def handle_callback(update, context):
         await query.message.reply_text(
             f"💬 *Ask Tutor*\n"
             f"🧠 AI Brain: {'Active ✅' if HAS_AI_TUTOR else 'Limited'}\n"
-            f"📚 {len(ALL_QS)} past questions in databank\n"
             f"Tutor questions: {remaining_text}\n\n"
             f"Ask anything — any subject, any topic:",
             parse_mode="Markdown",
@@ -1201,7 +1189,7 @@ async def handle_callback(update, context):
 
 
 # ============================================================
-# TEXT HANDLER — AI TUTOR RAG INTEGRATION
+# TEXT HANDLER
 # ============================================================
 
 async def handle_msg(update, context):
@@ -1257,17 +1245,10 @@ async def handle_msg(update, context):
         if HAS_AI_TUTOR:
             answer_text = await asyncio.to_thread(_ask_tutor, text, subj)
         else:
-            answer_text = (
-                "⚠️ *AI Tutor is not available right now.*\n\n"
-                "Please try again later or contact support."
-            )
+            answer_text = ("⚠️ *AI Tutor is not available right now.*")
     except Exception as e:
         print(f"[tutor] Call failed: {e}")
-        traceback.print_exc()
-        answer_text = (
-            "⚠️ *Tutor error*\n\n"
-            "I couldn't process that question. Please try again in a moment."
-        )
+        answer_text = ("⚠️ *Tutor error*\n\nPlease try again in a moment.")
 
     if thinking_msg is not None:
         try:
@@ -1287,8 +1268,7 @@ async def handle_msg(update, context):
     try:
         await update.message.reply_text(final_msg[:4000], parse_mode="Markdown",
                                         reply_markup=kb)
-    except Exception as e:
-        print(f"[tutor] Markdown send failed: {e}")
+    except Exception:
         try:
             await update.message.reply_text(final_msg[:4000], reply_markup=kb)
         except Exception as e2:
@@ -1312,235 +1292,87 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v28 · Monthly {PREMIUM_PRICE_TEXT} · 6mo {PREMIUM_6MONTHS_TEXT} · "
-            f"{len(ALL_QS)} Qs across {len(AVAILABLE_SUBJECTS)} subjects · "
+    return (f"UTME Bot v28 · {len(ALL_QS)} Qs · "
             f"AI Tutor: {'ON' if HAS_AI_TUTOR else 'OFF'} · "
-            f"Bot: @{BOT_USERNAME} · "
-            f"Channel: {CHANNEL_ID or 'OFF'} · Running")
+            f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
 
 
 @flask_app.route("/health")
 def health():
-    per_subject = {s: len(LOCAL_DATABANK.get(s, [])) for s in AVAILABLE_SUBJECTS}
     tutor_ok, tutor_detail = _tutor_ping() if HAS_AI_TUTOR else (False, "not loaded")
-    kb_stats = _get_kb_stats() if HAS_AI_TUTOR else {}
     return jsonify({
-        "status": "ok", "version": "v28",
+        "status": "ok",
         "bot_username": BOT_USERNAME,
-        "databank": {"total_questions": len(ALL_QS),
-                     "available_subjects": AVAILABLE_SUBJECTS,
-                     "engine_loaded": HAS_ENGINE,
-                     "per_subject": per_subject},
-        "tutor": {"module_loaded": HAS_AI_TUTOR,
-                  "deepseek_ok": tutor_ok,
-                  "detail": tutor_detail,
-                  "kb_stats": kb_stats},
-        "channel": {"configured": bool(CHANNEL_ID),
-                    "channel_id": CHANNEL_ID[:15] + "..." if CHANNEL_ID else "NOT SET",
-                    "post_schedule_lagos": ["08:30 morning", "13:00 afternoon", "20:00 evening"]},
-        "pricing": {"monthly": PREMIUM_PRICE_TEXT, "six_months": PREMIUM_6MONTHS_TEXT},
-        "free_tier": {"mock_per_day": FREE_MOCK_QS_DAILY,
-                      "tutor_per_day": FREE_TUTOR_PER_DAY},
-        "gateways": {"flutterwave": bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY)},
+        "total_questions": len(ALL_QS),
+        "free_mock_limit": FREE_MOCK_QS_DAILY,
+        "tutor_ok": tutor_ok,
+        "tutor_detail": tutor_detail,
+        "channel_configured": bool(CHANNEL_ID),
         "users": len(USER_DATA),
     })
 
 
-@flask_app.route("/debug/files")
-def debug_files():
-    cwd = os.getcwd()
-    tree = {}
-    for root, dirs, files in os.walk(cwd):
-        dirs[:] = [d for d in dirs if d not in {"__pycache__", ".git", ".venv", "venv"}]
-        rel = os.path.relpath(root, cwd)
-        js = sorted(f for f in files if f.endswith(".json"))
-        if js:
-            tree[rel] = js
-    try:
-        import cbt_engine
-        found = list(getattr(cbt_engine, "FOUND_FILES", []))
-    except Exception:
-        found = []
-    return jsonify({
-        "cwd": cwd,
-        "json_files_by_dir": tree,
-        "cbt_engine_found_files": found,
-        "total_questions": len(ALL_QS),
-        "available_subjects": AVAILABLE_SUBJECTS,
-    })
+def run_flask():
+    flask_app.run(host="0.0.0.0", port=PORT, threaded=True)
 
 
-UPGRADE_PAGE = r"""
-<!DOCTYPE html>
+UPGRADE_PAGE = r"""<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Upgrade — UTME Success Bot</title>
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <style>
- :root{--bg1:#1e1b4b;--bg2:#4c1d95;--bg3:#7c3aed;--accent:#f59e0b;--accent2:#fbbf24;--success:#10b981;--ink:#0f172a;--muted:#64748b;--card:#fff;--line:#e2e8f0}
- *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
- body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 50%,var(--bg3) 100%);background-attachment:fixed;min-height:100vh;color:var(--ink);padding:20px 14px 60px}
+ body{margin:0;font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#1e1b4b,#7c3aed);min-height:100vh;padding:20px;color:#0f172a}
  .wrap{max-width:480px;margin:0 auto}
- .hero{text-align:center;color:#fff;margin:10px 0 24px}
- .hero .crown{font-size:52px;line-height:1;filter:drop-shadow(0 4px 12px rgba(245,158,11,.5))}
- .hero h1{margin:8px 0 4px;font-size:26px}
- .hero p{margin:0;opacity:.85;font-size:14px}
- .card{background:var(--card);border-radius:20px;padding:24px 22px;box-shadow:0 20px 50px -12px rgba(0,0,0,.35);margin-bottom:18px}
- .benefits{list-style:none;padding:0;margin:0}
- .benefits li{display:flex;align-items:flex-start;gap:12px;padding:11px 0;font-size:15px;line-height:1.45;border-bottom:1px solid #f1f5f9}
- .benefits li:last-child{border-bottom:0}
- .check{flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--success),#059669);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-top:1px}
- .badge{display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase}
- .plan{border:2px solid var(--line);border-radius:16px;padding:20px 18px;margin-bottom:14px;position:relative}
- .plan.best{border-color:var(--accent);background:linear-gradient(180deg,#fffbeb,#fff)}
- .plan.best::before{content:"⭐ BEST VALUE";position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:10px;font-weight:800;padding:5px 12px;border-radius:20px;letter-spacing:.6px;box-shadow:0 4px 10px rgba(245,158,11,.35)}
- .plan-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
- .plan-name{font-size:17px;font-weight:700}
- .plan-price{font-size:26px;font-weight:800;color:var(--bg3)}
- .plan-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
- .plan-sub s{color:#cbd5e1;margin-right:6px}
- .pay{display:block;width:100%;padding:15px 20px;border:none;border-radius:12px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--bg3),var(--bg2));box-shadow:0 8px 20px -6px rgba(124,58,237,.6);transition:opacity .2s,transform .1s}
- .plan.best .pay{background:linear-gradient(135deg,var(--accent),#d97706);box-shadow:0 8px 20px -6px rgba(245,158,11,.6)}
- .pay:active{transform:translateY(2px)}
- .pay[disabled]{opacity:.5;cursor:not-allowed;box-shadow:none}
- .alt{text-align:center;margin-top:6px;padding-top:18px;border-top:1px dashed var(--line)}
- .alt-title{font-size:13px;color:var(--muted);margin-bottom:10px}
- .btn-alt{display:block;padding:14px 20px;border-radius:12px;text-decoration:none;font-weight:700;color:#fff;font-size:15px;background:linear-gradient(135deg,var(--success),#059669);box-shadow:0 8px 20px -6px rgba(16,185,129,.5);text-align:center}
- .trust{text-align:center;font-size:11.5px;color:rgba(255,255,255,.7);margin-top:20px;line-height:1.7}
- .trust a{color:rgba(255,255,255,.9);text-decoration:underline}
- .user-badge{text-align:center;color:#fff;font-size:12px;opacity:.75;margin-bottom:16px;font-family:monospace;background:rgba(0,0,0,.2);padding:6px 14px;border-radius:20px;display:inline-block}
- .user-wrap{text-align:center;margin-bottom:6px}
- .alert{background:#fef2f2;color:#991b1b;padding:12px 16px;border-radius:12px;font-size:13px;border-left:4px solid #dc2626;margin-bottom:16px;line-height:1.5}
- .testmode{background:#fef3c7;color:#92400e;padding:8px 14px;border-radius:10px;font-size:12px;text-align:center;font-weight:600;margin-bottom:14px}
- .status{display:none;background:#dbeafe;color:#1e40af;padding:12px 16px;border-radius:12px;font-size:13px;text-align:center;margin-top:12px;font-weight:600}
-</style></head>
-<body><div class="wrap">
- <div class="hero"><div class="crown">👑</div><h1>Upgrade to Premium</h1><p>Unlock everything. Score higher in UTME.</p></div>
- 
- {% if not gateway_ready %}
- <div class="alert">⚠️ Payment gateway not configured. Please contact support or try again later.<br><br>Missing: {% if not flw_public_key %}FLW_PUBLIC_KEY {% endif %}{% if not flw_secret_key %}FLW_SECRET_KEY{% endif %}</div>
- {% endif %}
- 
- {% if test_mode %}
- <div class="testmode">🧪 TEST MODE — Using Flutterwave test keys (no real money charged)</div>
- {% endif %}
- 
- <div class="user-wrap"><span class="user-badge">User ID: {{ uid }}</span></div>
- <div class="card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span class="badge">PREMIUM BENEFITS</span></div>
- <ul class="benefits">
-  <li><span class="check">✓</span><div><b>Unlimited Quick mocks</b> — no daily limits</div></li>
-  <li><span class="check">✓</span><div><b>Subject Mock</b> — 40 questions from any single subject</div></li>
-  <li><span class="check">✓</span><div><b>Full JAMB Mock</b> — 180 questions, real exam simulation</div></li>
-  <li><span class="check">✓</span><div><b>Unlimited AI Tutor</b> — any subject, any time</div></li>
-  <li><span class="check">✓</span><div><b>Voice explanations 🎙️</b></div></li>
-  <li><span class="check">✓</span><div><b>{{ total_qs }}+ past questions</b> — full databank</div></li>
-  <li><span class="check">✓</span><div><b>Leaderboard &amp; score tracking</b></div></li>
- </ul></div>
- <div class="card"><div style="text-align:center;margin-bottom:14px"><div class="badge">CHOOSE YOUR PLAN</div></div>
-  <div class="plan"><div class="plan-head"><span class="plan-name">Monthly</span><span class="plan-price">{{ monthly_price_text }}</span></div>
-   <div class="plan-sub">{{ monthly_days }} days of full access</div>
-   <button class="pay" id="pay-monthly" onclick="payNow('monthly', {{ monthly_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay {{ monthly_price_text }} — Monthly</button></div>
-  <div class="plan best"><div class="plan-head"><span class="plan-name">6 Months</span><span class="plan-price">{{ six_months_text }}</span></div>
-   <div class="plan-sub"><s>{{ monthly_price_text }} × 6</s> <b style="color:#d97706">Save {{ savings_text }}!</b> · {{ six_months_days }} days</div>
-   <button class="pay" id="pay-6months" onclick="payNow('6months', {{ six_months_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay {{ six_months_text }} — Save {{ savings_text }}</button></div>
-  <div class="status" id="status">Opening secure payment…</div>
- </div>
- <div class="card"><div class="alt"><div class="alt-title">💚 Invite {{ referral_required }} friends → <b>{{ referral_reward_days }} days FREE</b></div>
-  <a class="btn-alt" href="{{ share_link }}">👥 Share Invite Link — Get {{ referral_reward_days }} Days FREE</a></div></div>
- <div class="trust">🔒 Secured by Flutterwave · <a href="https://t.me/{{ bot_username }}">Return to Bot</a></div>
+ .card{background:#fff;border-radius:20px;padding:24px;margin-bottom:18px;box-shadow:0 20px 50px -12px rgba(0,0,0,.35)}
+ h1{color:#fff;text-align:center;font-size:26px}
+ p.sub{color:rgba(255,255,255,.85);text-align:center;margin-top:0}
+ .plan{border:2px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:14px}
+ .plan.best{border-color:#f59e0b;background:#fffbeb}
+ .pay{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,#7c3aed,#4c1d95);cursor:pointer;margin-top:10px}
+ .plan.best .pay{background:linear-gradient(135deg,#f59e0b,#d97706)}
+ .btn-alt{display:block;padding:14px;text-align:center;border-radius:12px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-decoration:none;font-weight:700;margin-top:8px}
+ .alert{background:#fef2f2;color:#991b1b;padding:12px;border-radius:12px;font-size:13px;border-left:4px solid #dc2626;margin-bottom:16px}
+</style></head><body><div class="wrap">
+<h1>👑 Upgrade to Premium</h1>
+<p class="sub">Unlock unlimited practice. Score higher in UTME.</p>
+{% if not gateway_ready %}<div class="alert">⚠️ Payment not configured. Contact support.</div>{% endif %}
+<div class="card">
+ <div class="plan"><b>Monthly</b> — {{ monthly_price_text }}<br><small>{{ monthly_days }} days full access</small>
+ <button class="pay" onclick="payNow('monthly', {{ monthly_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay Monthly</button></div>
+ <div class="plan best"><b>⭐ 6 Months</b> — {{ six_months_text }}<br><small>Save {{ savings_text }} · {{ six_months_days }} days</small>
+ <button class="pay" onclick="payNow('6months', {{ six_months_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay 6 Months</button></div>
+ <a class="btn-alt" href="{{ share_link }}">👥 Invite Friends — Get {{ referral_reward_days }} Days FREE</a>
+</div>
+<p style="text-align:center;color:rgba(255,255,255,.7);font-size:12px">
+🔒 Secured by Flutterwave · <a href="https://t.me/{{ bot_username }}" style="color:#fff">Return to Bot</a></p>
 </div>
 <script>
-const UID = "{{ uid }}";
-const BOT = "{{ bot_username }}";
-const FLW_PK = "{{ flw_public_key }}";
-const API = window.location.origin;
-
-console.log("[Payment] Page loaded");
-console.log("[Payment] User:", UID);
-console.log("[Payment] Bot:", BOT);
-console.log("[Payment] Public Key Prefix:", FLW_PK ? FLW_PK.substring(0,15) + "..." : "MISSING");
-
-function payNow(planKey, amount) {
-  console.log("[Payment] payNow called:", planKey, amount);
-
-  if (typeof FlutterwaveCheckout === "undefined") {
-    alert("❌ Payment gateway failed to load.\n\nPlease disable any ad-blocker and refresh this page.");
-    return;
-  }
-
-  if (!FLW_PK || FLW_PK.length < 20) {
-    alert("❌ Payment is not configured.\n\nFLW_PUBLIC_KEY is missing on the server. Please contact support.");
-    return;
-  }
-
-  const status = document.getElementById("status");
-  status.style.display = "block";
-  status.textContent = "Opening secure payment…";
-
-  const txRef = "UTME-" + UID + "-" + Date.now();
-  console.log("[Payment] tx_ref:", txRef);
-
-  try {
-    FlutterwaveCheckout({
-      public_key: FLW_PK,
-      tx_ref: txRef,
-      amount: amount,
-      currency: "NGN",
-      payment_options: "card,banktransfer,ussd,account",
-      redirect_url: API + "/payment/complete?uid=" + UID,
-      customer: {
-        email: "user" + UID + "@utmebot.com",
-        phone_number: "",
-        name: "UTME User " + UID,
-      },
-      customizations: {
-        title: "UTME Success Bot Premium",
-        description: planKey === "6months" ? "6 Months Premium Access" : "Monthly Premium Access",
-      },
-      meta: { user_id: UID, plan: planKey },
-      callback: function (resp) {
-        console.log("[Payment] Callback:", resp);
-        status.textContent = "Verifying payment…";
-        fetch(API + "/verify/flutterwave", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            transaction_id: resp.transaction_id,
-            tx_ref: resp.tx_ref,
-            expected_uid: UID,
-            plan: planKey,
-          }),
-        })
-        .then(r => r.json())
-        .then(res => {
-          if (res.status === "success") {
-            alert("✅ Payment successful!\\n\\nYour Premium access is now active.");
-            window.location.href = "https://t.me/" + BOT;
-          } else if (res.status === "duplicate_or_invalid") {
-            alert("ℹ️ This payment was already processed.");
-            window.location.href = "https://t.me/" + BOT;
-          } else {
-            alert("⚠️ We received your payment.\\n\\nPlease send to support if not activated in 5 min:\\nUser ID: " + UID);
-            window.location.href = "https://t.me/" + BOT;
-          }
-        })
-        .catch(() => {
-          alert("⚠️ Network error while verifying. Message the bot with User ID: " + UID);
-          window.location.href = "https://t.me/" + BOT;
-        });
-      },
-      onclose: function () {
-        console.log("[Payment] Modal closed");
-        status.style.display = "none";
-      },
-    });
-  } catch (err) {
-    console.error("[Payment] Exception:", err);
-    alert("❌ Could not open payment window.\\n\\nError: " + err.message);
-  }
+const UID="{{ uid }}", BOT="{{ bot_username }}", FLW_PK="{{ flw_public_key }}", API=window.location.origin;
+function payNow(planKey, amount){
+ if(typeof FlutterwaveCheckout==="undefined"){alert("Payment gateway failed to load. Disable ad-blocker and refresh.");return;}
+ if(!FLW_PK||FLW_PK.length<20){alert("Payment not configured. Contact support.");return;}
+ const txRef="UTME-"+UID+"-"+Date.now();
+ FlutterwaveCheckout({
+  public_key:FLW_PK, tx_ref:txRef, amount:amount, currency:"NGN",
+  payment_options:"card,banktransfer,ussd,account",
+  redirect_url:API+"/payment/complete?uid="+UID,
+  customer:{email:"user"+UID+"@utmebot.com", name:"UTME User "+UID},
+  customizations:{title:"UTME Success Bot Premium", description:planKey==="6months"?"6 Months":"Monthly"},
+  meta:{user_id:UID, plan:planKey},
+  callback:function(resp){
+   fetch(API+"/verify/flutterwave",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({transaction_id:resp.transaction_id,tx_ref:resp.tx_ref,expected_uid:UID,plan:planKey})})
+   .then(r=>r.json()).then(res=>{
+    if(res.status==="success"){alert("✅ Payment successful!");window.location.href="https://t.me/"+BOT;}
+    else if(res.status==="duplicate_or_invalid"){alert("ℹ️ Already processed.");window.location.href="https://t.me/"+BOT;}
+    else{alert("⚠️ Payment received. Contact support if not activated.");window.location.href="https://t.me/"+BOT;}
+   }).catch(()=>{alert("⚠️ Network error. Contact support.");window.location.href="https://t.me/"+BOT;});
+  },
+  onclose:function(){console.log("[Payment] closed");}
+ });
 }
-</script></body></html>
-"""
+</script></body></html>"""
 
 
 @flask_app.route("/upgrade/<uid>")
@@ -1549,54 +1381,28 @@ def upgrade_page(uid):
     six = _resolve_plan("6months")
     savings = PREMIUM_PRICE * 6 - PREMIUM_6MONTHS_PRICE
     savings_text = f"\u20a6{savings}" if savings > 0 else ""
-
     invite_link = f"https://t.me/{BOT_USERNAME}?start=invite_{uid}"
-    share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot — free JAMB practice!')}"
-
-    gateway_ready = bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY)
-    test_mode = bool(FLW_PUBLIC_KEY and "TEST" in FLW_PUBLIC_KEY.upper())
-
+    share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot!')}"
     return render_template_string(
-        UPGRADE_PAGE,
-        uid=uid,
-        bot_username=BOT_USERNAME,
+        UPGRADE_PAGE, uid=uid, bot_username=BOT_USERNAME,
         flw_public_key=FLW_PUBLIC_KEY,
-        flw_secret_key=FLW_SECRET_KEY,
-        gateway_ready=gateway_ready,
-        test_mode=test_mode,
-        total_qs=len(ALL_QS),
-        monthly_price=monthly["price"],
-        monthly_price_text=monthly["price_text"],
-        monthly_days=monthly["days"],
-        six_months_price=six["price"],
-        six_months_text=six["price_text"],
-        six_months_days=six["days"],
-        savings_text=savings_text,
-        referral_required=REFERRAL_REQUIRED,
-        referral_reward_days=REFERRAL_REWARD_DAYS,
-        invite_link=invite_link,
-        share_link=share_link,
-    )
+        gateway_ready=bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY),
+        monthly_price=monthly["price"], monthly_price_text=monthly["price_text"],
+        monthly_days=monthly["days"], six_months_price=six["price"],
+        six_months_text=six["price_text"], six_months_days=six["days"],
+        savings_text=savings_text, referral_reward_days=REFERRAL_REWARD_DAYS,
+        share_link=share_link)
 
 
 @flask_app.route("/payment/complete")
 def payment_complete():
     uid = request.args.get("uid", "")
-    return f"""
-    <!DOCTYPE html><html><head><meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Payment Complete</title>
-    <style>body{{font-family:-apple-system,sans-serif;text-align:center;padding:60px 20px;background:#f8fafc;margin:0}}
-    .box{{max-width:400px;margin:0 auto;background:#fff;padding:40px 24px;border-radius:20px;box-shadow:0 10px 30px -10px rgba(0,0,0,.15)}}
-    h1{{color:#10b981;margin:0 0 12px;font-size:24px}}p{{color:#64748b;line-height:1.6;font-size:14px}}
-    a{{display:inline-block;margin-top:24px;padding:14px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:12px;font-weight:700;font-size:15px}}</style>
-    </head><body><div class="box">
-    <h1>✅ Payment Received</h1>
-    <p>Your payment has been received.<br>Premium activation is processing.</p>
-    <p>If it doesn't activate in 2 minutes, message the bot with your ID: <b>{uid}</b></p>
-    <a href="https://t.me/{BOT_USERNAME}">Return to Bot</a>
-    </div></body></html>
-    """
+    return f"""<html><body style="font-family:sans-serif;text-align:center;padding:60px">
+    <h1 style="color:#10b981">✅ Payment Received</h1>
+    <p>Activation in progress.</p>
+    <p>Message the bot with your ID: <b>{uid}</b> if not activated in 2 minutes.</p>
+    <a href="https://t.me/{BOT_USERNAME}" style="padding:14px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:12px;font-weight:700">Return to Bot</a>
+    </body></html>"""
 
 
 @flask_app.route("/verify/flutterwave", methods=["POST"])
@@ -1655,101 +1461,52 @@ def flutterwave_webhook():
     return jsonify({"status": "success"})
 
 
-def run_flask():
-    flask_app.run(host="0.0.0.0", port=PORT, threaded=True)
-
-
 # ============================================================
-# CHANNEL AUTO-POSTING (v4 — unique post per slot)
+# CHANNEL AUTO-POSTING (v4 — unique per slot)
 # ============================================================
-# Each slot: (hour, minute, slot_name)
-POST_SLOTS = (
-    (8,  30, "morning"),
-    (13, 0,  "afternoon"),
-    (20, 0,  "evening"),
-)
-POST_WINDOW_MIN = 30  # fire within 30 minutes after target time
+POST_SLOTS = ((8, 30, "morning"), (13, 0, "afternoon"), (20, 0, "evening"))
+POST_WINDOW_MIN = 30
 
 
 def _now_lagos():
-    """Lagos time = UTC+1 (no DST)."""
     return datetime.now(timezone.utc) + timedelta(hours=1)
 
 
 def _build_morning_post(q):
-    """8:30 AM — Motivational morning challenge."""
-    intro = random.choice([
-        "🌅 *Good Morning, Champion!*",
-        "🌅 *Rise and Grind!*",
-        "🌅 *Morning Dose of JAMB Practice*",
-    ])
-    return (
-        f"{intro}\n\n"
-        f"Start today strong with this one:\n\n"
-        f"📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
-        f"{md(q.get('question','')[:340])}\n\n"
-        f"A) {md(q.get('option_a','')[:80])}\n"
-        f"B) {md(q.get('option_b','')[:80])}\n"
-        f"C) {md(q.get('option_c','')[:80])}\n"
-        f"D) {md(q.get('option_d','')[:80])}\n\n"
-        f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
-        f"🎯 You've got this. Keep pushing!\n"
-        f"👉 Full practice: https://t.me/{BOT_USERNAME}"
-    )
+    intro = random.choice(["🌅 *Good Morning, Champion!*", "🌅 *Rise and Grind!*", "🌅 *Morning JAMB Practice*"])
+    return (f"{intro}\n\n📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
+            f"{md(q.get('question','')[:340])}\n\n"
+            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
+            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
+            f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
+            f"🎯 You've got this!\n👉 Full practice: https://t.me/{BOT_USERNAME}")
 
 
 def _build_afternoon_post(q):
-    """1:00 PM — Quick focused practice."""
-    intro = random.choice([
-        "☀️ *Afternoon Quick Practice*",
-        "☀️ *Midday JAMB Challenge*",
-        "☀️ *Sharpen Your Skills*",
-    ])
-    return (
-        f"{intro}\n\n"
-        f"Take 30 seconds — solve this:\n\n"
-        f"📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
-        f"{md(q.get('question','')[:340])}\n\n"
-        f"A) {md(q.get('option_a','')[:80])}\n"
-        f"B) {md(q.get('option_b','')[:80])}\n"
-        f"C) {md(q.get('option_c','')[:80])}\n"
-        f"D) {md(q.get('option_d','')[:80])}\n\n"
-        f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
-        f"⚡ Stay sharp — you're doing great!\n"
-        f"👉 More practice: https://t.me/{BOT_USERNAME}"
-    )
+    intro = random.choice(["☀️ *Afternoon Quick Practice*", "☀️ *Midday JAMB Challenge*"])
+    return (f"{intro}\n\nTake 30 seconds:\n\n📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
+            f"{md(q.get('question','')[:340])}\n\n"
+            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
+            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
+            f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
+            f"⚡ Stay sharp!\n👉 More practice: https://t.me/{BOT_USERNAME}")
 
 
 def _build_evening_post(q):
-    """8:00 PM — Deep study + explanation."""
-    intro = random.choice([
-        "🌙 *Evening Study Session*",
-        "🌙 *End the Day Strong*",
-        "🌙 *Tonight's JAMB Practice*",
-    ])
-    body = (
-        f"{intro}\n\n"
-        f"Let's close the day with a solid one:\n\n"
-        f"📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
-        f"{md(q.get('question','')[:340])}\n\n"
-        f"A) {md(q.get('option_a','')[:80])}\n"
-        f"B) {md(q.get('option_b','')[:80])}\n"
-        f"C) {md(q.get('option_c','')[:80])}\n"
-        f"D) {md(q.get('option_d','')[:80])}\n\n"
-        f"💡 *Answer:* {md(q.get('answer',''))}\n"
-    )
+    intro = random.choice(["🌙 *Evening Study Session*", "🌙 *End the Day Strong*"])
+    body = (f"{intro}\n\n📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
+            f"{md(q.get('question','')[:340])}\n\n"
+            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
+            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
+            f"💡 *Answer:* {md(q.get('answer',''))}\n")
     expl = (q.get("explanation") or "").strip()
     if expl:
         body += f"\n📖 *Why?* {md(expl[:350])}\n"
-    body += (
-        f"\n🛌 Sleep well — review again tomorrow.\n"
-        f"👉 Full practice: https://t.me/{BOT_USERNAME}"
-    )
+    body += f"\n🛌 Sleep well!\n👉 Full practice: https://t.me/{BOT_USERNAME}"
     return body
 
 
 def _build_post(q, slot_name):
-    """Route to the correct template."""
     if slot_name == "morning":
         return _build_morning_post(q)
     if slot_name == "afternoon":
@@ -1760,80 +1517,51 @@ def _build_post(q, slot_name):
 
 
 async def channel_post(app, slot_name="morning", slot_label="manual"):
-    """Build and send a single channel post. Raises on failure."""
     if not CHANNEL_ID:
-        raise RuntimeError("CHANNEL_ID is not configured on the server")
-
+        raise RuntimeError("CHANNEL_ID is not configured")
     q = get_random_question()
     if not q:
-        raise RuntimeError("No questions available in databank")
-
+        raise RuntimeError("No questions available")
     msg = _build_post(q, slot_name)
-
-    await app.bot.send_message(
-        chat_id=CHANNEL_ID,
-        text=msg,
-        parse_mode="Markdown",
-    )
+    await app.bot.send_message(chat_id=CHANNEL_ID, text=msg, parse_mode="Markdown")
     print(f"[channel] ✅ Posted ({slot_name}/{slot_label}) to {CHANNEL_ID}")
     return True
 
 
 async def channel_posting_job(app):
-    """
-    Posts 3 times daily (Lagos time):
-      • 08:30 → morning (motivational)
-      • 13:00 → afternoon (quick practice)
-      • 20:00 → evening (deep study + explanation)
-    """
-    print("[channel] ⏰ Channel posting job started")
+    print("[channel] ⏰ Job started")
     print(f"[channel]    CHANNEL_ID = {CHANNEL_ID or '❌ NOT SET'}")
-    print(f"[channel]    Schedule   = 08:30, 13:00, 20:00 Lagos time")
-    print(f"[channel]    Bot        = @{BOT_USERNAME}")
-    print(f"[channel]    Mode       = unique post per slot")
-
+    print(f"[channel]    Schedule   = 08:30, 13:00, 20:00 Lagos")
     if not CHANNEL_ID:
-        print("[channel] ❌ CHANNEL_ID not set — auto-posting DISABLED")
+        print("[channel] ❌ CHANNEL_ID missing — DISABLED")
         return
-
-    # Startup test (morning style)
     try:
         await channel_post(app, slot_name="morning", slot_label="startup-test")
     except Exception as e:
         print(f"[channel] ❌ Startup post failed: {type(e).__name__}: {e}")
-        print("[channel]    Check: (1) bot is admin, (2) CHANNEL_ID, "
-              "(3) 'Post Messages' permission")
 
     posted_slots = set()
-
     while True:
         try:
             now = _now_lagos()
             now_total = now.hour * 60 + now.minute
             today = now.date().isoformat()
-
             for (h, m, slot_name) in POST_SLOTS:
                 slot_key = f"{today}_{h:02d}{m:02d}"
                 target_total = h * 60 + m
-
                 if (target_total <= now_total < target_total + POST_WINDOW_MIN
                         and slot_key not in posted_slots):
-                    print(f"[channel] → Slot {slot_name} reached "
-                          f"(Lagos {now.strftime('%H:%M')})")
+                    print(f"[channel] → Slot {slot_name} reached")
                     try:
                         await channel_post(app, slot_name=slot_name,
                                            slot_label=f"{h:02d}:{m:02d}")
                         posted_slots.add(slot_key)
                     except Exception as e:
-                        print(f"[channel] ❌ Slot {slot_name} failed: "
-                              f"{type(e).__name__}: {e}")
-
+                        print(f"[channel] ❌ {slot_name}: {e}")
             posted_slots = {k for k in posted_slots if k.startswith(today)}
             await asyncio.sleep(300)
-
         except Exception as e:
-            print(f"[channel] ❌ Job loop error: {type(e).__name__}: {e}")
-            traceback.print_exc()
+            print(f"[channel] ❌ Loop error: {e}")
             await asyncio.sleep(600)
 
 
@@ -1841,7 +1569,7 @@ async def post_init(app):
     try:
         commands = [
             BotCommand("start", "🏠 Main Menu"),
-            BotCommand("mock", "📝 Start Mock Exam"),
+            BotCommand("mock", "📝 Mock Exam"),
             BotCommand("past", "📚 Past Questions"),
             BotCommand("study", "📖 Study Plan"),
             BotCommand("syllabus", "📋 JAMB Syllabus"),
@@ -1849,22 +1577,17 @@ async def post_init(app):
             BotCommand("tutor", "💬 Ask AI Tutor"),
             BotCommand("invite", "👥 Invite Friends"),
             BotCommand("premium", "💎 Upgrade Premium"),
-            BotCommand("debug", "🔍 Databank Status"),
-            BotCommand("kbstats", "🧠 AI Brain Status"),
-            BotCommand("postnow", "📤 Test channel post (admin)"),
             BotCommand("help", "❓ Help"),
         ]
         await app.bot.set_my_commands(commands)
         await app.bot.set_chat_menu_button(
             menu_button=MenuButtonCommands(text="📋 Menu"))
-        print("✅ Bot commands registered")
-
+        print("✅ Commands registered")
         try:
             asyncio.create_task(channel_posting_job(app))
-            print("✅ Channel poster task launched")
+            print("✅ Channel poster launched")
         except Exception as e:
-            print(f"⚠️ Could not launch channel poster: {e}")
-
+            print(f"⚠️ Channel poster: {e}")
     except Exception as e:
         print(f"Menu setup failed: {e}")
 
@@ -1876,27 +1599,25 @@ def main():
     load_data()
     load_processed_tx()
 
-    print(f"🤖 Bot username locked to: @{BOT_USERNAME}")
+    print(f"🤖 Bot: @{BOT_USERNAME}")
+    print(f"🔒 Free mock limit: {FREE_MOCK_QS_DAILY} per 24 hours (HARD-LOCKED)")
+    print(f"🔒 Subject/Full Mocks: PREMIUM ONLY (HARD-LOCKED)")
+    if ADMIN_ID:
+        print(f"⚠️  ADMIN_ID = {ADMIN_ID} → this account is treated as PREMIUM")
 
-    # ── Build AI Tutor knowledge base ──
     if HAS_AI_TUTOR:
         try:
-            print("🧠 Building AI Tutor knowledge base…")
+            print("🧠 Building AI Tutor KB…")
             _build_kb()
             ok, detail = _tutor_ping()
-            print(f"🧠 AI Tutor ping: {detail}")
+            print(f"🧠 Tutor ping: {detail}")
         except Exception as e:
-            print(f"⚠️ AI Tutor init failed: {e}")
-            traceback.print_exc()
-    else:
-        print("⚠️ AI Tutor module not loaded")
+            print(f"⚠️ Tutor init: {e}")
 
     threading.Thread(target=run_flask, daemon=True).start()
     print(f"🌐 Flask on port {PORT}")
-    print(f"📚 Loaded: {len(ALL_QS)} questions | {len(AVAILABLE_SUBJECTS)} subjects")
+    print(f"📚 Loaded: {len(ALL_QS)} Qs | {len(AVAILABLE_SUBJECTS)} subjects")
     print(f"📢 Channel: {CHANNEL_ID or '❌ NOT CONFIGURED'}")
-    for s in AVAILABLE_SUBJECTS:
-        print(f"   {s}: {len(LOCAL_DATABANK.get(s, []))}")
 
     if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE" or len(BOT_TOKEN) < 20:
         print("❌ BOT_TOKEN not set!")
@@ -1906,32 +1627,30 @@ def main():
     try:
         app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-        app.add_handler(CommandHandler("start",    cmd_start))
-        app.add_handler(CommandHandler("menu",     cmd_start))
-        app.add_handler(CommandHandler("mock",     cmd_mock))
-        app.add_handler(CommandHandler("past",     cmd_past))
-        app.add_handler(CommandHandler("questions", cmd_past))
-        app.add_handler(CommandHandler("study",    cmd_study))
+        app.add_handler(CommandHandler("start", cmd_start))
+        app.add_handler(CommandHandler("menu", cmd_start))
+        app.add_handler(CommandHandler("mock", cmd_mock))
+        app.add_handler(CommandHandler("past", cmd_past))
+        app.add_handler(CommandHandler("study", cmd_study))
         app.add_handler(CommandHandler("syllabus", cmd_syllabus))
-        app.add_handler(CommandHandler("score",    cmd_score))
-        app.add_handler(CommandHandler("tutor",    cmd_tutor))
-        app.add_handler(CommandHandler("ask",      cmd_tutor))
-        app.add_handler(CommandHandler("invite",   cmd_invite))
-        app.add_handler(CommandHandler("premium",  cmd_premium))
-        app.add_handler(CommandHandler("debug",    cmd_debug))
-        app.add_handler(CommandHandler("kbstats",  cmd_kbstats))
-        app.add_handler(CommandHandler("postnow",  cmd_postnow))
-        app.add_handler(CommandHandler("help",     cmd_help))
+        app.add_handler(CommandHandler("score", cmd_score))
+        app.add_handler(CommandHandler("tutor", cmd_tutor))
+        app.add_handler(CommandHandler("invite", cmd_invite))
+        app.add_handler(CommandHandler("premium", cmd_premium))
+        app.add_handler(CommandHandler("debug", cmd_debug))
+        app.add_handler(CommandHandler("kbstats", cmd_kbstats))
+        app.add_handler(CommandHandler("postnow", cmd_postnow))
+        app.add_handler(CommandHandler("help", cmd_help))
 
         app.add_handler(CallbackQueryHandler(handle_callback))
         app.add_handler(MessageHandler(
             filters.Regex("^(📚 Past Questions|📝 Mock Exam|📊 My Score|💬 Ask Tutor|"
-                          "💎 Premium|👥 Invite Friends|📖 Study Plan|🔵 MENU|MENU|/mock|mock)$"),
+                          "💎 Premium|👥 Invite Friends|📖 Study Plan)$"),
             handle_msg))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
 
         app.post_init = post_init
-        print(f"✅ Bot v28 running | {len(ALL_QS)} Qs | {len(AVAILABLE_SUBJECTS)} subjects")
+        print(f"✅ Bot running")
         app.run_polling()
     except Exception as e:
         print(f"❌ Bot failed: {e}")
