@@ -1,5 +1,5 @@
 """
-tutor.py — DeepSeek AI Tutor with RAG + Nigerian Male Teacher Voice.
+tutor.py — DeepSeek AI Tutor (Mr. Ellams) with RAG + Nigerian Male Teacher Voice.
 - BM25 keyword retrieval from questions_*.json databank
 - Optional semantic search via sentence-transformers
 - DeepSeek thinking mode for reasoning
@@ -301,10 +301,10 @@ def _format_context(results, max_per_chunk=800):
 
 
 # ═══════════════════════════════════════════════════════
-# SYSTEM PROMPT — Nigerian teacher persona
+# SYSTEM PROMPT — Mr. Ellams persona
 # ═══════════════════════════════════════════════════════
 
-SYSTEM_PROMPT = """You are "Mr. Adewale", a seasoned Nigerian JAMB tutor with 20 years of
+SYSTEM_PROMPT = """You are "Mr. Ellams", a seasoned Nigerian JAMB tutor with 20 years of
 classroom experience. You explain questions like a brilliant, patient Nigerian
 secondary school teacher, guiding the student calmly and professionally.
 
@@ -378,7 +378,7 @@ def ask_tutor(question_text: str, subject: str = "") -> str:
 
 
 # ═══════════════════════════════════════════════════════
-# VOICE — Nigerian Male Teacher
+# VOICE — Nigerian Male Teacher (Mr. Ellams)
 # ═══════════════════════════════════════════════════════
 
 def _clean_for_speech(text: str) -> str:
@@ -394,7 +394,7 @@ def _clean_for_speech(text: str) -> str:
 
 
 def make_voice_professional(text: str):
-    """Nigerian male teacher voice via Edge TTS. gTTS fallback."""
+    """Mr. Ellams — Nigerian male teacher voice via Edge TTS. gTTS fallback."""
     clean = _clean_for_speech(text)
     if not clean:
         return None
@@ -466,7 +466,7 @@ def build_voice_inputfile(text: str):
     buf = make_voice_professional(text)
     if buf is None:
         return None
-    return InputFile(buf, filename="tutor_explanation.mp3")
+    return InputFile(buf, filename="ellams_explanation.mp3")
 
 
 def ping():
@@ -503,4 +503,5 @@ def get_kb_stats():
         "ready": _KB_READY,
         "voice_engine": "edge-tts" if EDGE_TTS_AVAILABLE else ("gtts" if GTTS_AVAILABLE else "none"),
         "voice_name": VOICE_MALE_NIGERIAN,
+        "tutor_name": "Mr. Ellams",
     }
