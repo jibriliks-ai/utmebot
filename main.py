@@ -1,5 +1,5 @@
 """
-UTME Success Bot v28 — HARD-LOCKED FREE PLAN + AI TUTOR + CHANNEL + CBT 4-SUBJECT MOCK + ADMIN PANEL
+UTME Success Bot v28 — HARD-LOCKED FREE PLAN + AI TUTOR (Mr. Ellams) + CHANNEL + CBT 4-SUBJECT MOCK + ADMIN PANEL
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -70,6 +70,7 @@ except Exception as _e:
 
 BOT_USERNAME = "UTMESucessBot"
 SUPPORT_HANDLE = "@UTMESUCCESS"
+TUTOR_NAME = "Mr. Ellams"
 if CHANNEL_ID:
     CHANNEL_ID = str(CHANNEL_ID).strip()
 
@@ -148,7 +149,7 @@ try:
         ping as _tutor_ping,
     )
     HAS_AI_TUTOR = True
-    print("[ssmain] ✅ AI Tutor module loaded")
+    print(f"[ssmain] ✅ AI Tutor module loaded ({TUTOR_NAME})")
 except Exception as _e:
     print(f"[ssmain] ⚠️ AI Tutor unavailable: {_e}")
     HAS_AI_TUTOR = False
@@ -394,7 +395,7 @@ def upgrade_kb(uid):
         f"• ♾️ Unlimited mocks\n"
         f"• 📚 Subject Mock (40 Qs)\n"
         f"• 🔥 Full JAMB CBT Mock (180 Qs · 4 Subjects)\n"
-        f"• 💬 Unlimited AI Tutor + 🎙️ Voice\n\n"
+        f"• 💬 Unlimited {TUTOR_NAME} (AI Tutor) + 🎙️ Voice\n\n"
         f"*Plans:*\n"
         f"• Monthly — {PREMIUM_PRICE_TEXT} / {PREMIUM_DAYS} days\n"
         f"• 6 Months — {PREMIUM_6MONTHS_TEXT} / {PREMIUM_6MONTHS_DAYS} days\n\n"
@@ -435,7 +436,7 @@ def main_menu_text_kb(uid):
         [InlineKeyboardButton("💎 Premium",        callback_data="premium_info"),
          InlineKeyboardButton("❓ Help",            callback_data="help_menu")],
     ]
-    # ── ADMIN-ONLY button (invisible to non-admins) ──
+    # ── ADMIN-ONLY button ──
     if ADMIN_ID and str(uid) == str(ADMIN_ID):
         kb.append([InlineKeyboardButton("⚙️ Admin Panel (Admin Only)",
                                         callback_data="admin_panel")])
@@ -669,7 +670,7 @@ def _admin_menu_text():
         f"📚 *Databank*\n"
         f"  • Total Questions: {len(ALL_QS)}\n"
         f"  • Subjects: {len(AVAILABLE_SUBJECTS)}\n\n"
-        f"💬 *AI Tutor*\n"
+        f"💬 *AI Tutor ({TUTOR_NAME})*\n"
         f"  • Status: {'✅ Active' if HAS_AI_TUTOR else '❌ Offline'}\n"
         f"  • Voice: Nigerian Male Teacher\n\n"
         f"📢 *Channel*\n"
@@ -763,7 +764,7 @@ async def _admin_handle_callback(query, uid, data, context):
         stats = _get_kb_stats() if HAS_AI_TUTOR else {}
         ok, detail = _tutor_ping() if HAS_AI_TUTOR else (False, "n/a")
         lines = [
-            "🧠 *AI Brain Status*",
+            f"🧠 *AI Brain Status ({TUTOR_NAME})*",
             f"DeepSeek: {'✅' if ok else '❌'} {md(str(detail))}",
             f"KB ready: {stats.get('ready', False)}",
             f"Chunks: {stats.get('total_chunks', 0)}",
@@ -879,7 +880,7 @@ async def cmd_tutor(update, context):
         used = u["tutor_counts"].get(str(date.today()), 0)
         remaining_text = f"{max(0, FREE_TUTOR_PER_DAY - used)}/{FREE_TUTOR_PER_DAY} left today"
     await update.message.reply_text(
-        f"💬 *Ask Tutor — Mr. Adewale*\n\n"
+        f"💬 *Ask Tutor — {TUTOR_NAME}*\n\n"
         f"🧠 AI Brain: {'Active ✅' if HAS_AI_TUTOR else 'Limited'}\n"
         f"🎙️ Voice: Nigerian male teacher\n"
         f"📚 {len(ALL_QS)} past questions\n\n"
@@ -919,7 +920,7 @@ async def cmd_premium(update, context):
         f"*6 Months — {PREMIUM_6MONTHS_TEXT}* / {PREMIUM_6MONTHS_DAYS} days *(BEST VALUE)*\n\n"
         f"✅ Unlimited mocks\n✅ Subject Mock (40Q)\n"
         f"✅ Full JAMB CBT Mock (180Q · 4 subjects)\n"
-        f"✅ Unlimited tutor + Voice 🎙️\n✅ {len(ALL_QS)} Qs",
+        f"✅ Unlimited {TUTOR_NAME} + Voice 🎙️\n✅ {len(ALL_QS)} Qs",
         parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
 
 
@@ -935,7 +936,7 @@ async def cmd_help(update, context):
         f"/study — Study plan\n"
         f"/syllabus — JAMB syllabus\n"
         f"/score — Your scores\n"
-        f"/tutor — Ask Mr. Adewale (AI Tutor)\n"
+        f"/tutor — Ask {TUTOR_NAME} (AI Tutor)\n"
         f"/invite — Invite friends\n"
         f"/premium — Upgrade premium\n"
         f"/help — This message\n\n"
@@ -966,7 +967,7 @@ async def cmd_debug(update, context):
         f"Total: *{len(ALL_QS)}* questions",
         f"Subjects: *{len(AVAILABLE_SUBJECTS)}*",
         f"Engine: {'✅' if HAS_ENGINE else '❌'}",
-        f"AI Tutor: {'✅' if HAS_AI_TUTOR else '❌'}",
+        f"AI Tutor ({TUTOR_NAME}): {'✅' if HAS_AI_TUTOR else '❌'}",
         f"Bot: @{md(BOT_USERNAME)}",
         f"Channel: `{CHANNEL_ID or '❌ NOT SET'}`", "",
     ]
@@ -983,7 +984,7 @@ async def cmd_kbstats(update, context):
     stats = _get_kb_stats() if HAS_AI_TUTOR else {}
     ok, detail = _tutor_ping() if HAS_AI_TUTOR else (False, "not loaded")
     lines = [
-        "🧠 *AI Tutor Status*",
+        f"🧠 *AI Tutor ({TUTOR_NAME}) Status*",
         f"DeepSeek: {'✅' if ok else '❌'} {md(str(detail))}",
         f"KB ready: {stats.get('ready', False)}",
         f"Chunks: {stats.get('total_chunks', 0)}",
@@ -1041,7 +1042,7 @@ async def handle_callback(update, context):
             return
 
     # ══════════════════════════════════════════════════════
-    # HARD GATES — premium-only mock handlers
+    # HARD GATES
     # ══════════════════════════════════════════════════════
     premium_blocked_callbacks = (
         "mock_by_subject", "mock_full", "cbt_start", "cbt_clear",
@@ -1190,7 +1191,7 @@ async def handle_callback(update, context):
                     f"✅ Subject Mock (40 Qs)\n"
                     f"✅ Full JAMB CBT Mock (180 Qs)\n"
                     f"✅ Unlimited Quick Mocks\n"
-                    f"✅ Unlimited AI Tutor"
+                    f"✅ Unlimited {TUTOR_NAME}"
                 )
                 buttons = [
                     [InlineKeyboardButton("💎 Upgrade to Premium Now",
@@ -1413,7 +1414,7 @@ async def handle_callback(update, context):
             used = u["tutor_counts"].get(str(date.today()), 0)
             remaining_text = f"{max(0, FREE_TUTOR_PER_DAY - used)}/{FREE_TUTOR_PER_DAY} left today"
         await query.message.reply_text(
-            f"💬 *Ask Mr. Adewale*\n"
+            f"💬 *Ask {TUTOR_NAME}*\n"
             f"🧠 AI: {'Active ✅' if HAS_AI_TUTOR else 'Limited'}\n"
             f"🎙️ Voice: Nigerian male teacher\n"
             f"Tutor: {remaining_text}\n\n"
@@ -1434,7 +1435,7 @@ async def handle_callback(update, context):
             f"*6 Months — {PREMIUM_6MONTHS_TEXT}* / {PREMIUM_6MONTHS_DAYS} days *(BEST VALUE)*\n\n"
             f"✅ Unlimited mocks\n✅ Subject Mock (40Q)\n"
             f"✅ Full JAMB CBT Mock (180Q · 4 subjects)\n"
-            f"✅ Unlimited tutor + Voice 🎙️\n✅ {len(ALL_QS)} Qs",
+            f"✅ Unlimited {TUTOR_NAME} + Voice 🎙️\n✅ {len(ALL_QS)} Qs",
             parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
         return
 
@@ -1559,7 +1560,7 @@ async def handle_msg(update, context):
     thinking_msg = None
     try:
         thinking_msg = await update.message.reply_text(
-            "🧠 *Mr. Adewale is thinking…*", parse_mode="Markdown")
+            f"🧠 *{TUTOR_NAME} is thinking…*", parse_mode="Markdown")
     except Exception:
         pass
 
@@ -1580,7 +1581,7 @@ async def handle_msg(update, context):
         except Exception:
             pass
 
-    header = f"💬 *Mr. Adewale — {md(display)}*\n\n*Q:* {md(text[:300])}\n\n"
+    header = f"💬 *{TUTOR_NAME} — {md(display)}*\n\n*Q:* {md(text[:300])}\n\n"
     footer = "\n\n_📚 Grounded in JAMB databank + DeepSeek reasoning_"
     final_msg = header + answer_text + footer
 
@@ -1605,7 +1606,7 @@ async def handle_msg(update, context):
             if voice_if is not None:
                 await update.message.reply_voice(
                     voice=voice_if,
-                    caption="🎙️ Voice Explanation — Mr. Adewale")
+                    caption=f"🎙️ Voice Explanation — {TUTOR_NAME}")
             else:
                 print("[tutor] Voice generation returned None")
         except Exception as e:
@@ -1621,7 +1622,7 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     return (f"UTME Bot v28 · {len(ALL_QS)} Qs · "
-            f"AI Tutor: {'ON' if HAS_AI_TUTOR else 'OFF'} · "
+            f"AI Tutor ({TUTOR_NAME}): {'ON' if HAS_AI_TUTOR else 'OFF'} · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
 
 
@@ -1631,6 +1632,7 @@ def health():
     return jsonify({
         "status": "ok",
         "bot_username": BOT_USERNAME,
+        "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
         "free_mock_limit": FREE_MOCK_QS_DAILY,
         "cbt_subjects_required": CBT_SUBJECTS_REQUIRED,
@@ -1903,7 +1905,7 @@ async def post_init(app):
             BotCommand("study", "📖 Study Plan"),
             BotCommand("syllabus", "📋 JAMB Syllabus"),
             BotCommand("score", "📊 My Score"),
-            BotCommand("tutor", "💬 Ask Mr. Adewale"),
+            BotCommand("tutor", f"💬 Ask {TUTOR_NAME}"),
             BotCommand("invite", "👥 Invite Friends"),
             BotCommand("premium", "💎 Upgrade Premium"),
             BotCommand("help", "❓ Help"),
@@ -1929,6 +1931,7 @@ def main():
     load_processed_tx()
 
     print(f"🤖 Bot: @{BOT_USERNAME}")
+    print(f"👨‍🏫 Tutor: {TUTOR_NAME} (Nigerian male teacher voice)")
     print(f"🔒 Free mock limit: {FREE_MOCK_QS_DAILY}/24h (HARD-LOCKED)")
     print(f"🔒 CBT Mock: {CBT_SUBJECTS_REQUIRED} subjects · "
           f"{CBT_TOTAL_QUESTIONS} Qs · PREMIUM ONLY")
@@ -1937,7 +1940,7 @@ def main():
 
     if HAS_AI_TUTOR:
         try:
-            print("🧠 Building AI Tutor KB…")
+            print(f"🧠 Building {TUTOR_NAME} knowledge base…")
             _build_kb()
             ok, detail = _tutor_ping()
             print(f"🧠 Tutor ping: {detail}")
