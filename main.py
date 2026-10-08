@@ -2176,4 +2176,46 @@ def main():
     print(f"📚 Loaded: {len(ALL_QS)} Qs | {len(AVAILABLE_SUBJECTS)} subjects")
     print(f"📢 Channel: {CHANNEL_ID or '❌ NOT CONFIGURED'}")
 
-    if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE" or len(BOT_TOKEN) < 20
+    if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE" or len(BOT_TOKEN) < 20:
+        print("❌ BOT_TOKEN not set!")
+        while True:
+            time.sleep(60)
+
+    try:
+        app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+        app.add_handler(CommandHandler("start", cmd_start))
+        app.add_handler(CommandHandler("menu", cmd_start))
+        app.add_handler(CommandHandler("mock", cmd_mock))
+        app.add_handler(CommandHandler("past", cmd_past))
+        app.add_handler(CommandHandler("study", cmd_study))
+        app.add_handler(CommandHandler("syllabus", cmd_syllabus))
+        app.add_handler(CommandHandler("score", cmd_score))
+        app.add_handler(CommandHandler("tutor", cmd_tutor))
+        app.add_handler(CommandHandler("invite", cmd_invite))
+        app.add_handler(CommandHandler("premium", cmd_premium))
+        app.add_handler(CommandHandler("admin", cmd_admin))
+        app.add_handler(CommandHandler("debug", cmd_debug))
+        app.add_handler(CommandHandler("kbstats", cmd_kbstats))
+        app.add_handler(CommandHandler("postnow", cmd_postnow))
+        app.add_handler(CommandHandler("help", cmd_help))
+
+        app.add_handler(CallbackQueryHandler(handle_callback))
+        app.add_handler(MessageHandler(
+            filters.Regex("^(📚 Past Questions|📝 Mock Exam|📊 My Score|💬 Ask Tutor|"
+                          "💎 Premium|👥 Invite Friends|📖 Study Plan|⚙️ Admin Panel)$"),
+            handle_msg))
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
+
+        app.post_init = post_init
+        print("✅ Bot running")
+        app.run_polling()
+    except Exception as e:
+        print(f"❌ Bot failed: {e}")
+        traceback.print_exc()
+        while True:
+            time.sleep(60)
+
+
+if __name__ == "__main__":
+    main()
