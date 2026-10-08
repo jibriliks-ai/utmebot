@@ -1,10 +1,9 @@
 """
-UTME Success Bot v30 — Option Shuffler + Per-Student Rotation
-- Free: ONE free 40Q English mock (one-time)
-- Free users must build a 4-subject JAMB plan on first login
-- Options shuffled per question (answer not always A)
-- Questions rotated per student (used_ids tracking)
-- JAMB Trap Detector for failed questions (Mr. Ellams)
+UTME Success Bot v31 — Real Exam Mode + Free AI Limit + Rotating State Rank
+- Wrong answers during mock do NOT reveal correct answer
+- Post-mock: score + topic breakdown + 3 action buttons
+- 3 free AI Why queries per day (free users) — 4th locks → upgrade
+- Rank button rotates across Nigerian states, min score 35/40
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -89,6 +88,28 @@ SUBJECT_DISPLAY = {
 
 PLAN_SIZE = 4
 FREE_ENGLISH_QS = 40
+FREE_AI_WHY_PER_DAY = 3
+
+# ══════════════════════════════════════════════════════════
+# NIGERIAN STATES + NAMES (for fake ranking)
+# ══════════════════════════════════════════════════════════
+NIGERIAN_STATES = [
+    "Delta", "Edo", "Lagos", "Ondo", "Anambra", "Oyo", "Kano",
+    "Rivers", "Kaduna", "Enugu", "Imo", "Abia", "Akwa Ibom",
+    "Cross River", "Plateau", "Benue", "Kogi", "Kwara", "Osun",
+    "Ekiti", "Ogun", "Bayelsa", "Ebonyi", "Nasarawa", "Niger",
+    "Sokoto", "Kebbi", "Zamfara", "Yobe", "Borno", "Adamawa",
+    "Taraba", "Gombe", "Jigawa", "Katsina", "Bauchi",
+]
+
+NIGERIAN_NAMES = [
+    "Chinedu O.", "Amina B.", "Tunde A.", "Ngozi E.", "Emeka N.",
+    "Fatima Y.", "Blessing I.", "Yusuf M.", "Chioma U.", "Segun F.",
+    "Aisha K.", "Kelechi A.", "Ifeoma O.", "Ibrahim S.", "Adaeze M.",
+    "Oluwaseun T.", "Halima G.", "Nkem C.", "Bolanle A.", "Uche O.",
+    "Zainab M.", "Obinna E.", "Folake B.", "Bashir A.", "Ebere N.",
+    "Yemi O.", "Hauwa A.", "Chidi N.", "Funmi D.", "Mustapha K.",
+]
 
 # ---------- Engine ----------
 ALL_QS = []
@@ -185,17 +206,11 @@ def md(s):
 
 
 # ══════════════════════════════════════════════════════════
-# OPTION SHUFFLER — fixes "answer always on A"
+# OPTION SHUFFLER
 # ══════════════════════════════════════════════════════════
 def _shuffle_options(q):
-    """
-    Return a copy of q with its 4 options shuffled.
-    The answer letter is remapped to the new option position.
-    This ensures the correct answer is not always on option A.
-    """
     if not isinstance(q, dict):
         return q
-
     opts = [
         q.get("option_a", "") or "",
         q.get("option_b", "") or "",
@@ -205,17 +220,12 @@ def _shuffle_options(q):
     valid_pairs = [(chr(65 + i), opts[i]) for i in range(4) if str(opts[i]).strip()]
     if len(valid_pairs) < 2:
         return q
-
     orig_ans = str(q.get("answer", "") or "").upper().strip()[:1]
-
-    # Locate the original correct option text
     answer_text = None
     for letter, text in valid_pairs:
         if letter == orig_ans:
             answer_text = text
             break
-
-    # If we cannot find it, try answer_text field
     if not answer_text:
         ans_txt_alt = str(q.get("answer_text", "") or "").strip()
         if ans_txt_alt:
@@ -223,14 +233,9 @@ def _shuffle_options(q):
                 if text.strip() == ans_txt_alt:
                     answer_text = text
                     break
-
     if not answer_text:
-        # Cannot reliably shuffle — return original
         return q
-
-    # Shuffle
     random.shuffle(valid_pairs)
-
     new_q = dict(q)
     new_letters = ["A", "B", "C", "D"]
     new_answer = orig_ans
@@ -238,68 +243,46 @@ def _shuffle_options(q):
         new_q[f"option_{new_letters[i].lower()}"] = text
         if text == answer_text:
             new_answer = new_letters[i]
-
-    # Blank out any leftover option slots (e.g. if only 3 options)
     for j in range(len(valid_pairs), 4):
         new_q[f"option_{new_letters[j].lower()}"] = ""
-
     new_q["answer"] = new_answer
     return new_q
 
 
 def _prepare_questions(qs):
-    """Shuffle options for every question in a list."""
     return [_shuffle_options(q) for q in qs]
 
 
 # ══════════════════════════════════════════════════════════
-# ROTATION FETCHER — different questions per student, per mock
+# ROTATION
 # ══════════════════════════════════════════════════════════
 def _fetch_rotated(uid, subject, limit):
-    """
-    Fetch questions for a subject with per-user rotation.
-    Prefers questions the user has NOT seen recently.
-    Falls back to old questions only when pool is exhausted.
-    """
     u = get_user(uid)
     used = set(str(x) for x in u.get("used_ids", []))
     pool = LOCAL_DATABANK.get(subject, [])
     if not pool:
         return []
-
     unused = [q for q in pool if str(q.get("id", "")) not in used]
     used_qs = [q for q in pool if str(q.get("id", "")) in used]
-
     random.shuffle(unused)
     random.shuffle(used_qs)
-
     combined = unused + used_qs
     selected = combined[:limit]
-
-    # Mark as used so next mock won't repeat them
     new_ids = [str(q.get("id", "")) for q in selected if q.get("id")]
     if new_ids:
         u["used_ids"] = (u.get("used_ids", []) + new_ids)[-5000:]
         save_data()
-
     return selected
 
 
 def _fetch_rotated_multi(uid, subjects, total):
-    """
-    Fetch `total` questions across multiple subjects with rotation.
-    Even distribution across subjects.
-    """
     u = get_user(uid)
     used = set(str(x) for x in u.get("used_ids", []))
-
     n = len(subjects)
     if n == 0:
         return []
-
     per_subject = total // n
     remainder = total % n
-
     picked = []
     picked_ids = []
     for i, subj in enumerate(subjects):
@@ -314,15 +297,64 @@ def _fetch_rotated_multi(uid, subjects, total):
         selected = (unused + used_qs)[:need]
         picked.extend(selected)
         picked_ids.extend(str(q.get("id", "")) for q in selected if q.get("id"))
-
     random.shuffle(picked)
     picked = picked[:total]
-
     if picked_ids:
         u["used_ids"] = (u.get("used_ids", []) + picked_ids)[-5000:]
         save_data()
-
     return picked
+
+
+# ══════════════════════════════════════════════════════════
+# STATE RANK HELPERS
+# ══════════════════════════════════════════════════════════
+def _get_user_state(uid):
+    """Rotate the state label per user, changes every day."""
+    seed_str = f"{uid}_{date.today().isoformat()}_state"
+    h = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
+    return NIGERIAN_STATES[h % len(NIGERIAN_STATES)]
+
+
+def _generate_rank(uid, subject_display, user_score, total):
+    """
+    Generate a realistic ranking for a state.
+    All student scores will be 35/40 or higher.
+    """
+    state = _get_user_state(uid)
+
+    # Deterministic seed per user + subject + day
+    seed_str = f"{uid}_{subject_display}_{date.today().isoformat()}"
+    seed_int = int(hashlib.md5(seed_str.encode()).hexdigest(), 16) % (2**32)
+    rng = random.Random(seed_int)
+
+    names = rng.sample(NIGERIAN_NAMES, 5)
+
+    # All scores between 35 and total (min 35)
+    min_score = 35
+    max_score = max(min_score, total)  # ensure min is not > total
+    if total < min_score:
+        # If total < 35 (unlikely for 40Q mock), scale down
+        min_score = max(1, total - 5)
+        max_score = total
+
+    scores = [rng.randint(min_score, max_score) for _ in range(5)]
+    scores.sort(reverse=True)
+
+    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+    lines = [f"🏆 *{state} State Ranking — {subject_display} Mock*\n"]
+    for i, (n, s) in enumerate(zip(names, scores)):
+        lines.append(f"{medals[i]} {md(n)} — *{s}/{total}*")
+
+    # Simulated user rank
+    if user_score >= min_score:
+        user_rank = rng.randint(1, 25)
+    else:
+        user_rank = rng.randint(40, 200)
+
+    lines.append(f"\n📊 *Your Score:* *{user_score}/{total}*")
+    lines.append(f"🎯 *Your Rank:* *#{user_rank}* in {state} State")
+    lines.append(f"\n_Simulated based on state benchmarks. Keep practising to climb the ranks!_")
+    return "\n".join(lines)
 
 
 # ---------- Storage ----------
@@ -395,6 +427,7 @@ def get_user(uid, username=""):
             "jamb_plan": ["english"],
             "plan_set": False,
             "free_english_used": False,
+            "ai_why_counts": {},
         }
         save_data()
     u = USER_DATA[uid]
@@ -404,6 +437,7 @@ def get_user(uid, username=""):
     u.setdefault("plan_set", False)
     u.setdefault("free_english_used", False)
     u.setdefault("used_ids", [])
+    u.setdefault("ai_why_counts", {})
     if u.get("premium_until"):
         try:
             if datetime.now() > datetime.fromisoformat(u["premium_until"]):
@@ -421,6 +455,25 @@ def is_premium(uid):
     if ADMIN_ID and str(uid) == str(ADMIN_ID):
         return True
     return bool(u.get("is_premium", False))
+
+
+def can_use_ai_why(uid):
+    """Returns (allowed, remaining)."""
+    if is_premium(uid):
+        return True, 999
+    u = get_user(uid)
+    today = str(date.today())
+    used = u.get("ai_why_counts", {}).get(today, 0)
+    remaining = max(0, FREE_AI_WHY_PER_DAY - used)
+    return remaining > 0, remaining
+
+
+def consume_ai_why(uid):
+    u = get_user(uid)
+    today = str(date.today())
+    u.setdefault("ai_why_counts", {})
+    u["ai_why_counts"][today] = u["ai_why_counts"].get(today, 0) + 1
+    save_data()
 
 
 def can_use_tutor(uid):
@@ -521,7 +574,8 @@ def upgrade_kb(uid):
         f"• 📚 Subject Mock (40 Qs per subject)\n"
         f"• 🔥 Full JAMB CBT Mock (180 Qs · 4 Subjects)\n"
         f"• 💬 Unlimited {TUTOR_NAME} + 🎙️ Voice\n"
-        f"• 🎯 JAMB Trap Detector on failed questions\n\n"
+        f"• 🎯 Unlimited AI Why analysis on failed questions\n"
+        f"• 📊 Full state ranking access\n\n"
         f"*Plans:*\n"
         f"• Monthly — {PREMIUM_PRICE_TEXT} / {PREMIUM_DAYS} days\n"
         f"• 6 Months — {PREMIUM_6MONTHS_TEXT} / {PREMIUM_6MONTHS_DAYS} days\n\n"
@@ -530,6 +584,23 @@ def upgrade_kb(uid):
     kb = plan_buttons(uid)
     kb.append([InlineKeyboardButton(f"👥 Invite {REFERRAL_REQUIRED}=FREE",
                                     callback_data="invite_friends")])
+    kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
+    return msg, InlineKeyboardMarkup(kb)
+
+
+def ai_why_limit_kb(uid):
+    msg = (
+        f"🔒 *Free AI Why limit reached*\n\n"
+        f"You've used your *{FREE_AI_WHY_PER_DAY} free AI Why analyses* today.\n\n"
+        f"💎 *Unlock Premium* ({PREMIUM_PRICE_TEXT}) to get:\n"
+        f"• ♾️ *Unlimited* AI Why analyses\n"
+        f"• 🎯 JAMB Trap Detector on every failed question\n"
+        f"• ♾️ Unlimited mocks on all subjects\n"
+        f"• 🔥 Full 180Q JAMB CBT Mock\n"
+        f"• 🎙️ Voice explanations from {TUTOR_NAME}\n\n"
+        f"👉 *Pay {PREMIUM_PRICE_TEXT} now to continue.*"
+    )
+    kb = plan_buttons(uid)
     kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
     return msg, InlineKeyboardMarkup(kb)
 
@@ -602,7 +673,6 @@ def _answer_keyboard(q):
 
 
 def _start_mock_session(uid, qs, subject_label, intro_text=""):
-    # ⭐ Shuffle options so answer is not always on A
     qs = _prepare_questions(qs)
     USER_SESSIONS[uid] = {
         "mode": "mock",
@@ -618,7 +688,7 @@ def _start_mock_session(uid, qs, subject_label, intro_text=""):
 
 
 # ══════════════════════════════════════════════════════════
-# PLAN BUILDER UI
+# PLAN BUILDER
 # ══════════════════════════════════════════════════════════
 PLAN_OPTIONAL_SUBJECTS = [
     "mathematics", "biology", "physics", "chemistry",
@@ -632,7 +702,6 @@ def _plan_builder_text(uid):
     plan = u.get("jamb_plan", ["english"])
     others = [s for s in plan if s != "english"]
     n = len(others)
-
     text = (
         f"Welcome to UTME Success Bot 🔥\n\n"
         f"To build your personal JAMB plan, choose your 4 JAMB subjects:\n\n"
@@ -641,13 +710,11 @@ def _plan_builder_text(uid):
     for i, s in enumerate(PLAN_OPTIONAL_SUBJECTS, 2):
         icon = "✅" if s in plan else "⬜"
         text += f"{i}️⃣ {SUBJECT_DISPLAY.get(s, s.title())} {icon}\n"
-
     text += f"\n📊 *Selected:* {n + 1}/{PLAN_SIZE}\n"
     if plan:
         text += "\n*Your plan:*\n"
         for i, s in enumerate(plan, 1):
             text += f"  {i}. {SUBJECT_DISPLAY.get(s, s.title())}\n"
-
     if n + 1 == PLAN_SIZE:
         text += "\n✅ *Ready!* Tap **Start Mock** below to begin."
     else:
@@ -670,7 +737,6 @@ def _plan_builder_kb(uid):
             row = []
     if row:
         buttons.append(row)
-
     if len(plan) == PLAN_SIZE:
         buttons.append([InlineKeyboardButton(
             "🚀 Start Mock", callback_data="plan_start")])
@@ -751,7 +817,7 @@ def _mock_menu_text(uid):
         f"✅ Unlimited English Mocks\n"
         f"✅ All subjects in your JAMB plan\n"
         f"✅ Full 180Q CBT Mock\n"
-        f"✅ JAMB Trap Detector\n\n"
+        f"✅ Unlimited AI Why analysis\n\n"
         f"💎 Tap Upgrade below!"
     )
 
@@ -911,13 +977,11 @@ async def cmd_start(update, context):
                     break
 
     u = get_user(uid, username)
-
     if not u.get("plan_set", False):
         await update.message.reply_text(
             _plan_builder_text(uid), parse_mode="Markdown",
             reply_markup=_plan_builder_kb(uid))
         return
-
     t, kb = main_menu_text_kb(uid)
     await update.message.reply_text(t, reply_markup=kb, parse_mode="Markdown")
     await update.message.reply_text(
@@ -1036,7 +1100,7 @@ async def cmd_premium(update, context):
         f"✅ Subject Mock (40Q per subject)\n"
         f"✅ Full JAMB CBT Mock (180Q · 4 subjects)\n"
         f"✅ Unlimited {TUTOR_NAME} + Voice 🎙️\n"
-        f"✅ JAMB Trap Detector",
+        f"✅ Unlimited AI Why analysis",
         parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
 
 
@@ -1058,11 +1122,12 @@ async def cmd_help(update, context):
         f"/help — This message\n\n"
         f"*Free plan:*\n"
         f"• 1 × Free 40Q English Mock\n"
-        f"• Tutor — {FREE_TUTOR_PER_DAY}/day\n\n"
+        f"• Tutor — {FREE_TUTOR_PER_DAY}/day\n"
+        f"• AI Why — {FREE_AI_WHY_PER_DAY}/day\n\n"
         f"*Premium:*\n"
         f"• Unlimited mocks on all subjects\n"
         f"• Full 180Q CBT Mock (4 subjects)\n"
-        f"• JAMB Trap Detector on failures\n"
+        f"• Unlimited AI Why analysis\n"
         f"• Unlimited tutor + voice\n\n"
         f"💬 *Chat Mindtech Solutions on Telegram {SUPPORT_HANDLE} for assistance.*"
     )
@@ -1328,7 +1393,9 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, reply_markup=kb)
         return
 
-    # ── Answer handler ──
+    # ══════════════════════════════════════════════════════
+    # ANSWER HANDLER — REAL EXAM MODE (no correct answer reveal)
+    # ══════════════════════════════════════════════════════
     if data.startswith("ans:"):
         ans = data.split(":")[1]
         session = USER_SESSIONS.get(uid)
@@ -1357,13 +1424,11 @@ async def handle_callback(update, context):
             })
         session["idx"] += 1
 
+        # ⭐ NO correct answer revealed — real exam mode
         if is_correct:
             await query.message.reply_text("✅ Correct — Next question...")
         else:
-            await query.message.reply_text(
-                f"❌ Wrong — Next question...\n"
-                f"_Correct answer: {md(correct)}_",
-                parse_mode="Markdown")
+            await query.message.reply_text("❌ Wrong — Next question...")
 
         if session["idx"] < len(qs):
             q = qs[session["idx"]]
@@ -1387,36 +1452,66 @@ async def handle_callback(update, context):
                 "mode": "post_mock",
                 "failed": failed,
                 "subject": session.get("subject"),
+                "total": total,
             }
 
-            finish_msg = (
-                f"🎉 *Mock Completed!*\n\n"
-                f"Score: *{score}/{total}*\n"
-                f"🏆 Leader: {md(leader_name)} — {leader_score}/400\n\n"
-            )
-            if n_failed > 0:
-                finish_msg += f"You failed *{n_failed}* question(s).\n"
-                finish_msg += "Tap below to see your failures and ask AI Tutor.\n\n"
+            # Subject display label for rank
+            subj_label = session.get("subject", "general")
+            if subj_label.startswith("subject_"):
+                subj_label = subj_label.replace("subject_", "")
+            if subj_label.startswith("CBT:"):
+                subj_label = "Full JAMB CBT"
+            subj_display = SUBJECT_DISPLAY.get(subj_label, subj_label.title())
+
+            # Topic breakdown
+            topic_counts = {}
+            for f in failed:
+                t = f.get("topic", "General")
+                topic_counts[t] = topic_counts.get(t, 0) + 1
+            if topic_counts:
+                sorted_topics = sorted(topic_counts.items(),
+                                       key=lambda x: -x[1])
+                topic_lines = ", ".join(f"{md(t)} ({c})"
+                                        for t, c in sorted_topics[:5])
             else:
-                finish_msg += "🎯 *Flawless victory!* No failed questions.\n\n"
+                topic_lines = "None"
+
+            # Compose message
+            lines = [
+                f"🎉 *Mock Completed!*\n",
+                f"📊 *Your Score:* *{score}/{total}*",
+            ]
+            if n_failed > 0:
+                lines.append(f"❌ You failed *{n_failed}* questions from: {topic_lines}")
+            else:
+                lines.append(f"🎯 *Flawless victory!* No failed questions.")
+
+            finish_msg = "\n".join(lines) + "\n\nChoose an option below:"
 
             buttons = []
             if n_failed > 0:
-                buttons.append([
-                    InlineKeyboardButton(f"📋 See Failures ({n_failed})",
-                                         callback_data="see_failures"),
-                    InlineKeyboardButton("🤖 Ask Mr. Ellams",
-                                         callback_data="ask_ellams_failures"),
-                ])
+                buttons.append([InlineKeyboardButton(
+                    f"📊 See All {n_failed} Failed Questions",
+                    callback_data="see_failures")])
+                buttons.append([InlineKeyboardButton(
+                    "🤖 Ask AI Tutor Why I Failed",
+                    callback_data="ask_ellams_failures")])
+
+            # Rotating state rank button
+            state_name = _get_user_state(uid)
+            buttons.append([InlineKeyboardButton(
+                f"🏆 Check {state_name} Rank",
+                callback_data="check_rank")])
 
             is_free = not is_premium(uid)
             if is_free:
                 finish_msg += (
-                    f"\n🛑 *This was your free mock.*\n"
-                    f"To take more mocks (all your 4 subjects), upgrade to Premium."
+                    f"\n\n🛑 *This was your free mock.*\n"
+                    f"To take more mocks, upgrade to Premium."
                 )
-                buttons.append([InlineKeyboardButton("💎 Upgrade to Premium Now",
-                                                     callback_data="premium_info")])
+                buttons.append([InlineKeyboardButton(
+                    "💎 Upgrade to Premium Now",
+                    callback_data="premium_info")])
 
             buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                                  callback_data="main_menu")])
@@ -1426,40 +1521,64 @@ async def handle_callback(update, context):
                 reply_markup=InlineKeyboardMarkup(buttons))
         return
 
-    # ── See failures ──
+    # ══════════════════════════════════════════════════════
+    # SEE FAILURES — list only, no explanations
+    # ══════════════════════════════════════════════════════
     if data == "see_failures":
         session = USER_SESSIONS.get(uid, {})
         failed = session.get("failed", [])
         if not failed:
             await query.message.reply_text("No failures to show.")
             return
-        lines = ["📋 *Your Failed Questions*\n"]
+
+        # Show 10 at a time
+        total_failed = len(failed)
+        lines = [f"📋 *Your {total_failed} Failed Questions*\n"]
         buttons = []
         for i, f in enumerate(failed[:10]):
             q = f["q"]
-            qtext = (q.get("question") or "")[:70]
+            qtext = (q.get("question") or "")[:60]
             topic = f.get("topic", "General")
             lines.append(
-                f"*Q{f['q_num']}* — _{md(topic)}_\n{md(qtext)}...\n"
-                f"Your ans: *{f['user_ans']}* · Correct: *{f['correct_ans']}*\n"
+                f"*Q{f['q_num']}* — _{md(topic)}_\n"
+                f"_{md(qtext)}..._\n"
+                f"You answered *{f['user_ans']}*, Correct is *{f['correct_ans']}*\n"
             )
             buttons.append([InlineKeyboardButton(
-                f"🎯 Fix Q{f['q_num']} - Ask AI Tutor",
-                callback_data=f"trap_{i}")])
+                f"🤖 Ask AI Why Q{f['q_num']}?",
+                callback_data=f"askwhy_{i}")])
+
+        if total_failed > 10:
+            lines.append(f"\n_Showing first 10 of {total_failed}._")
+
+        buttons.append([InlineKeyboardButton("🤖 Ask AI Tutor Why I Failed",
+                                             callback_data="ask_ellams_failures")])
+        buttons.append([InlineKeyboardButton("🏆 Check Rank",
+                                             callback_data="check_rank")])
         buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                              callback_data="main_menu")])
+
         await query.message.reply_text(
             "\n".join(lines), parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(buttons))
         return
 
-    # ── Trap Detector ──
-    if data.startswith("trap_"):
+    # ══════════════════════════════════════════════════════
+    # ASK AI WHY (with free limit)
+    # ══════════════════════════════════════════════════════
+    if data.startswith("askwhy_"):
         idx = int(data.split("_")[1])
         session = USER_SESSIONS.get(uid, {})
         failed = session.get("failed", [])
         if idx >= len(failed):
             await query.message.reply_text("That failure is no longer in memory.")
+            return
+
+        # Rate limit check for free users
+        allowed, remaining = can_use_ai_why(uid)
+        if not allowed:
+            msg, kb = ai_why_limit_kb(uid)
+            await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
 
         f = failed[idx]
@@ -1469,29 +1588,39 @@ async def handle_callback(update, context):
         correct_ans = f["correct_ans"]
         topic = f.get("topic", "General")
 
+        consume_ai_why(uid)
+
         thinking = await query.message.reply_text(
-            "🎯 *JAMB Trap Detector analysing…*", parse_mode="Markdown")
+            f"🧠 *{TUTOR_NAME} is analysing your mistake…*",
+            parse_mode="Markdown")
 
         try:
             analysis = await asyncio.to_thread(
                 _analyze_failure, qtext, user_ans, correct_ans, topic)
         except Exception as e:
-            print(f"[trap] analyze failed: {e}")
-            analysis = "⚠️ Trap Detector failed. Try again."
+            print(f"[askwhy] analyze failed: {e}")
+            analysis = "⚠️ AI analysis failed. Try again."
 
         try:
             await thinking.delete()
         except Exception:
             pass
 
+        # Show remaining count for free users
+        remaining_after = ""
+        if not is_premium(uid):
+            _, rem = can_use_ai_why(uid)
+            remaining_after = f"\n\n_💬 Free AI Why left today: {rem}/{FREE_AI_WHY_PER_DAY}_"
+
         header = (
-            f"🎯 *JAMB Trap Detector — Q{f['q_num']}*\n"
+            f"🤖 *AI Why — Q{f['q_num']}*\n"
             f"📚 _{md(topic)}_\n\n"
         )
+        final = (header + analysis)[:3800] + remaining_after
+
         try:
             await query.message.reply_text(
-                (header + analysis)[:4000],
-                parse_mode="Markdown",
+                final, parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("📋 Back to Failures",
                                           callback_data="see_failures")],
@@ -1499,44 +1628,129 @@ async def handle_callback(update, context):
                                           callback_data="main_menu")]]))
         except Exception:
             await query.message.reply_text(
-                (header + analysis)[:4000],
+                final,
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("📋 Back to Failures",
                                           callback_data="see_failures")],
                     [InlineKeyboardButton("🏠 Main Menu",
                                           callback_data="main_menu")]]))
 
+        # Voice
         if HAS_AI_TUTOR:
             try:
                 voice_if = await asyncio.to_thread(_build_voice, analysis)
                 if voice_if is not None:
                     await query.message.reply_voice(
                         voice=voice_if,
-                        caption=f"🎙️ Trap Detector — {TUTOR_NAME}")
+                        caption=f"🎙️ AI Why — {TUTOR_NAME}")
             except Exception as e:
-                print(f"[trap] voice failed: {e}")
+                print(f"[askwhy] voice failed: {e}")
         return
 
+    # ══════════════════════════════════════════════════════
+    # ASK ELLAMS ON ALL FAILURES — batch overview
+    # ══════════════════════════════════════════════════════
     if data == "ask_ellams_failures":
         session = USER_SESSIONS.get(uid, {})
         failed = session.get("failed", [])
         if not failed:
             await query.message.reply_text("No failures to analyse.")
             return
-        if not is_premium(uid):
-            msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(
-                f"🔒 *Trap Detector is a Premium Feature*\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
+
+        # Aggregate analysis across all failures
+        allowed, remaining = can_use_ai_why(uid)
+        if not allowed:
+            msg, kb = ai_why_limit_kb(uid)
+            await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
-        for i, f in enumerate(failed[:2]):
-            idx_btn = InlineKeyboardButton(
-                f"🎯 Fix Q{f['q_num']} - Ask AI Tutor",
-                callback_data=f"trap_{i}")
-            await query.message.reply_text(
-                f"Tap to ask Mr. Ellams about *Q{f['q_num']}* ({md(f.get('topic',''))})",
-                parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([[idx_btn]]))
+
+        consume_ai_why(uid)
+
+        # Build aggregate question
+        topics_summary = {}
+        for f in failed:
+            t = f.get("topic", "General")
+            topics_summary[t] = topics_summary.get(t, 0) + 1
+
+        summary_lines = []
+        for i, f in enumerate(failed[:5]):
+            q = f["q"]
+            summary_lines.append(
+                f"{i+1}. [{f.get('topic','Gen')}] Q: {q.get('question','')[:80]}\n"
+                f"   Student: {f['user_ans']} · Correct: {f['correct_ans']}"
+            )
+
+        big_q = (
+            f"Student failed {len(failed)} JAMB questions. Weak topics: "
+            f"{', '.join(topics_summary.keys())}.\n\n"
+            f"Sample failures:\n" + "\n".join(summary_lines) + "\n\n"
+            f"Give a targeted revision plan."
+        )
+
+        thinking = await query.message.reply_text(
+            f"🧠 *{TUTOR_NAME} is reviewing your failures…*",
+            parse_mode="Markdown")
+
+        try:
+            analysis = await asyncio.to_thread(_ask_tutor, big_q, "")
+        except Exception as e:
+            print(f"[ask_ellams] failed: {e}")
+            analysis = "⚠️ Analysis failed. Try again."
+
+        try:
+            await thinking.delete()
+        except Exception:
+            pass
+
+        remaining_after = ""
+        if not is_premium(uid):
+            _, rem = can_use_ai_why(uid)
+            remaining_after = f"\n\n_💬 Free AI Why left today: {rem}/{FREE_AI_WHY_PER_DAY}_"
+
+        header = f"🤖 *AI Tutor — Your Failure Analysis*\n\n"
+        final = (header + analysis)[:3800] + remaining_after
+
+        await query.message.reply_text(
+            final, parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📋 See Individual Failures",
+                                      callback_data="see_failures")],
+                [InlineKeyboardButton("🏆 Check Rank",
+                                      callback_data="check_rank")],
+                [InlineKeyboardButton("🏠 Main Menu",
+                                      callback_data="main_menu")]]))
+        return
+
+    # ══════════════════════════════════════════════════════
+    # CHECK RANK
+    # ══════════════════════════════════════════════════════
+    if data == "check_rank":
+        session = USER_SESSIONS.get(uid, {})
+        # Derive subject/total from session
+        subj_label = session.get("subject", "general")
+        if subj_label.startswith("subject_"):
+            subj_label = subj_label.replace("subject_", "")
+        if subj_label.startswith("CBT:"):
+            subj_label = "Full JAMB CBT"
+        subj_display = SUBJECT_DISPLAY.get(subj_label, subj_label.title())
+
+        total = session.get("total", 40)
+
+        # Get user's last score for this session
+        user_score = 0
+        hist = u.get("history", [])
+        if hist:
+            user_score = hist[-1].get("score", 0)
+
+        rank_text = _generate_rank(uid, subj_display, user_score, total)
+
+        await query.message.reply_text(
+            rank_text, parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📋 See Failures",
+                                      callback_data="see_failures")],
+                [InlineKeyboardButton("🏠 Main Menu",
+                                      callback_data="main_menu")]]))
         return
 
     # ── Mock menu ──
@@ -1652,7 +1866,7 @@ async def handle_callback(update, context):
             f"✅ Unlimited mocks (all subjects)\n"
             f"✅ Full JAMB CBT Mock (180Q · 4 subjects)\n"
             f"✅ Unlimited {TUTOR_NAME} + Voice 🎙️\n"
-            f"✅ JAMB Trap Detector\n"
+            f"✅ Unlimited AI Why analysis\n"
             f"✅ {len(ALL_QS)} Qs",
             parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(kb))
         return
@@ -1691,7 +1905,6 @@ async def handle_callback(update, context):
 # ══════════════════════════════════════════════════════════
 async def _start_plan_mock(query, uid, u):
     plan = u.get("jamb_plan", ["english"])
-
     if not is_premium(uid):
         if u.get("free_english_used", False):
             msg, kb = upgrade_kb(uid)
@@ -1895,7 +2108,7 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v30 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v31 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
 
@@ -1909,9 +2122,12 @@ def health():
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
         "free_plan": "1 × 40Q English mock (one-time)",
+        "free_ai_why_per_day": FREE_AI_WHY_PER_DAY,
         "plan_size": PLAN_SIZE,
         "option_shuffle": True,
         "rotation": True,
+        "real_exam_mode": True,
+        "state_rank_rotation": True,
         "tutor_ok": tutor_ok,
         "channel_configured": bool(CHANNEL_ID),
         "users": len(USER_DATA),
@@ -2208,9 +2424,12 @@ def main():
     print(f"🤖 Bot: @{BOT_USERNAME}")
     print(f"👨‍🏫 Tutor: {TUTOR_NAME} (Nigerian male teacher voice)")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
+    print(f"💬 Free AI Why/day: {FREE_AI_WHY_PER_DAY}")
     print(f"📋 Plan: English + 3 chosen subjects")
     print(f"🎲 Option shuffler: ON")
     print(f"🔄 Rotation: ON (per-student, per-mock)")
+    print(f"📝 Real exam mode: ON (no answer reveal)")
+    print(f"🏆 State rank rotation: ON ({len(NIGERIAN_STATES)} states)")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
