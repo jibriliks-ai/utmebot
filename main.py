@@ -1,9 +1,9 @@
 """
-UTME Success Bot v29 — Free English Mock + JAMB Plan Builder + Trap Detector + Admin Panel
+UTME Success Bot v30 — Option Shuffler + Per-Student Rotation
 - Free: ONE free 40Q English mock (one-time)
 - Free users must build a 4-subject JAMB plan on first login
-- After free English, other subjects → upgrade
-- Enhanced mock feedback with failure tracking
+- Options shuffled per question (answer not always A)
+- Questions rotated per student (used_ids tracking)
 - JAMB Trap Detector for failed questions (Mr. Ellams)
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
@@ -87,9 +87,6 @@ SUBJECT_DISPLAY = {
     "crk": "✝️ CRK",
 }
 
-# ══════════════════════════════════════════════════════════
-# PLAN CONFIG
-# ══════════════════════════════════════════════════════════
 PLAN_SIZE = 4
 FREE_ENGLISH_QS = 40
 
@@ -128,7 +125,6 @@ except Exception as _e:
             if v:
                 lines.append(f"{L}) {v}")
         return "\n".join(lines)
-
     def _search(q, s=None, limit=5):
         return []
     def _rnd(s=None):
@@ -186,6 +182,147 @@ def md(s):
     s = str(s)
     return (s.replace("\\", "\\\\").replace("_", "\\_").replace("*", "\\*")
              .replace("`", "\\`").replace("[", "\\["))
+
+
+# ══════════════════════════════════════════════════════════
+# OPTION SHUFFLER — fixes "answer always on A"
+# ══════════════════════════════════════════════════════════
+def _shuffle_options(q):
+    """
+    Return a copy of q with its 4 options shuffled.
+    The answer letter is remapped to the new option position.
+    This ensures the correct answer is not always on option A.
+    """
+    if not isinstance(q, dict):
+        return q
+
+    opts = [
+        q.get("option_a", "") or "",
+        q.get("option_b", "") or "",
+        q.get("option_c", "") or "",
+        q.get("option_d", "") or "",
+    ]
+    valid_pairs = [(chr(65 + i), opts[i]) for i in range(4) if str(opts[i]).strip()]
+    if len(valid_pairs) < 2:
+        return q
+
+    orig_ans = str(q.get("answer", "") or "").upper().strip()[:1]
+
+    # Locate the original correct option text
+    answer_text = None
+    for letter, text in valid_pairs:
+        if letter == orig_ans:
+            answer_text = text
+            break
+
+    # If we cannot find it, try answer_text field
+    if not answer_text:
+        ans_txt_alt = str(q.get("answer_text", "") or "").strip()
+        if ans_txt_alt:
+            for letter, text in valid_pairs:
+                if text.strip() == ans_txt_alt:
+                    answer_text = text
+                    break
+
+    if not answer_text:
+        # Cannot reliably shuffle — return original
+        return q
+
+    # Shuffle
+    random.shuffle(valid_pairs)
+
+    new_q = dict(q)
+    new_letters = ["A", "B", "C", "D"]
+    new_answer = orig_ans
+    for i, (old_letter, text) in enumerate(valid_pairs):
+        new_q[f"option_{new_letters[i].lower()}"] = text
+        if text == answer_text:
+            new_answer = new_letters[i]
+
+    # Blank out any leftover option slots (e.g. if only 3 options)
+    for j in range(len(valid_pairs), 4):
+        new_q[f"option_{new_letters[j].lower()}"] = ""
+
+    new_q["answer"] = new_answer
+    return new_q
+
+
+def _prepare_questions(qs):
+    """Shuffle options for every question in a list."""
+    return [_shuffle_options(q) for q in qs]
+
+
+# ══════════════════════════════════════════════════════════
+# ROTATION FETCHER — different questions per student, per mock
+# ══════════════════════════════════════════════════════════
+def _fetch_rotated(uid, subject, limit):
+    """
+    Fetch questions for a subject with per-user rotation.
+    Prefers questions the user has NOT seen recently.
+    Falls back to old questions only when pool is exhausted.
+    """
+    u = get_user(uid)
+    used = set(str(x) for x in u.get("used_ids", []))
+    pool = LOCAL_DATABANK.get(subject, [])
+    if not pool:
+        return []
+
+    unused = [q for q in pool if str(q.get("id", "")) not in used]
+    used_qs = [q for q in pool if str(q.get("id", "")) in used]
+
+    random.shuffle(unused)
+    random.shuffle(used_qs)
+
+    combined = unused + used_qs
+    selected = combined[:limit]
+
+    # Mark as used so next mock won't repeat them
+    new_ids = [str(q.get("id", "")) for q in selected if q.get("id")]
+    if new_ids:
+        u["used_ids"] = (u.get("used_ids", []) + new_ids)[-5000:]
+        save_data()
+
+    return selected
+
+
+def _fetch_rotated_multi(uid, subjects, total):
+    """
+    Fetch `total` questions across multiple subjects with rotation.
+    Even distribution across subjects.
+    """
+    u = get_user(uid)
+    used = set(str(x) for x in u.get("used_ids", []))
+
+    n = len(subjects)
+    if n == 0:
+        return []
+
+    per_subject = total // n
+    remainder = total % n
+
+    picked = []
+    picked_ids = []
+    for i, subj in enumerate(subjects):
+        pool = LOCAL_DATABANK.get(subj, [])
+        if not pool:
+            continue
+        need = per_subject + (1 if i < remainder else 0)
+        unused = [q for q in pool if str(q.get("id", "")) not in used]
+        used_qs = [q for q in pool if str(q.get("id", "")) in used]
+        random.shuffle(unused)
+        random.shuffle(used_qs)
+        selected = (unused + used_qs)[:need]
+        picked.extend(selected)
+        picked_ids.extend(str(q.get("id", "")) for q in selected if q.get("id"))
+
+    random.shuffle(picked)
+    picked = picked[:total]
+
+    if picked_ids:
+        u["used_ids"] = (u.get("used_ids", []) + picked_ids)[-5000:]
+        save_data()
+
+    return picked
 
 
 # ---------- Storage ----------
@@ -266,6 +403,7 @@ def get_user(uid, username=""):
     u.setdefault("jamb_plan", ["english"])
     u.setdefault("plan_set", False)
     u.setdefault("free_english_used", False)
+    u.setdefault("used_ids", [])
     if u.get("premium_until"):
         try:
             if datetime.now() > datetime.fromisoformat(u["premium_until"]):
@@ -464,6 +602,8 @@ def _answer_keyboard(q):
 
 
 def _start_mock_session(uid, qs, subject_label, intro_text=""):
+    # ⭐ Shuffle options so answer is not always on A
+    qs = _prepare_questions(qs)
     USER_SESSIONS[uid] = {
         "mode": "mock",
         "qs": qs,
@@ -1008,16 +1148,11 @@ async def handle_callback(update, context):
     data = query.data
     u = get_user(uid, query.from_user.first_name or "")
 
-    # ══════════════════════════════════════════════════════
-    # ADMIN PANEL
-    # ══════════════════════════════════════════════════════
     if data.startswith("admin_"):
         if await _admin_handle_callback(query, uid, data, context):
             return
 
-    # ══════════════════════════════════════════════════════
-    # PLAN BUILDER
-    # ══════════════════════════════════════════════════════
+    # ── Plan builder ──
     if data == "plan_builder":
         await query.message.reply_text(
             _plan_builder_text(uid), parse_mode="Markdown",
@@ -1085,9 +1220,7 @@ async def handle_callback(update, context):
         await _start_plan_mock(query, uid, u)
         return
 
-    # ══════════════════════════════════════════════════════
-    # FREE ENGLISH MOCK
-    # ══════════════════════════════════════════════════════
+    # ── Free English mock ──
     if data == "start_free_english":
         if is_premium(uid):
             await query.answer("You're Premium — no need for free mock.",
@@ -1097,7 +1230,7 @@ async def handle_callback(update, context):
             msg, kb = upgrade_kb(uid)
             await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
-        qs = fetcher.fetch("english", None, FREE_ENGLISH_QS)
+        qs = _fetch_rotated(uid, "english", FREE_ENGLISH_QS)
         if len(qs) < 10:
             await query.message.reply_text(
                 "⚠️ Not enough English questions available right now.")
@@ -1113,9 +1246,7 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ══════════════════════════════════════════════════════
-    # PREMIUM GATES
-    # ══════════════════════════════════════════════════════
+    # ── Premium gates ──
     premium_blocked = ("mock_by_subject", "mock_full", "cbt_start", "cbt_clear")
     if data in premium_blocked and not is_premium(uid):
         print(f"[GATE] BLOCKED {data} uid={uid}")
@@ -1133,9 +1264,7 @@ async def handle_callback(update, context):
             parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ══════════════════════════════════════════════════════
-    # STUDY / SYLLABUS / PAST
-    # ══════════════════════════════════════════════════════
+    # ── Study / Syllabus / Past ──
     if data == "study_plan":
         await query.message.reply_text("📖 *Study Plan — Choose Subject:*",
                                        reply_markup=subjects_kb("study_subject"),
@@ -1190,7 +1319,7 @@ async def handle_callback(update, context):
                 f"🔒 *Premium Required*\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
-        qs = fetcher.fetch(subj, None, 5)
+        qs = _fetch_rotated(uid, subj, 5)
         if not qs:
             await query.message.reply_text(
                 f"⚠️ No questions for {SUBJECT_DISPLAY.get(subj, subj)}.")
@@ -1199,9 +1328,7 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, reply_markup=kb)
         return
 
-    # ══════════════════════════════════════════════════════
-    # ANSWER HANDLER
-    # ══════════════════════════════════════════════════════
+    # ── Answer handler ──
     if data.startswith("ans:"):
         ans = data.split(":")[1]
         session = USER_SESSIONS.get(uid)
@@ -1299,9 +1426,7 @@ async def handle_callback(update, context):
                 reply_markup=InlineKeyboardMarkup(buttons))
         return
 
-    # ══════════════════════════════════════════════════════
-    # SEE FAILURES
-    # ══════════════════════════════════════════════════════
+    # ── See failures ──
     if data == "see_failures":
         session = USER_SESSIONS.get(uid, {})
         failed = session.get("failed", [])
@@ -1328,9 +1453,7 @@ async def handle_callback(update, context):
             reply_markup=InlineKeyboardMarkup(buttons))
         return
 
-    # ══════════════════════════════════════════════════════
-    # TRAP DETECTOR per failed question
-    # ══════════════════════════════════════════════════════
+    # ── Trap Detector ──
     if data.startswith("trap_"):
         idx = int(data.split("_")[1])
         session = USER_SESSIONS.get(uid, {})
@@ -1394,9 +1517,6 @@ async def handle_callback(update, context):
                 print(f"[trap] voice failed: {e}")
         return
 
-    # ══════════════════════════════════════════════════════
-    # ASK MR. ELLAMS ON ALL FAILURES
-    # ══════════════════════════════════════════════════════
     if data == "ask_ellams_failures":
         session = USER_SESSIONS.get(uid, {})
         failed = session.get("failed", [])
@@ -1419,18 +1539,14 @@ async def handle_callback(update, context):
                 reply_markup=InlineKeyboardMarkup([[idx_btn]]))
         return
 
-    # ══════════════════════════════════════════════════════
-    # MOCK MENU
-    # ══════════════════════════════════════════════════════
+    # ── Mock menu ──
     if data == "mock_menu":
         await query.message.reply_text(
             _mock_menu_text(uid), parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(_mock_menu_kb(uid)))
         return
 
-    # ══════════════════════════════════════════════════════
-    # SUBJECT MOCK (PREMIUM)
-    # ══════════════════════════════════════════════════════
+    # ── Subject mock ──
     if data == "mock_by_subject":
         await query.message.reply_text(
             "📚 *Choose Subject for your 40Q Mock:*",
@@ -1439,7 +1555,7 @@ async def handle_callback(update, context):
 
     if data.startswith("mock_subject_"):
         subj = data.replace("mock_subject_", "")
-        qs = fetcher.fetch(subj, None, 40)
+        qs = _fetch_rotated(uid, subj, 40)
         if len(qs) < 5:
             await query.message.reply_text(
                 f"⚠️ Not enough questions for {SUBJECT_DISPLAY.get(subj, subj)}.")
@@ -1450,9 +1566,7 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ══════════════════════════════════════════════════════
-    # FULL JAMB CBT MOCK (PREMIUM)
-    # ══════════════════════════════════════════════════════
+    # ── Full CBT mock ──
     if data == "mock_full":
         plan = u.get("jamb_plan", ["english"])[:4]
         if len(plan) != 4:
@@ -1462,14 +1576,11 @@ async def handle_callback(update, context):
                     [InlineKeyboardButton("✏️ Set Plan",
                                           callback_data="plan_builder")]]))
             return
-        qs = _fetch_cbt_questions(uid, plan, total=180)
+        qs = _fetch_rotated_multi(uid, plan, 180)
         if len(qs) < 20:
             await query.message.reply_text(
                 f"⚠️ Only {len(qs)} questions available. Try again later.")
             return
-        used_ids = [q.get("id") for q in qs if q.get("id")]
-        u["used_ids"] = (u.get("used_ids", []) + [str(x) for x in used_ids])[-5000:]
-        save_data()
 
         stats = []
         counts = {}
@@ -1491,9 +1602,7 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ══════════════════════════════════════════════════════
-    # SCORE / TUTOR / PREMIUM / INVITE / HELP
-    # ══════════════════════════════════════════════════════
+    # ── Score / Tutor / Premium / Invite / Help ──
     if data == "my_score":
         hist = u.get("history", [])
         if not hist:
@@ -1593,7 +1702,7 @@ async def _start_plan_mock(query, uid, u):
                 f"upgrade to Premium.\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
-        qs = fetcher.fetch("english", None, FREE_ENGLISH_QS)
+        qs = _fetch_rotated(uid, "english", FREE_ENGLISH_QS)
         if len(qs) < 10:
             await query.message.reply_text(
                 "⚠️ Not enough English questions available.")
@@ -1612,7 +1721,7 @@ async def _start_plan_mock(query, uid, u):
         return
 
     subject = plan[0] if plan else "english"
-    qs = fetcher.fetch(subject, None, 40)
+    qs = _fetch_rotated(uid, subject, 40)
     if len(qs) < 5:
         await query.message.reply_text(
             f"⚠️ Not enough questions for {SUBJECT_DISPLAY.get(subject, subject)}.")
@@ -1625,34 +1734,6 @@ async def _start_plan_mock(query, uid, u):
     )
     txt, kb = _start_mock_session(uid, f"subject_{subject}", intro_text=intro)
     await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
-
-
-# ══════════════════════════════════════════════════════════
-# CBT FETCHER
-# ══════════════════════════════════════════════════════════
-def _fetch_cbt_questions(uid, subjects, total=180):
-    u = get_user(uid)
-    used_ids = set(str(x) for x in u.get("used_ids", []))
-    n_subj = len(subjects)
-    per_subject = total // n_subj
-    remainder = total % n_subj
-    all_selected = []
-    for i, subj in enumerate(subjects):
-        pool = LOCAL_DATABANK.get(subj, [])
-        if not pool:
-            continue
-        need = per_subject + (1 if i < remainder else 0)
-        unused = [q for q in pool if str(q.get("id", "")) not in used_ids]
-        used = [q for q in pool if str(q.get("id", "")) in used_ids]
-        random.shuffle(unused)
-        random.shuffle(used)
-        if len(unused) >= need:
-            selected = unused[:need]
-        else:
-            selected = unused + used[: need - len(unused)]
-        all_selected.extend(selected)
-    random.shuffle(all_selected)
-    return all_selected[:total]
 
 
 # ============================================================
@@ -1814,7 +1895,7 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v29 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v30 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
 
@@ -1829,6 +1910,8 @@ def health():
         "total_questions": len(ALL_QS),
         "free_plan": "1 × 40Q English mock (one-time)",
         "plan_size": PLAN_SIZE,
+        "option_shuffle": True,
+        "rotation": True,
         "tutor_ok": tutor_ok,
         "channel_configured": bool(CHANNEL_ID),
         "users": len(USER_DATA),
@@ -2126,6 +2209,8 @@ def main():
     print(f"👨‍🏫 Tutor: {TUTOR_NAME} (Nigerian male teacher voice)")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
     print(f"📋 Plan: English + 3 chosen subjects")
+    print(f"🎲 Option shuffler: ON")
+    print(f"🔄 Rotation: ON (per-student, per-mock)")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
