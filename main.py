@@ -1,8 +1,8 @@
 """
-UTME Success Bot v33 — Fixed Failures Persistence + AI Why Limit
-- Failures stored in USER_DATA (survives cold starts)
-- Every failed question has "Ask AI Why Q#?"
-- 3 free AI Why/day for free users, 4th → upgrade
+UTME Success Bot v34 — Persuasive Completion + Fixed Failures
+- New completion: mark-loss breakdown + social proof + Fix button
+- Failures stored minimal & JSON-safe (survives cold starts)
+- See Failures button always works
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -90,7 +90,7 @@ FREE_ENGLISH_QS = 40
 FREE_AI_WHY_PER_DAY = 3
 
 # ══════════════════════════════════════════════════════════
-# NIGERIAN STATES + NAMES
+# NIGERIAN DATA FOR SOCIAL PROOF
 # ══════════════════════════════════════════════════════════
 NIGERIAN_STATES = [
     "Delta", "Edo", "Lagos", "Ondo", "Anambra", "Oyo", "Kano",
@@ -99,6 +99,12 @@ NIGERIAN_STATES = [
     "Ekiti", "Ogun", "Bayelsa", "Ebonyi", "Nasarawa", "Niger",
     "Sokoto", "Kebbi", "Zamfara", "Yobe", "Borno", "Adamawa",
     "Taraba", "Gombe", "Jigawa", "Katsina", "Bauchi",
+]
+
+NIGERIAN_CITIES = [
+    "Warri", "Lagos", "Benin", "Enugu", "Kano", "Ibadan", "Port Harcourt",
+    "Kaduna", "Aba", "Jos", "Uyo", "Owerri", "Maiduguri", "Abeokuta",
+    "Akure", "Sokoto", "Calabar", "Asaba", "Makurdi", "Bauchi",
 ]
 
 NIGERIAN_NAMES = [
@@ -253,6 +259,24 @@ def _prepare_questions(qs):
 
 
 # ══════════════════════════════════════════════════════════
+# ⭐ MINIMAL FAILURE SNAPSHOT (JSON-safe)
+# ══════════════════════════════════════════════════════════
+def _make_failure_snapshot(q, user_ans, correct_ans, q_num):
+    """Return a minimal JSON-safe snapshot of a failed question."""
+    return {
+        "q_num": int(q_num),
+        "question": str(q.get("question", "") or "")[:300],
+        "option_a": str(q.get("option_a", "") or "")[:200],
+        "option_b": str(q.get("option_b", "") or "")[:200],
+        "option_c": str(q.get("option_c", "") or "")[:200],
+        "option_d": str(q.get("option_d", "") or "")[:200],
+        "user_ans": str(user_ans or "")[:1],
+        "correct_ans": str(correct_ans or "")[:1],
+        "topic": str(q.get("topic", "General") or "General")[:60],
+    }
+
+
+# ══════════════════════════════════════════════════════════
 # ROTATION
 # ══════════════════════════════════════════════════════════
 def _fetch_rotated(uid, subject, limit):
@@ -313,6 +337,20 @@ def _get_user_state(uid):
     return NIGERIAN_STATES[h % len(NIGERIAN_STATES)]
 
 
+def _get_user_rank_number(uid, user_score, total):
+    """Deterministic rank number per user per day."""
+    seed_str = f"{uid}_{date.today().isoformat()}_rank"
+    h = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
+    if user_score >= 35:
+        return (h % 15) + 1
+    elif user_score >= 25:
+        return (h % 40) + 15
+    elif user_score >= 15:
+        return (h % 80) + 40
+    else:
+        return (h % 100) + 80
+
+
 def _generate_rank(uid, subject_display, user_score, total):
     state = _get_user_state(uid)
     seed_str = f"{uid}_{subject_display}_{date.today().isoformat()}"
@@ -330,14 +368,77 @@ def _generate_rank(uid, subject_display, user_score, total):
     lines = [f"🏆 *{state} State Ranking — {subject_display} Mock*\n"]
     for i, (n, s) in enumerate(zip(names, scores)):
         lines.append(f"{medals[i]} {md(n)} — *{s}/{total}*")
-    if user_score >= min_score:
-        user_rank = rng.randint(1, 25)
-    else:
-        user_rank = rng.randint(40, 200)
+    user_rank = _get_user_rank_number(uid, user_score, total)
     lines.append(f"\n📊 *Your Score:* *{user_score}/{total}*")
     lines.append(f"🎯 *Your Rank:* *#{user_rank}* in {state} State")
     lines.append(f"\n_Simulated based on state benchmarks. Keep practising to climb the ranks!_")
     return "\n".join(lines)
+
+
+# ══════════════════════════════════════════════════════════
+# ⭐ SOCIAL PROOF GENERATOR
+# ══════════════════════════════════════════════════════════
+def _social_proof_line(uid, prev_score, total):
+    """Return a social proof line personalised to the user."""
+    seed_str = f"{uid}_{date.today().isoformat()}_sp"
+    rng = random.Random(seed_str)
+    name = rng.choice(NIGERIAN_NAMES).split()[0]
+    city = rng.choice(NIGERIAN_CITIES)
+    # They scored "prev_score" yesterday and now score higher
+    new_score = min(total, prev_score + rng.randint(6, 12))
+    return f"→ *{name}* from {city}: Now scoring *{new_score}/{total}*"
+
+
+# ══════════════════════════════════════════════════════════
+# ⭐ COMPLETION MESSAGE BUILDER
+# ══════════════════════════════════════════════════════════
+def _build_completion_message(uid, score, total, failed, subject_label, subj_display):
+    """Build the persuasive completion message."""
+    n_failed = len(failed)
+
+    header = f"🎉 *Mock Completed!* You scored *{score}/{total}*\n"
+
+    if n_failed == 0:
+        state = _get_user_state(uid)
+        rank = _get_user_rank_number(uid, score, total)
+        return (
+            f"{header}\n"
+            f"🎯 *Perfect score!* You got everything right.\n\n"
+            f"🏆 You're currently ranked *#{rank}* in *{state} State*.\n\n"
+            f"Keep the momentum going! 🚀",
+            True
+        )
+
+    # Mark-loss breakdown by topic
+    topic_losses = {}
+    for f in failed:
+        t = f.get("topic", "General") or "General"
+        topic_losses[t] = topic_losses.get(t, 0) + 1
+    sorted_t = sorted(topic_losses.items(), key=lambda x: -x[1])
+
+    loss_lines = []
+    for t, c in sorted_t[:5]:
+        loss_lines.append(f"  • *{md(t)}* — {c} mark{'s' if c > 1 else ''} LOST")
+
+    marks_line = (
+        f"\n❌ *You lost {n_failed} mark{'s' if n_failed > 1 else ''} from:*\n"
+        + "\n".join(loss_lines)
+    )
+
+    # Fear hook
+    fear_line = (
+        f"\n\n⚠️ *In JAMB, {n_failed} mark{'s' if n_failed > 1 else ''} = "
+        f"You will lose admission to your dream course.*"
+    )
+
+    # Social proof
+    social_line = (
+        f"\n\n*Your mates who scored {score} yesterday fixed it today:*\n"
+        f"{_social_proof_line(uid, score, total)}"
+    )
+
+    msg = header + marks_line + fear_line + social_line
+    return msg, False
 
 
 # ---------- Storage ----------
@@ -369,8 +470,8 @@ def load_data():
 def save_data():
     try:
         DATA_FILE.write_text(json.dumps(USER_DATA, indent=2), encoding="utf-8")
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[save_data] ⚠️ failed to write: {e}")
 
 
 def load_processed_tx():
@@ -511,7 +612,6 @@ def add_premium(uid, days=None, plan="monthly"):
     return True
 
 
-# ---------- Plans ----------
 PLANS = {
     "monthly": {"key": "monthly", "label": "Monthly", "price": PREMIUM_PRICE,
                 "price_text": PREMIUM_PRICE_TEXT, "days": PREMIUM_DAYS},
@@ -544,7 +644,6 @@ def _grant_from_verified(tx_ref, plan_key):
     return uid
 
 
-# ---------- UI builders ----------
 def plan_buttons(uid):
     return [
         [InlineKeyboardButton(f"💳 Monthly — {PREMIUM_PRICE_TEXT}",
@@ -562,8 +661,7 @@ def upgrade_kb(uid):
         f"• 📚 Subject Mock (40 Qs per subject)\n"
         f"• 🔥 Full JAMB CBT Mock (180 Qs · 4 Subjects)\n"
         f"• 💬 Unlimited {TUTOR_NAME} + 🎙️ Voice\n"
-        f"• 🎯 Unlimited AI Why analysis on failed questions\n"
-        f"• 📊 Full state ranking access\n\n"
+        f"• 🎯 Unlimited AI Why analysis on failed questions\n\n"
         f"*Plans:*\n"
         f"• Monthly — {PREMIUM_PRICE_TEXT} / {PREMIUM_DAYS} days\n"
         f"• 6 Months — {PREMIUM_6MONTHS_TEXT} / {PREMIUM_6MONTHS_DAYS} days\n\n"
@@ -600,7 +698,7 @@ def main_menu_text_kb(uid):
 
     if is_premium(uid):
         status_badge = "💎 *PREMIUM MEMBER*"
-        status_line = f"✨ _Unlimited access on all subjects_"
+        status_line = "✨ _Unlimited access on all subjects_"
     else:
         status_badge = "🆓 *FREE ACCOUNT*"
         if not u.get("free_english_used", False):
@@ -610,25 +708,20 @@ def main_menu_text_kb(uid):
 
     leader_name, leader_score = get_leading()
     total_users = len(USER_DATA)
-
     _, ai_remaining = can_use_ai_why(uid) if not is_premium(uid) else (True, 999)
     ai_str = "♾️ Unlimited" if is_premium(uid) else f"{ai_remaining}/{FREE_AI_WHY_PER_DAY} today"
-
     qs_str = f"{len(ALL_QS):,}"
 
     text = (
         f"╔══════════════════════════╗\n"
         f"     🎓  *UTME SUCCESS BOT*  🎓\n"
         f"╚══════════════════════════╝\n\n"
-
         f"👋 *Welcome back, Champion!*\n"
         f"_{status_line}_\n\n"
-
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📋  *YOUR JAMB PLAN*\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"🎯 {plan_str}\n\n"
-
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📊  *YOUR STATS*\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -636,13 +729,11 @@ def main_menu_text_kb(uid):
         f"  🤖 AI Tutor:  `{ai_str}`\n"
         f"  👥 Students:  `{total_users:,}`\n"
         f"  📚 Questions:  `{qs_str}`\n\n"
-
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"🏆  *TOP PERFORMER*\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"  🥇  {md(leader_name)}\n"
         f"  🎯  *{leader_score}/400*\n\n"
-
         f"💡 _Tap any button below to begin._"
     )
 
@@ -663,11 +754,9 @@ def main_menu_text_kb(uid):
          InlineKeyboardButton("❓  Help", callback_data="help_menu")],
         [InlineKeyboardButton("✏️  Change My Plan", callback_data="plan_builder")],
     ]
-
     if ADMIN_ID and str(uid) == str(ADMIN_ID):
         kb.append([InlineKeyboardButton("⚙️  Admin Panel",
                                         callback_data="admin_panel")])
-
     return text, InlineKeyboardMarkup(kb)
 
 
@@ -730,19 +819,15 @@ def _plan_builder_text(uid):
     plan = u.get("jamb_plan", ["english"])
     others = [s for s in plan if s != "english"]
     n = len(others)
-
     filled = n + 1
-    total_slots = PLAN_SIZE
-    bar = "▰" * filled + "▱" * (total_slots - filled)
+    bar = "▰" * filled + "▱" * (PLAN_SIZE - filled)
 
     text = (
         f"╔══════════════════════════╗\n"
         f"    🔥  *WELCOME TO UTME*  🔥\n"
         f"         *SUCCESS BOT*\n"
         f"╚══════════════════════════╝\n\n"
-
         f"🎓 _Nigeria's smartest JAMB practice bot._\n\n"
-
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"✨  *WHY STUDENTS LOVE US*\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -751,17 +836,13 @@ def _plan_builder_text(uid):
         f"  🎯  *Real exam mode* — no answer hints\n"
         f"  📊  *State rankings* to test your level\n"
         f"  🆓  *1 free English mock* for new students\n\n"
-
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"📋  *BUILD YOUR JAMB PLAN*\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"_Pick 3 more subjects. English is compulsory._\n\n"
-
-        f"  `{bar}`  *{filled}/{total_slots}*\n\n"
+        f"  `{bar}`  *{filled}/{PLAN_SIZE}*\n\n"
+        f"  1️⃣  📖 English  ✅ _(compulsory)_\n\n"
     )
-
-    text += f"  1️⃣  📖 English  ✅ _(compulsory)_\n\n"
-
     for i, s in enumerate(PLAN_OPTIONAL_SUBJECTS, 2):
         icon = "✅" if s in plan else "⬜"
         text += f"  {i}️⃣  {SUBJECT_DISPLAY.get(s, s.title())}  {icon}\n"
@@ -773,7 +854,7 @@ def _plan_builder_text(uid):
         for i, s in enumerate(plan, 1):
             text += f"  {i}.  {SUBJECT_DISPLAY.get(s, s.title())}\n"
 
-    if n + 1 == PLAN_SIZE:
+    if filled == PLAN_SIZE:
         text += (
             f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"✅  *READY TO START!*\n"
@@ -782,14 +863,13 @@ def _plan_builder_text(uid):
             f"💡 _Your first mock is FREE._"
         )
     else:
-        remaining = PLAN_SIZE - (n + 1)
+        remaining = PLAN_SIZE - filled
         text += (
             f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"⬜  Select *{remaining}* more subject"
             f"{'s' if remaining > 1 else ''} to continue.\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━"
         )
-
     return text
 
 
@@ -809,18 +889,16 @@ def _plan_builder_kb(uid):
     if row:
         buttons.append(row)
     if len(plan) == PLAN_SIZE:
-        buttons.append([InlineKeyboardButton(
-            "🚀 Start Mock", callback_data="plan_start")])
+        buttons.append([InlineKeyboardButton("🚀 Start Mock",
+                                             callback_data="plan_start")])
     if len(plan) > 1:
-        buttons.append([InlineKeyboardButton(
-            "🗑️ Reset Plan", callback_data="plan_reset")])
-    buttons.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
+        buttons.append([InlineKeyboardButton("🗑️ Reset Plan",
+                                             callback_data="plan_reset")])
+    buttons.append([InlineKeyboardButton("🏠 Main Menu",
+                                         callback_data="main_menu")])
     return InlineKeyboardMarkup(buttons)
 
 
-# ══════════════════════════════════════════════════════════
-# SUBJECT ACCESS
-# ══════════════════════════════════════════════════════════
 def can_take_subject(uid, subject) -> tuple:
     if is_premium(uid):
         return True, "premium"
@@ -832,9 +910,6 @@ def can_take_subject(uid, subject) -> tuple:
     return False, "premium_only"
 
 
-# ══════════════════════════════════════════════════════════
-# MOCK MENU
-# ══════════════════════════════════════════════════════════
 def _mock_menu_kb(uid):
     u = get_user(uid)
     kb = []
@@ -916,9 +991,7 @@ def _admin_menu_text():
         f"  • Questions: {len(ALL_QS)}\n"
         f"  • Subjects: {len(AVAILABLE_SUBJECTS)}\n\n"
         f"💬 *AI Tutor ({TUTOR_NAME})*\n"
-        f"  • Status: {'✅ Active' if HAS_AI_TUTOR else '❌ Offline'}\n"
-        f"  • Voice: Nigerian Male Teacher\n"
-        f"  • Trap Detector: {'✅ Active' if HAS_AI_TUTOR else '❌'}\n\n"
+        f"  • Status: {'✅ Active' if HAS_AI_TUTOR else '❌ Offline'}\n\n"
         f"📢 *Channel*\n"
         f"  • Status: {'✅ Configured' if CHANNEL_ID else '❌ Not set'}\n\n"
         f"Select an action:"
@@ -950,13 +1023,10 @@ async def _admin_handle_callback(query, uid, data, context):
     if not _admin_only(uid):
         await query.message.reply_text("🔒 Admin only.")
         return True
-
     if data == "admin_panel":
-        await query.message.reply_text(
-            _admin_menu_text(), parse_mode="Markdown",
-            reply_markup=_admin_menu_kb())
+        await query.message.reply_text(_admin_menu_text(), parse_mode="Markdown",
+                                       reply_markup=_admin_menu_kb())
         return True
-
     if data == "admin_users":
         lines = ["👥 *Recent Users* (up to 20)\n"]
         for uid_k, u in list(USER_DATA.items())[-20:]:
@@ -969,27 +1039,20 @@ async def _admin_handle_callback(query, uid, data, context):
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back", callback_data="admin_panel")]]))
         return True
-
     if data == "admin_grant_prompt":
         await query.message.reply_text(
-            f"💰 *Grant Premium Manually*\n\n"
-            f"Reply with the user's Telegram ID (numbers only).",
-            parse_mode="Markdown",
+            "💰 Reply with the user's Telegram ID (numbers only).",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back", callback_data="admin_panel")]]))
         USER_SESSIONS[str(uid)] = {"mode": "admin_grant_wait"}
         return True
-
     if data == "admin_broadcast_prompt":
         await query.message.reply_text(
-            f"📢 *Broadcast to All Users*\n\n"
-            f"Reply with the exact text you want every user to receive.",
-            parse_mode="Markdown",
+            "📢 Reply with the broadcast text.",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back", callback_data="admin_panel")]]))
         USER_SESSIONS[str(uid)] = {"mode": "admin_broadcast_wait"}
         return True
-
     if data == "admin_channel_post":
         if not CHANNEL_ID:
             await query.message.reply_text("❌ CHANNEL_ID not set.")
@@ -1001,7 +1064,6 @@ async def _admin_handle_callback(query, uid, data, context):
         except Exception as e:
             await query.message.reply_text(f"❌ Failed: {e}")
         return True
-
     if data == "admin_kb_stats":
         stats = _get_kb_stats() if HAS_AI_TUTOR else {}
         ok, detail = _tutor_ping() if HAS_AI_TUTOR else (False, "n/a")
@@ -1011,15 +1073,13 @@ async def _admin_handle_callback(query, uid, data, context):
             f"KB ready: {stats.get('ready', False)}",
             f"Chunks: {stats.get('total_chunks', 0)}",
             f"BM25: {stats.get('bm25_ready', False)}",
-            f"Voice engine: {stats.get('voice_engine', 'n/a')}",
-            f"Voice name: `{stats.get('voice_name', 'n/a')}`",
+            f"Voice: {stats.get('voice_engine', 'n/a')}",
         ]
         await query.message.reply_text(
             "\n".join(lines), parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔙 Back", callback_data="admin_panel")]]))
         return True
-
     return False
 
 
@@ -1046,12 +1106,10 @@ async def cmd_start(update, context):
                             inv_data["invites"] = 0
                         save_data()
                     break
-
     u = get_user(uid, username)
     if not u.get("plan_set", False):
-        await update.message.reply_text(
-            _plan_builder_text(uid), parse_mode="Markdown",
-            reply_markup=_plan_builder_kb(uid))
+        await update.message.reply_text(_plan_builder_text(uid), parse_mode="Markdown",
+                                        reply_markup=_plan_builder_kb(uid))
         return
     t, kb = main_menu_text_kb(uid)
     await update.message.reply_text(t, reply_markup=kb, parse_mode="Markdown")
@@ -1065,9 +1123,8 @@ async def cmd_mock(update, context):
     uid = str(update.effective_user.id)
     u = get_user(uid, update.effective_user.first_name or "")
     if not u.get("plan_set", False):
-        await update.message.reply_text(
-            _plan_builder_text(uid), parse_mode="Markdown",
-            reply_markup=_plan_builder_kb(uid))
+        await update.message.reply_text(_plan_builder_text(uid), parse_mode="Markdown",
+                                        reply_markup=_plan_builder_kb(uid))
         return
     await update.message.reply_text(
         _mock_menu_text(uid), parse_mode="Markdown",
@@ -1076,23 +1133,23 @@ async def cmd_mock(update, context):
 
 async def cmd_study(update, context):
     get_user(update.effective_user.id, update.effective_user.first_name or "")
-    await update.message.reply_text(
-        "📖 *Study Plan — Choose Subject:*",
-        reply_markup=subjects_kb("study_subject"), parse_mode="Markdown")
+    await update.message.reply_text("📖 *Study Plan — Choose Subject:*",
+                                    reply_markup=subjects_kb("study_subject"),
+                                    parse_mode="Markdown")
 
 
 async def cmd_syllabus(update, context):
     get_user(update.effective_user.id, update.effective_user.first_name or "")
-    await update.message.reply_text(
-        "📋 *JAMB Syllabus — Choose Subject:*",
-        reply_markup=subjects_kb("syllabus_subject"), parse_mode="Markdown")
+    await update.message.reply_text("📋 *JAMB Syllabus — Choose Subject:*",
+                                    reply_markup=subjects_kb("syllabus_subject"),
+                                    parse_mode="Markdown")
 
 
 async def cmd_past(update, context):
     get_user(update.effective_user.id, update.effective_user.first_name or "")
-    await update.message.reply_text(
-        "📚 *Past Questions — Choose Subject:*",
-        reply_markup=subjects_kb("past_subject"), parse_mode="Markdown")
+    await update.message.reply_text("📚 *Past Questions — Choose Subject:*",
+                                    reply_markup=subjects_kb("past_subject"),
+                                    parse_mode="Markdown")
 
 
 async def cmd_score(update, context):
@@ -1131,8 +1188,7 @@ async def cmd_tutor(update, context):
     await update.message.reply_text(
         f"💬 *Ask Tutor — {TUTOR_NAME}*\n\n"
         f"🧠 AI Brain: {'Active ✅' if HAS_AI_TUTOR else 'Limited'}\n"
-        f"🎙️ Voice: Nigerian male teacher\n"
-        f"🎯 JAMB Trap Detector: Ready\n\n"
+        f"🎙️ Voice: Nigerian male teacher\n\n"
         f"Tutor: {remaining_text}\n\n"
         f"Type any JAMB question for text + voice explanation.",
         parse_mode="Markdown",
@@ -1160,8 +1216,8 @@ async def cmd_premium(update, context):
     uid = str(update.effective_user.id)
     get_user(uid, update.effective_user.first_name or "")
     kb = plan_buttons(uid)
-    kb.append([InlineKeyboardButton(
-        f"👥 Invite {REFERRAL_REQUIRED}=FREE", callback_data="invite_friends")])
+    kb.append([InlineKeyboardButton(f"👥 Invite {REFERRAL_REQUIRED}=FREE",
+                                    callback_data="invite_friends")])
     kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
     await update.message.reply_text(
         f"💎 *Premium Plans*\n\n"
@@ -1241,7 +1297,7 @@ async def cmd_kbstats(update, context):
         f"KB ready: {stats.get('ready', False)}",
         f"Chunks: {stats.get('total_chunks', 0)}",
         f"BM25: {stats.get('bm25_ready', False)}",
-        f"Voice engine: {stats.get('voice_engine', 'n/a')}",
+        f"Voice: {stats.get('voice_engine', 'n/a')}",
     ]
     await update.message.reply_text(
         "\n".join(lines), parse_mode="Markdown",
@@ -1290,9 +1346,8 @@ async def handle_callback(update, context):
 
     # ── Plan builder ──
     if data == "plan_builder":
-        await query.message.reply_text(
-            _plan_builder_text(uid), parse_mode="Markdown",
-            reply_markup=_plan_builder_kb(uid))
+        await query.message.reply_text(_plan_builder_text(uid), parse_mode="Markdown",
+                                       reply_markup=_plan_builder_kb(uid))
         return
 
     if data.startswith("plan_toggle_"):
@@ -1312,13 +1367,13 @@ async def handle_callback(update, context):
         u["jamb_plan"] = plan
         save_data()
         try:
-            await query.edit_message_text(
-                _plan_builder_text(uid), parse_mode="Markdown",
-                reply_markup=_plan_builder_kb(uid))
+            await query.edit_message_text(_plan_builder_text(uid),
+                                          parse_mode="Markdown",
+                                          reply_markup=_plan_builder_kb(uid))
         except Exception:
-            await query.message.reply_text(
-                _plan_builder_text(uid), parse_mode="Markdown",
-                reply_markup=_plan_builder_kb(uid))
+            await query.message.reply_text(_plan_builder_text(uid),
+                                           parse_mode="Markdown",
+                                           reply_markup=_plan_builder_kb(uid))
         return
 
     if data == "plan_reset":
@@ -1326,13 +1381,13 @@ async def handle_callback(update, context):
         u["plan_set"] = False
         save_data()
         try:
-            await query.edit_message_text(
-                _plan_builder_text(uid), parse_mode="Markdown",
-                reply_markup=_plan_builder_kb(uid))
+            await query.edit_message_text(_plan_builder_text(uid),
+                                          parse_mode="Markdown",
+                                          reply_markup=_plan_builder_kb(uid))
         except Exception:
-            await query.message.reply_text(
-                _plan_builder_text(uid), parse_mode="Markdown",
-                reply_markup=_plan_builder_kb(uid))
+            await query.message.reply_text(_plan_builder_text(uid),
+                                           parse_mode="Markdown",
+                                           reply_markup=_plan_builder_kb(uid))
         return
 
     if data == "plan_start":
@@ -1349,14 +1404,13 @@ async def handle_callback(update, context):
     if data == "start_plan_mock":
         plan = u.get("jamb_plan", ["english"])
         if len(plan) != PLAN_SIZE:
-            await query.message.reply_text(
-                _plan_builder_text(uid), parse_mode="Markdown",
-                reply_markup=_plan_builder_kb(uid))
+            await query.message.reply_text(_plan_builder_text(uid),
+                                           parse_mode="Markdown",
+                                           reply_markup=_plan_builder_kb(uid))
             return
         await _start_plan_mock(query, uid, u)
         return
 
-    # ── Free English mock ──
     if data == "start_free_english":
         if is_premium(uid):
             await query.answer("You're Premium — no need for free mock.",
@@ -1368,16 +1422,13 @@ async def handle_callback(update, context):
             return
         qs = _fetch_rotated(uid, "english", FREE_ENGLISH_QS)
         if len(qs) < 10:
-            await query.message.reply_text(
-                "⚠️ Not enough English questions available right now.")
+            await query.message.reply_text("⚠️ Not enough English questions available.")
             return
         u["free_english_used"] = True
         save_data()
-        intro = (
-            f"🆓 *Free English Mock (One-time)*\n\n"
-            f"{len(qs)} questions · Take your time.\n\n"
-            f"💡 After this, all other subjects require Premium."
-        )
+        intro = (f"🆓 *Free English Mock (One-time)*\n\n"
+                 f"{len(qs)} questions · Take your time.\n\n"
+                 f"💡 After this, all other subjects require Premium.")
         txt, kb = _start_mock_session(uid, qs, "english", intro_text=intro)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
@@ -1385,19 +1436,15 @@ async def handle_callback(update, context):
     # ── Premium gates ──
     premium_blocked = ("mock_by_subject", "mock_full", "cbt_start", "cbt_clear")
     if data in premium_blocked and not is_premium(uid):
-        print(f"[GATE] BLOCKED {data} uid={uid}")
         msg, kb = upgrade_kb(uid)
-        await query.message.reply_text(
-            f"🔒 *Premium Feature*\n\n{msg}",
-            parse_mode="Markdown", reply_markup=kb)
+        await query.message.reply_text(f"🔒 *Premium Feature*\n\n{msg}",
+                                       parse_mode="Markdown", reply_markup=kb)
         return
     if (data.startswith("mock_subject_") or data.startswith("cbt_toggle_")) \
             and not is_premium(uid):
-        print(f"[GATE] BLOCKED {data} uid={uid}")
         msg, kb = upgrade_kb(uid)
-        await query.message.reply_text(
-            f"🔒 *Premium Feature*\n\n{msg}",
-            parse_mode="Markdown", reply_markup=kb)
+        await query.message.reply_text(f"🔒 *Premium Feature*\n\n{msg}",
+                                       parse_mode="Markdown", reply_markup=kb)
         return
 
     # ── Study / Syllabus / Past ──
@@ -1406,7 +1453,6 @@ async def handle_callback(update, context):
                                        reply_markup=subjects_kb("study_subject"),
                                        parse_mode="Markdown")
         return
-
     if data.startswith("study_subject_"):
         subj = data.replace("study_subject_", "")
         u["study_subject"] = subj
@@ -1421,13 +1467,11 @@ async def handle_callback(update, context):
                 [InlineKeyboardButton(f"💬 Ask {display}", callback_data="ask_tutor")],
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
         return
-
     if data == "syllabus":
         await query.message.reply_text("📋 *JAMB Syllabus — Choose:*",
                                        reply_markup=subjects_kb("syllabus_subject"),
                                        parse_mode="Markdown")
         return
-
     if data.startswith("syllabus_subject_"):
         subj = data.replace("syllabus_subject_", "")
         display = SUBJECT_DISPLAY.get(subj, subj.title())
@@ -1439,21 +1483,18 @@ async def handle_callback(update, context):
                                       callback_data=f"study_subject_{subj}")],
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
         return
-
     if data == "past_by_subject":
         await query.message.reply_text("📚 *Past Questions — Choose Subject:*",
                                        reply_markup=subjects_kb("past_subject"),
                                        parse_mode="Markdown")
         return
-
     if data.startswith("past_subject_"):
         subj = data.replace("past_subject_", "")
         allowed, reason = can_take_subject(uid, subj)
         if not allowed:
             msg, kb = upgrade_kb(uid)
-            await query.message.reply_text(
-                f"🔒 *Premium Required*\n\n{msg}",
-                parse_mode="Markdown", reply_markup=kb)
+            await query.message.reply_text(f"🔒 *Premium Required*\n\n{msg}",
+                                           parse_mode="Markdown", reply_markup=kb)
             return
         qs = _fetch_rotated(uid, subj, 5)
         if not qs:
@@ -1486,13 +1527,8 @@ async def handle_callback(update, context):
         if is_correct:
             session["score"] += 1
         else:
-            session["failed"].append({
-                "q": current_q,
-                "user_ans": ans,
-                "correct_ans": correct,
-                "topic": current_q.get("topic", "General"),
-                "q_num": idx + 1,
-            })
+            session["failed"].append(_make_failure_snapshot(
+                current_q, ans, correct, idx + 1))
         session["idx"] += 1
 
         if is_correct:
@@ -1505,72 +1541,69 @@ async def handle_callback(update, context):
             txt = format_question(q, session["idx"] + 1, len(qs))
             await query.message.reply_text(txt, reply_markup=_answer_keyboard(q))
         else:
+            # ═══ MOCK COMPLETE ═══
             score = session["score"]
             total = len(qs)
-            percent = score * 100 // total if total else 0
             failed = session.get("failed", [])
             n_failed = len(failed)
 
             u["history"].append({
                 "date": str(date.today()),
                 "subject": session.get("subject", "general"),
-                "score": score, "total": total, "percent": percent})
-            # ⭐ PERSIST failures to user_data
+                "score": score, "total": total,
+                "percent": score * 100 // total if total else 0})
+
+            # ⭐ PERSIST MINIMAL FAILURES (JSON-safe)
             u["last_mock_failed"] = failed
             u["last_mock_subject"] = session.get("subject", "general")
             u["last_mock_total"] = total
             save_data()
-            leader_name, leader_score = get_leading()
 
-            USER_SESSIONS[uid] = {
-                "mode": "post_mock",
-                "failed": failed,
-                "subject": session.get("subject"),
-                "total": total,
-            }
+            # Determine display label
+            subj_label = session.get("subject", "general")
+            if subj_label.startswith("subject_"):
+                subj_label = subj_label.replace("subject_", "")
+            if subj_label.startswith("CBT:"):
+                subj_label = "Full JAMB CBT"
+            subj_display = SUBJECT_DISPLAY.get(subj_label, subj_label.title())
 
-            topic_counts = {}
-            for f in failed:
-                t = f.get("topic", "General")
-                topic_counts[t] = topic_counts.get(t, 0) + 1
-            if topic_counts:
-                sorted_topics = sorted(topic_counts.items(),
-                                       key=lambda x: -x[1])
-                topic_lines = ", ".join(f"{md(t)} ({c})"
-                                        for t, c in sorted_topics[:5])
-            else:
-                topic_lines = "None"
-
-            lines = [
-                f"🎉 *Mock Completed!*\n",
-                f"📊 *Your Score:* *{score}/{total}*",
-            ]
-            if n_failed > 0:
-                lines.append(f"❌ You failed *{n_failed}* questions from: {topic_lines}")
-            else:
-                lines.append(f"🎯 *Flawless victory!* No failed questions.")
-
-            finish_msg = "\n".join(lines) + "\n\nChoose an option below:"
+            # ⭐ Build persuasive message
+            finish_msg, is_perfect = _build_completion_message(
+                uid, score, total, failed, subj_label, subj_display)
 
             buttons = []
-            if n_failed > 0:
-                buttons.append([InlineKeyboardButton(
-                    f"📊 See All {n_failed} Failed Questions",
-                    callback_data="see_failures")])
-                buttons.append([InlineKeyboardButton(
-                    "🤖 Ask AI Tutor Why I Failed",
-                    callback_data="ask_ellams_failures")])
 
-            state_name = _get_user_state(uid)
-            buttons.append([InlineKeyboardButton(
-                f"🏆 Check {state_name} Rank",
-                callback_data="check_rank")])
+            if not is_perfect and n_failed > 0:
+                # Main button: Fix My X Failures
+                if is_premium(uid):
+                    fix_label = f"🤖 Fix My {n_failed} Failures (Unlimited)"
+                else:
+                    _, rem = can_use_ai_why(uid)
+                    fix_label = f"🤖 Fix My {n_failed} Failures ({rem} FREE)"
+
+                buttons.append([InlineKeyboardButton(
+                    fix_label, callback_data="see_failures")])
+                buttons.append([InlineKeyboardButton(
+                    "📊 See All Failed Questions",
+                    callback_data="see_failures")])
+
+                state = _get_user_state(uid)
+                rank = _get_user_rank_number(uid, score, total)
+                buttons.append([InlineKeyboardButton(
+                    f"🏆 Check Leaderboard — You're #{rank}",
+                    callback_data="check_rank")])
+            else:
+                state = _get_user_state(uid)
+                rank = _get_user_rank_number(uid, score, total)
+                buttons.append([InlineKeyboardButton(
+                    f"🏆 Check {state} Rank — #{rank}",
+                    callback_data="check_rank")])
 
             is_free = not is_premium(uid)
             if is_free:
                 finish_msg += (
-                    f"\n\n🛑 *This was your free mock.*\n"
-                    f"To take more mocks, upgrade to Premium."
+                    f"\n\n🛑 _This was your free mock._\n"
+                    f"Upgrade for unlimited mocks on all subjects."
                 )
                 buttons.append([InlineKeyboardButton(
                     "💎 Upgrade to Premium Now",
@@ -1579,16 +1612,44 @@ async def handle_callback(update, context):
             buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                                  callback_data="main_menu")])
 
-            await query.message.reply_text(
-                finish_msg, parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup(buttons))
+            try:
+                await query.message.reply_text(
+                    finish_msg[:4000], parse_mode="Markdown",
+                    reply_markup=InlineKeyboardMarkup(buttons))
+            except Exception as e:
+                print(f"[complete] md send failed: {e}")
+                try:
+                    await query.message.reply_text(
+                        finish_msg[:4000],
+                        reply_markup=InlineKeyboardMarkup(buttons))
+                except Exception as e2:
+                    print(f"[complete] plain send failed: {e2}")
         return
 
     # ══════════════════════════════════════════════════════
-    # SEE FAILURES (reads from USER_DATA — persistent)
+    # SEE FAILURES — with robust fallback
     # ══════════════════════════════════════════════════════
     if data == "see_failures":
         failed = u.get("last_mock_failed", [])
+
+        # Fallback: try session memory
+        if not failed:
+            session = USER_SESSIONS.get(uid, {})
+            failed = session.get("failed", [])
+
+        # Fallback: reload from disk (in case of concurrent write)
+        if not failed:
+            try:
+                reloaded = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+                disk_u = reloaded.get(str(uid), {})
+                failed = disk_u.get("last_mock_failed", [])
+                if failed:
+                    # Sync into memory
+                    u["last_mock_failed"] = failed
+                    save_data()
+            except Exception as e:
+                print(f"[see_failures] disk reload failed: {e}")
+
         if not failed:
             await query.message.reply_text(
                 "📋 *No recent failed questions found.*\n\n"
@@ -1602,21 +1663,25 @@ async def handle_callback(update, context):
             return
 
         total_failed = len(failed)
-        MAX_SHOW = 20
+        MAX_SHOW = 15
 
-        lines = [f"📋 *Your {total_failed} Failed Questions*\n"]
+        lines = [f"📋 *Your {total_failed} Failed Questions*\n",
+                 "_Tap any button below to get an AI explanation._\n"]
+
         buttons = []
         for i, f in enumerate(failed[:MAX_SHOW]):
-            q = f["q"]
-            qtext = (q.get("question") or "")[:60]
-            topic = f.get("topic", "General")
+            qtext = str(f.get("question") or "")[:55]
+            topic = f.get("topic", "General") or "General"
+            q_num = f.get("q_num", i + 1)
+            ua = f.get("user_ans", "?")
+            ca = f.get("correct_ans", "?")
             lines.append(
-                f"*Q{f['q_num']}* — _{md(topic)}_\n"
+                f"*Q{q_num}* — _{md(topic)}_\n"
                 f"_{md(qtext)}..._\n"
-                f"You answered *{f['user_ans']}*, Correct is *{f['correct_ans']}*\n"
+                f"You: *{ua}* · Correct: *{ca}*\n"
             )
             buttons.append([InlineKeyboardButton(
-                f"🤖 Ask AI Why Q{f['q_num']}?",
+                f"🤖 Ask AI Why Q{q_num}?",
                 callback_data=f"askwhy_{i}")])
 
         if total_failed > MAX_SHOW:
@@ -1630,26 +1695,26 @@ async def handle_callback(update, context):
                                              callback_data="main_menu")])
 
         text = "\n".join(lines)
-        if len(text) <= 4000:
+        try:
             await query.message.reply_text(
-                text, parse_mode="Markdown",
+                text[:4000], parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup(buttons))
-        else:
-            midpoint = len(lines) // 2
-            part1 = "\n".join(lines[:midpoint])
-            part2 = "\n".join(lines[midpoint:])
-            await query.message.reply_text(part1, parse_mode="Markdown")
+        except Exception as e:
+            print(f"[see_failures] md failed: {e}")
             await query.message.reply_text(
-                part2, parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup(buttons))
+                text[:4000], reply_markup=InlineKeyboardMarkup(buttons))
         return
 
     # ══════════════════════════════════════════════════════
-    # ASK AI WHY (reads from USER_DATA + 3/day limit)
+    # ASK AI WHY
     # ══════════════════════════════════════════════════════
     if data.startswith("askwhy_"):
         idx = int(data.split("_")[1])
         failed = u.get("last_mock_failed", [])
+        if idx >= len(failed):
+            # Try session memory
+            session = USER_SESSIONS.get(uid, {})
+            failed = session.get("failed", [])
         if idx >= len(failed):
             await query.message.reply_text(
                 "That failure is no longer available. Please retake a mock.",
@@ -1667,11 +1732,17 @@ async def handle_callback(update, context):
             return
 
         f = failed[idx]
-        q = f["q"]
-        qtext = q.get("question", "")
-        user_ans = f["user_ans"]
-        correct_ans = f["correct_ans"]
-        topic = f.get("topic", "General")
+        qtext = str(f.get("question", ""))
+        user_ans = str(f.get("user_ans", ""))
+        correct_ans = str(f.get("correct_ans", ""))
+        topic = str(f.get("topic", "General"))
+        q_num = f.get("q_num", idx + 1)
+
+        # Rebuild a mini question dict for the analyser
+        mini_q = (
+            f"Question: {qtext}\n"
+            f"Topic: {topic}"
+        )
 
         consume_ai_why(uid)
 
@@ -1681,7 +1752,7 @@ async def handle_callback(update, context):
 
         try:
             analysis = await asyncio.to_thread(
-                _analyze_failure, qtext, user_ans, correct_ans, topic)
+                _analyze_failure, mini_q, user_ans, correct_ans, topic)
         except Exception as e:
             print(f"[askwhy] analyze failed: {e}")
             analysis = "⚠️ AI analysis failed. Try again."
@@ -1696,10 +1767,7 @@ async def handle_callback(update, context):
             _, rem = can_use_ai_why(uid)
             remaining_after = f"\n\n_💬 Free AI Why left today: {rem}/{FREE_AI_WHY_PER_DAY}_"
 
-        header = (
-            f"🤖 *AI Why — Q{f['q_num']}*\n"
-            f"📚 _{md(topic)}_\n\n"
-        )
+        header = f"🤖 *AI Why — Q{q_num}*\n📚 _{md(topic)}_\n\n"
         final = (header + analysis)[:3800] + remaining_after
 
         try:
@@ -1730,15 +1798,14 @@ async def handle_callback(update, context):
                 print(f"[askwhy] voice failed: {e}")
         return
 
-    # ══════════════════════════════════════════════════════
-    # ASK ELLAMS ON ALL FAILURES
-    # ══════════════════════════════════════════════════════
     if data == "ask_ellams_failures":
         failed = u.get("last_mock_failed", [])
         if not failed:
+            session = USER_SESSIONS.get(uid, {})
+            failed = session.get("failed", [])
+        if not failed:
             await query.message.reply_text(
-                "📋 *No recent failures to analyse.*\n\n"
-                "Take a mock first.",
+                "📋 *No recent failures to analyse.*\n\nTake a mock first.",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("🎯 Start Mock",
@@ -1762,10 +1829,9 @@ async def handle_callback(update, context):
 
         summary_lines = []
         for i, f in enumerate(failed[:5]):
-            q = f["q"]
             summary_lines.append(
-                f"{i+1}. [{f.get('topic','Gen')}] Q: {q.get('question','')[:80]}\n"
-                f"   Student: {f['user_ans']} · Correct: {f['correct_ans']}"
+                f"{i+1}. [{f.get('topic','Gen')}] Q: {str(f.get('question',''))[:80]}\n"
+                f"   Student: {f.get('user_ans','?')} · Correct: {f.get('correct_ans','?')}"
             )
 
         big_q = (
@@ -1809,9 +1875,6 @@ async def handle_callback(update, context):
                                       callback_data="main_menu")]]))
         return
 
-    # ══════════════════════════════════════════════════════
-    # CHECK RANK
-    # ══════════════════════════════════════════════════════
     if data == "check_rank":
         subj_label = u.get("last_mock_subject", "general")
         if subj_label.startswith("subject_"):
@@ -1821,7 +1884,6 @@ async def handle_callback(update, context):
         subj_display = SUBJECT_DISPLAY.get(subj_label, subj_label.title())
 
         total = u.get("last_mock_total", 40)
-
         user_score = 0
         hist = u.get("history", [])
         if hist:
@@ -1845,7 +1907,6 @@ async def handle_callback(update, context):
             reply_markup=InlineKeyboardMarkup(_mock_menu_kb(uid)))
         return
 
-    # ── Subject mock ──
     if data == "mock_by_subject":
         await query.message.reply_text(
             "📚 *Choose Subject for your 40Q Mock:*",
@@ -1865,7 +1926,6 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ── Full CBT mock ──
     if data == "mock_full":
         plan = u.get("jamb_plan", ["english"])[:4]
         if len(plan) != 4:
@@ -1880,7 +1940,6 @@ async def handle_callback(update, context):
             await query.message.reply_text(
                 f"⚠️ Only {len(qs)} questions available. Try again later.")
             return
-
         stats = []
         counts = {}
         for q in qs:
@@ -1888,20 +1947,15 @@ async def handle_callback(update, context):
             counts[key] = counts.get(key, 0) + 1
         for s in plan:
             stats.append(f"  • {SUBJECT_DISPLAY.get(s, s.title())}: {counts.get(s, 0)} Qs")
-
-        intro = (
-            f"🚀 *Full JAMB CBT Mock*\n\n"
-            f"📚 *Your Plan:*\n" + "\n".join(stats) + "\n\n"
-            f"📝 Total: *{len(qs)} questions*\n"
-            f"⏱️ Recommended: *2 hours*\n\n"
-            f"Good luck! 🎯"
-        )
+        intro = (f"🚀 *Full JAMB CBT Mock*\n\n"
+                 f"📚 *Your Plan:*\n" + "\n".join(stats) + "\n\n"
+                 f"📝 Total: *{len(qs)} questions*\n"
+                 f"⏱️ Recommended: *2 hours*\n\nGood luck! 🎯")
         subj_label = "CBT:" + ",".join(plan)
         txt, kb = _start_mock_session(uid, qs, subj_label, intro_text=intro)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ── Score / Tutor / Premium / Invite / Help ──
     if data == "my_score":
         hist = u.get("history", [])
         if not hist:
@@ -1931,7 +1985,6 @@ async def handle_callback(update, context):
         await query.message.reply_text(
             f"💬 *Ask {TUTOR_NAME}*\n"
             f"🧠 AI: {'Active ✅' if HAS_AI_TUTOR else 'Limited'}\n"
-            f"🎙️ Voice: Nigerian male teacher\n"
             f"Tutor: {remaining_text}\n\n"
             f"Ask anything — any subject:",
             parse_mode="Markdown",
@@ -1976,18 +2029,15 @@ async def handle_callback(update, context):
 
     if data == "main_menu":
         if not u.get("plan_set", False):
-            await query.message.reply_text(
-                _plan_builder_text(uid), parse_mode="Markdown",
-                reply_markup=_plan_builder_kb(uid))
+            await query.message.reply_text(_plan_builder_text(uid),
+                                           parse_mode="Markdown",
+                                           reply_markup=_plan_builder_kb(uid))
             return
         t, kb = main_menu_text_kb(uid)
         await query.message.reply_text(t, reply_markup=kb, parse_mode="Markdown")
         return
 
 
-# ══════════════════════════════════════════════════════════
-# START MOCK FROM PLAN
-# ══════════════════════════════════════════════════════════
 async def _start_plan_mock(query, uid, u):
     plan = u.get("jamb_plan", ["english"])
     if not is_premium(uid):
@@ -2002,8 +2052,7 @@ async def _start_plan_mock(query, uid, u):
             return
         qs = _fetch_rotated(uid, "english", FREE_ENGLISH_QS)
         if len(qs) < 10:
-            await query.message.reply_text(
-                "⚠️ Not enough English questions available.")
+            await query.message.reply_text("⚠️ Not enough English questions available.")
             return
         u["free_english_used"] = True
         save_data()
@@ -2025,11 +2074,9 @@ async def _start_plan_mock(query, uid, u):
             f"⚠️ Not enough questions for {SUBJECT_DISPLAY.get(subject, subject)}.")
         return
     display = SUBJECT_DISPLAY.get(subject, subject.title())
-    intro = (
-        f"🎯 *Mock from Your Plan*\n\n"
-        f"Starting: *{display}* ({len(qs)} Qs)\n\n"
-        f"Continue with other subjects from your plan after this."
-    )
+    intro = (f"🎯 *Mock from Your Plan*\n\n"
+             f"Starting: *{display}* ({len(qs)} Qs)\n\n"
+             f"Continue with other subjects from your plan after this.")
     txt, kb = _start_mock_session(uid, f"subject_{subject}", intro_text=intro)
     await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
 
@@ -2046,7 +2093,6 @@ async def handle_msg(update, context):
     if _admin_only(uid):
         admin_session = USER_SESSIONS.get(uid, {})
         admin_mode = admin_session.get("mode")
-
         if admin_mode == "admin_grant_wait":
             target_id = text.strip()
             if target_id.isdigit():
@@ -2065,7 +2111,6 @@ async def handle_msg(update, context):
                         [InlineKeyboardButton("🔙 Back",
                                               callback_data="admin_panel")]]))
             return
-
         if admin_mode == "admin_broadcast_wait":
             USER_SESSIONS.pop(uid, None)
             broadcast_text = text.strip()
@@ -2090,35 +2135,25 @@ async def handle_msg(update, context):
             return
 
     if text == "⚙️ Admin Panel" and _admin_only(uid):
-        await cmd_admin(update, context)
-        return
-
-    if text == "📚 Past Questions":
-        await cmd_past(update, context); return
-    if text == "📝 Mock Exam":
-        await cmd_mock(update, context); return
-    if text == "📊 My Score":
-        await cmd_score(update, context); return
-    if text == "💬 Ask Tutor":
-        await cmd_tutor(update, context); return
-    if text == "💎 Premium":
-        await cmd_premium(update, context); return
-    if text == "👥 Invite Friends":
-        await cmd_invite(update, context); return
-    if text == "📖 Study Plan":
-        await cmd_study(update, context); return
+        await cmd_admin(update, context); return
+    if text == "📚 Past Questions": await cmd_past(update, context); return
+    if text == "📝 Mock Exam":       await cmd_mock(update, context); return
+    if text == "📊 My Score":        await cmd_score(update, context); return
+    if text == "💬 Ask Tutor":       await cmd_tutor(update, context); return
+    if text == "💎 Premium":         await cmd_premium(update, context); return
+    if text == "👥 Invite Friends":  await cmd_invite(update, context); return
+    if text == "📖 Study Plan":      await cmd_study(update, context); return
 
     if not u.get("plan_set", False):
-        await update.message.reply_text(
-            _plan_builder_text(uid), parse_mode="Markdown",
-            reply_markup=_plan_builder_kb(uid))
+        await update.message.reply_text(_plan_builder_text(uid),
+                                        parse_mode="Markdown",
+                                        reply_markup=_plan_builder_kb(uid))
         return
 
     session = USER_SESSIONS.get(uid, {})
     is_tutor = (session.get("mode") == "tutor" or
                 (session.get("mode") not in ("cbt_select", "post_mock") and
                  ("?" in text or len(text) > 8)))
-
     if not is_tutor:
         await update.message.reply_text("Use the menu below 👇",
                                         reply_markup=BOTTOM_KEYBOARD)
@@ -2164,7 +2199,6 @@ async def handle_msg(update, context):
         [InlineKeyboardButton("🎙️ Voice Explanation", callback_data="ask_tutor")],
         [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
     ])
-
     try:
         await update.message.reply_text(final_msg[:4000], parse_mode="Markdown",
                                         reply_markup=kb)
@@ -2193,7 +2227,7 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v33 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v34 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
 
@@ -2214,6 +2248,7 @@ def health():
         "real_exam_mode": True,
         "state_rank_rotation": True,
         "failures_persisted": True,
+        "persuasive_completion": True,
         "tutor_ok": tutor_ok,
         "channel_configured": bool(CHANNEL_ID),
         "users": len(USER_DATA),
@@ -2417,12 +2452,9 @@ def _build_evening_post(q):
 
 
 def _build_post(q, slot_name):
-    if slot_name == "morning":
-        return _build_morning_post(q)
-    if slot_name == "afternoon":
-        return _build_afternoon_post(q)
-    if slot_name == "evening":
-        return _build_evening_post(q)
+    if slot_name == "morning": return _build_morning_post(q)
+    if slot_name == "afternoon": return _build_afternoon_post(q)
+    if slot_name == "evening": return _build_evening_post(q)
     return _build_morning_post(q)
 
 
@@ -2513,10 +2545,11 @@ def main():
     print(f"💬 Free AI Why/day: {FREE_AI_WHY_PER_DAY}")
     print(f"📋 Plan: English + 3 chosen subjects")
     print(f"🎲 Option shuffler: ON")
-    print(f"🔄 Rotation: ON (per-student, per-mock)")
+    print(f"🔄 Rotation: ON")
     print(f"📝 Real exam mode: ON (no answer reveal)")
-    print(f"🏆 State rank rotation: ON ({len(NIGERIAN_STATES)} states)")
-    print(f"💾 Failures persisted: ON (survives cold starts)")
+    print(f"🏆 State rank rotation: ON")
+    print(f"💾 Failures persisted: ON (JSON-safe minimal snapshots)")
+    print(f"📣 Persuasive completion: ON")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
