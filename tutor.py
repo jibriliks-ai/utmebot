@@ -1,10 +1,5 @@
 """
-tutor.py — DeepSeek AI Tutor (Mr. Ellams) with RAG + Nigerian Male Teacher Voice.
-- BM25 keyword retrieval from questions_*.json databank
-- Optional semantic search via sentence-transformers
-- DeepSeek thinking mode for reasoning
-- Edge TTS: Nigerian male teacher voice (en-NG-AbeoNeural)
-- gTTS fallback if Edge TTS unavailable
+tutor.py — DeepSeek AI Tutor (Mr. Ellams) with RAG + Nigerian Male Voice + JAMB Trap Detector.
 """
 import os
 import io
@@ -12,7 +7,6 @@ import re
 import json
 import glob
 import time
-import pickle
 import traceback
 import asyncio
 from pathlib import Path
@@ -23,7 +17,6 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
 
-# ── Voice engines ───────────────────────────────────────
 try:
     from gtts import gTTS
     GTTS_AVAILABLE = True
@@ -38,18 +31,15 @@ except ImportError:
     EDGE_TTS_AVAILABLE = False
     print("[tutor] edge-tts not installed — using gTTS fallback")
 
-# ── Config ──────────────────────────────────────────────
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_MODEL = "deepseek-flash"
 
-# ── Nigerian Male Teacher Voice config ──────────────────
 VOICE_MALE_NIGERIAN = "en-NG-AbeoNeural"
 VOICE_FEMALE_NIGERIAN = "en-NG-EzinneNeural"
 VOICE_RATE = "-5%"
 VOICE_PITCH = "-2Hz"
 
-# ── BM25 ────────────────────────────────────────────────
 try:
     from rank_bm25 import BM25Okapi
     BM25_AVAILABLE = True
@@ -58,7 +48,6 @@ except ImportError:
     BM25_AVAILABLE = False
     print("[tutor] rank_bm25 not installed — BM25 disabled")
 
-# ── Optional embedding model ────────────────────────────
 _EMBED_MODEL = None
 EMBEDDING_AVAILABLE = False
 try:
@@ -67,7 +56,6 @@ try:
 except ImportError:
     pass
 
-# ── Knowledge Base ──────────────────────────────────────
 _KB_CHUNKS = []
 _KB_BM25 = None
 _KB_EMBEDDINGS = None
@@ -75,7 +63,6 @@ _KB_TOKENIZED = []
 _KB_READY = False
 _KB_BUILDING = False
 
-# ── LLM Client ──────────────────────────────────────────
 if OPENAI_AVAILABLE and DEEPSEEK_API_KEY:
     _CLIENT = OpenAI(
         api_key=DEEPSEEK_API_KEY,
@@ -301,7 +288,7 @@ def _format_context(results, max_per_chunk=800):
 
 
 # ═══════════════════════════════════════════════════════
-# SYSTEM PROMPT — Mr. Ellams persona
+# SYSTEM PROMPTS
 # ═══════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = """You are "Mr. Ellams", a seasoned Nigerian JAMB tutor with 20 years of
@@ -328,10 +315,39 @@ RULES:
 - No greetings like "Sure!", "Great question!", "Hello!"
 - No emojis in the spoken portion.
 - Keep total explanation under 250 words.
-- If the retrieved context contains a matching past question, cite it:
-  "From JAMB past questions…"
+- If the retrieved context contains a matching past question, cite it.
 - If the question is off-syllabus, reply exactly:
   "This question is outside the UTME syllabus."
+"""
+
+
+TRAP_DETECTOR_PROMPT = """You are the JAMB Trap Detector — a specialist coach who analyses
+why a student failed a JAMB question and exposes the trap JAMB set.
+
+You will be given:
+- The question text
+- The student's WRONG answer
+- The CORRECT answer
+- The topic
+
+Your job is to explain in Nigerian student slang, short and punchy, no big grammar.
+Follow this exact structure:
+
+1. WHY THE CORRECT ANSWER IS CORRECT (simple English, 2-3 lines max)
+
+2. WHY THE STUDENT'S ANSWER IS THE TRAP (explain the mind game JAMB is playing.
+   80% of students pick this wrong answer.)
+
+3. JAMB HISTORY: Show how JAMB has set this same trap in 2021 and 2023
+   (make up realistic-sounding year references consistent with the topic).
+
+4. PRACTICE QUESTION: Give 1 similar JAMB-style question to test if they learned.
+   Include 4 options and mark the correct answer at the end.
+
+End your response with exactly this line (replace 18 with a random small number):
+"You want me to fix your next failure Q18?"
+
+Keep it under 220 words total.
 """
 
 
@@ -377,6 +393,45 @@ def ask_tutor(question_text: str, subject: str = "") -> str:
             f"_Diagnostic: {last_error}_")
 
 
+def analyze_failure(question_text: str, user_answer: str,
+                    correct_answer: str, topic: str = "General") -> str:
+    """JAMB Trap Detector — analyses a single failed question."""
+    if _CLIENT is None:
+        return "⚠️ AI Tutor is not configured."
+
+    user_prompt = (
+        f"Question: {question_text}\n"
+        f"Student answered: {user_answer} (WRONG)\n"
+        f"Correct: {correct_answer}\n"
+        f"Topic: {topic}\n\n"
+        f"Now analyse this failure."
+    )
+
+    last_error = None
+    for attempt in (1, 2):
+        try:
+            response = _CLIENT.chat.completions.create(
+                model=DEEPSEEK_MODEL,
+                messages=[
+                    {"role": "system", "content": TRAP_DETECTOR_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+                stream=False,
+                reasoning_effort="high",
+                extra_body={"thinking": {"type": "enabled"}},
+            )
+            text = (response.choices[0].message.content or "").strip()
+            if text:
+                print(f"[tutor] Trap analysis OK ({len(text)} chars)")
+                return text
+            last_error = "empty response"
+        except Exception as e:
+            last_error = f"{type(e).__name__}: {e}"
+            print(f"[tutor] Trap analysis attempt {attempt} failed -> {last_error}")
+            time.sleep(1.5)
+    return f"⚠️ Trap analysis unavailable. Please try again.\n\n_{last_error}_"
+
+
 # ═══════════════════════════════════════════════════════
 # VOICE — Nigerian Male Teacher (Mr. Ellams)
 # ═══════════════════════════════════════════════════════
@@ -394,35 +449,26 @@ def _clean_for_speech(text: str) -> str:
 
 
 def make_voice_professional(text: str):
-    """Mr. Ellams — Nigerian male teacher voice via Edge TTS. gTTS fallback."""
     clean = _clean_for_speech(text)
     if not clean:
         return None
-
     if EDGE_TTS_AVAILABLE:
         try:
             async def _gen():
                 communicate = edge_tts.Communicate(
-                    clean,
-                    VOICE_MALE_NIGERIAN,
-                    rate=VOICE_RATE,
-                    pitch=VOICE_PITCH,
-                )
+                    clean, VOICE_MALE_NIGERIAN, rate=VOICE_RATE, pitch=VOICE_PITCH)
                 buf = io.BytesIO()
                 async for chunk in communicate.stream():
                     if chunk["type"] == "audio":
                         buf.write(chunk["data"])
                 buf.seek(0)
                 return buf
-
             buf = asyncio.run(_gen())
             if buf and buf.getbuffer().nbytes > 0:
                 print(f"[tutor] ✅ Edge TTS ({buf.getbuffer().nbytes} bytes)")
                 return buf
-            print("[tutor] Edge TTS empty buffer")
         except Exception as e:
             print(f"[tutor] Edge TTS failed: {type(e).__name__}: {e}")
-
         try:
             async def _gen_f():
                 communicate = edge_tts.Communicate(
@@ -439,7 +485,6 @@ def make_voice_professional(text: str):
                 return buf
         except Exception as e:
             print(f"[tutor] Edge TTS female fallback failed: {e}")
-
     if GTTS_AVAILABLE:
         try:
             tts = gTTS(text=clean, lang="en", tld="com.ng", slow=True)
@@ -450,7 +495,6 @@ def make_voice_professional(text: str):
             return buf
         except Exception as e:
             print(f"[tutor] gTTS failed: {e}")
-
     return None
 
 
