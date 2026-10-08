@@ -1,5 +1,11 @@
 """
 tutor.py — DeepSeek AI Tutor (Mr. Ellams) with RAG + Nigerian Male Voice + JAMB Trap Detector.
+- BM25 keyword retrieval from questions_*.json databank
+- Optional semantic search via sentence-transformers
+- DeepSeek thinking mode for reasoning
+- Edge TTS: Nigerian male teacher voice (en-NG-AbeoNeural)
+- gTTS fallback if Edge TTS unavailable
+- JAMB Trap Detector explains failures in simple, professional English
 """
 import os
 import io
@@ -315,7 +321,8 @@ RULES:
 - No greetings like "Sure!", "Great question!", "Hello!"
 - No emojis in the spoken portion.
 - Keep total explanation under 250 words.
-- If the retrieved context contains a matching past question, cite it.
+- If the retrieved context contains a matching past question, cite it:
+  "From JAMB past questions…"
 - If the question is off-syllabus, reply exactly:
   "This question is outside the UTME syllabus."
 """
@@ -330,13 +337,16 @@ You will be given:
 - The CORRECT answer
 - The topic
 
-Your job is to explain in Nigerian student slang, short and punchy, no big grammar.
+Your job is to explain in SIMPLE, CLEAR, PROFESSIONAL ENGLISH — the kind a Nigerian
+secondary school teacher uses. Short sentences. Easy words. No pidgin. No slang.
+No abbreviations. Every explanation must be easy for a JAMB student to read and learn from.
+
 Follow this exact structure:
 
-1. WHY THE CORRECT ANSWER IS CORRECT (simple English, 2-3 lines max)
+1. WHY THE CORRECT ANSWER IS CORRECT (2-3 short sentences, plain English)
 
 2. WHY THE STUDENT'S ANSWER IS THE TRAP (explain the mind game JAMB is playing.
-   80% of students pick this wrong answer.)
+   Mention that about 80% of students pick this wrong answer.)
 
 3. JAMB HISTORY: Show how JAMB has set this same trap in 2021 and 2023
    (make up realistic-sounding year references consistent with the topic).
@@ -395,7 +405,7 @@ def ask_tutor(question_text: str, subject: str = "") -> str:
 
 def analyze_failure(question_text: str, user_answer: str,
                     correct_answer: str, topic: str = "General") -> str:
-    """JAMB Trap Detector — analyses a single failed question."""
+    """JAMB Trap Detector — analyses a single failed question in simple English."""
     if _CLIENT is None:
         return "⚠️ AI Tutor is not configured."
 
@@ -404,7 +414,7 @@ def analyze_failure(question_text: str, user_answer: str,
         f"Student answered: {user_answer} (WRONG)\n"
         f"Correct: {correct_answer}\n"
         f"Topic: {topic}\n\n"
-        f"Now analyse this failure."
+        f"Now analyse this failure in simple, professional English."
     )
 
     last_error = None
@@ -449,26 +459,35 @@ def _clean_for_speech(text: str) -> str:
 
 
 def make_voice_professional(text: str):
+    """Mr. Ellams — Nigerian male teacher voice via Edge TTS. gTTS fallback."""
     clean = _clean_for_speech(text)
     if not clean:
         return None
+
     if EDGE_TTS_AVAILABLE:
         try:
             async def _gen():
                 communicate = edge_tts.Communicate(
-                    clean, VOICE_MALE_NIGERIAN, rate=VOICE_RATE, pitch=VOICE_PITCH)
+                    clean,
+                    VOICE_MALE_NIGERIAN,
+                    rate=VOICE_RATE,
+                    pitch=VOICE_PITCH,
+                )
                 buf = io.BytesIO()
                 async for chunk in communicate.stream():
                     if chunk["type"] == "audio":
                         buf.write(chunk["data"])
                 buf.seek(0)
                 return buf
+
             buf = asyncio.run(_gen())
             if buf and buf.getbuffer().nbytes > 0:
                 print(f"[tutor] ✅ Edge TTS ({buf.getbuffer().nbytes} bytes)")
                 return buf
+            print("[tutor] Edge TTS empty buffer")
         except Exception as e:
             print(f"[tutor] Edge TTS failed: {type(e).__name__}: {e}")
+
         try:
             async def _gen_f():
                 communicate = edge_tts.Communicate(
@@ -485,6 +504,7 @@ def make_voice_professional(text: str):
                 return buf
         except Exception as e:
             print(f"[tutor] Edge TTS female fallback failed: {e}")
+
     if GTTS_AVAILABLE:
         try:
             tts = gTTS(text=clean, lang="en", tld="com.ng", slow=True)
@@ -495,6 +515,7 @@ def make_voice_professional(text: str):
             return buf
         except Exception as e:
             print(f"[tutor] gTTS failed: {e}")
+
     return None
 
 
