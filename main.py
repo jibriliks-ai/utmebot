@@ -1,10 +1,8 @@
 """
-UTME Success Bot v32 — Professional UI + Real Exam Mode + Free AI Limit + Rotating State Rank
-- Redesigned welcome page and main menu (professional look)
-- Wrong answers during mock do NOT reveal correct answer
-- Post-mock: score + topic breakdown + 3 action buttons
-- 3 free AI Why queries per day (free users) — 4th locks → upgrade
-- Rank button rotates across Nigerian states, min score 35/40
+UTME Success Bot v33 — Fixed Failures Persistence + AI Why Limit
+- Failures stored in USER_DATA (survives cold starts)
+- Every failed question has "Ask AI Why Q#?"
+- 3 free AI Why/day for free users, 4th → upgrade
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -92,7 +90,7 @@ FREE_ENGLISH_QS = 40
 FREE_AI_WHY_PER_DAY = 3
 
 # ══════════════════════════════════════════════════════════
-# NIGERIAN STATES + NAMES (for state ranking)
+# NIGERIAN STATES + NAMES
 # ══════════════════════════════════════════════════════════
 NIGERIAN_STATES = [
     "Delta", "Edo", "Lagos", "Ondo", "Anambra", "Oyo", "Kano",
@@ -413,6 +411,9 @@ def get_user(uid, username=""):
             "plan_set": False,
             "free_english_used": False,
             "ai_why_counts": {},
+            "last_mock_failed": [],
+            "last_mock_subject": None,
+            "last_mock_total": 40,
         }
         save_data()
     u = USER_DATA[uid]
@@ -423,6 +424,9 @@ def get_user(uid, username=""):
     u.setdefault("free_english_used", False)
     u.setdefault("used_ids", [])
     u.setdefault("ai_why_counts", {})
+    u.setdefault("last_mock_failed", [])
+    u.setdefault("last_mock_subject", None)
+    u.setdefault("last_mock_total", 40)
     if u.get("premium_until"):
         try:
             if datetime.now() > datetime.fromisoformat(u["premium_until"]):
@@ -590,7 +594,6 @@ def ai_why_limit_kb(uid):
 
 
 def main_menu_text_kb(uid):
-    """Redesigned professional main menu."""
     u = get_user(uid)
     plan = u.get("jamb_plan", ["english"])
     plan_str = " • ".join(SUBJECT_DISPLAY.get(s, s.title()) for s in plan)
@@ -723,7 +726,6 @@ PLAN_OPTIONAL_SUBJECTS = [
 
 
 def _plan_builder_text(uid):
-    """Redesigned professional welcome/plan builder page."""
     u = get_user(uid)
     plan = u.get("jamb_plan", ["english"])
     others = [s for s in plan if s != "english"]
@@ -1463,7 +1465,7 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # ANSWER HANDLER — REAL EXAM MODE
+    # ANSWER HANDLER
     # ══════════════════════════════════════════════════════
     if data.startswith("ans:"):
         ans = data.split(":")[1]
@@ -1513,6 +1515,10 @@ async def handle_callback(update, context):
                 "date": str(date.today()),
                 "subject": session.get("subject", "general"),
                 "score": score, "total": total, "percent": percent})
+            # ⭐ PERSIST failures to user_data
+            u["last_mock_failed"] = failed
+            u["last_mock_subject"] = session.get("subject", "general")
+            u["last_mock_total"] = total
             save_data()
             leader_name, leader_score = get_leading()
 
@@ -1522,13 +1528,6 @@ async def handle_callback(update, context):
                 "subject": session.get("subject"),
                 "total": total,
             }
-
-            subj_label = session.get("subject", "general")
-            if subj_label.startswith("subject_"):
-                subj_label = subj_label.replace("subject_", "")
-            if subj_label.startswith("CBT:"):
-                subj_label = "Full JAMB CBT"
-            subj_display = SUBJECT_DISPLAY.get(subj_label, subj_label.title())
 
             topic_counts = {}
             for f in failed:
@@ -1586,19 +1585,28 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # SEE FAILURES
+    # SEE FAILURES (reads from USER_DATA — persistent)
     # ══════════════════════════════════════════════════════
     if data == "see_failures":
-        session = USER_SESSIONS.get(uid, {})
-        failed = session.get("failed", [])
+        failed = u.get("last_mock_failed", [])
         if not failed:
-            await query.message.reply_text("No failures to show.")
+            await query.message.reply_text(
+                "📋 *No recent failed questions found.*\n\n"
+                "Please take a mock first, then click *See Failures*.",
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🎯 Start Mock",
+                                          callback_data="start_plan_mock")],
+                    [InlineKeyboardButton("🏠 Main Menu",
+                                          callback_data="main_menu")]]))
             return
 
         total_failed = len(failed)
+        MAX_SHOW = 20
+
         lines = [f"📋 *Your {total_failed} Failed Questions*\n"]
         buttons = []
-        for i, f in enumerate(failed[:10]):
+        for i, f in enumerate(failed[:MAX_SHOW]):
             q = f["q"]
             qtext = (q.get("question") or "")[:60]
             topic = f.get("topic", "General")
@@ -1611,8 +1619,8 @@ async def handle_callback(update, context):
                 f"🤖 Ask AI Why Q{f['q_num']}?",
                 callback_data=f"askwhy_{i}")])
 
-        if total_failed > 10:
-            lines.append(f"\n_Showing first 10 of {total_failed}._")
+        if total_failed > MAX_SHOW:
+            lines.append(f"\n_Showing first {MAX_SHOW} of {total_failed}._")
 
         buttons.append([InlineKeyboardButton("🤖 Ask AI Tutor Why I Failed",
                                              callback_data="ask_ellams_failures")])
@@ -1621,20 +1629,35 @@ async def handle_callback(update, context):
         buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                              callback_data="main_menu")])
 
-        await query.message.reply_text(
-            "\n".join(lines), parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(buttons))
+        text = "\n".join(lines)
+        if len(text) <= 4000:
+            await query.message.reply_text(
+                text, parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(buttons))
+        else:
+            midpoint = len(lines) // 2
+            part1 = "\n".join(lines[:midpoint])
+            part2 = "\n".join(lines[midpoint:])
+            await query.message.reply_text(part1, parse_mode="Markdown")
+            await query.message.reply_text(
+                part2, parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(buttons))
         return
 
     # ══════════════════════════════════════════════════════
-    # ASK AI WHY
+    # ASK AI WHY (reads from USER_DATA + 3/day limit)
     # ══════════════════════════════════════════════════════
     if data.startswith("askwhy_"):
         idx = int(data.split("_")[1])
-        session = USER_SESSIONS.get(uid, {})
-        failed = session.get("failed", [])
+        failed = u.get("last_mock_failed", [])
         if idx >= len(failed):
-            await query.message.reply_text("That failure is no longer in memory.")
+            await query.message.reply_text(
+                "That failure is no longer available. Please retake a mock.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🎯 Start Mock",
+                                          callback_data="start_plan_mock")],
+                    [InlineKeyboardButton("🏠 Main Menu",
+                                          callback_data="main_menu")]]))
             return
 
         allowed, remaining = can_use_ai_why(uid)
@@ -1711,10 +1734,17 @@ async def handle_callback(update, context):
     # ASK ELLAMS ON ALL FAILURES
     # ══════════════════════════════════════════════════════
     if data == "ask_ellams_failures":
-        session = USER_SESSIONS.get(uid, {})
-        failed = session.get("failed", [])
+        failed = u.get("last_mock_failed", [])
         if not failed:
-            await query.message.reply_text("No failures to analyse.")
+            await query.message.reply_text(
+                "📋 *No recent failures to analyse.*\n\n"
+                "Take a mock first.",
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🎯 Start Mock",
+                                          callback_data="start_plan_mock")],
+                    [InlineKeyboardButton("🏠 Main Menu",
+                                          callback_data="main_menu")]]))
             return
 
         allowed, remaining = can_use_ai_why(uid)
@@ -1783,15 +1813,14 @@ async def handle_callback(update, context):
     # CHECK RANK
     # ══════════════════════════════════════════════════════
     if data == "check_rank":
-        session = USER_SESSIONS.get(uid, {})
-        subj_label = session.get("subject", "general")
+        subj_label = u.get("last_mock_subject", "general")
         if subj_label.startswith("subject_"):
             subj_label = subj_label.replace("subject_", "")
         if subj_label.startswith("CBT:"):
             subj_label = "Full JAMB CBT"
         subj_display = SUBJECT_DISPLAY.get(subj_label, subj_label.title())
 
-        total = session.get("total", 40)
+        total = u.get("last_mock_total", 40)
 
         user_score = 0
         hist = u.get("history", [])
@@ -2164,7 +2193,7 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v32 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v33 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
 
@@ -2184,6 +2213,7 @@ def health():
         "rotation": True,
         "real_exam_mode": True,
         "state_rank_rotation": True,
+        "failures_persisted": True,
         "tutor_ok": tutor_ok,
         "channel_configured": bool(CHANNEL_ID),
         "users": len(USER_DATA),
@@ -2486,7 +2516,7 @@ def main():
     print(f"🔄 Rotation: ON (per-student, per-mock)")
     print(f"📝 Real exam mode: ON (no answer reveal)")
     print(f"🏆 State rank rotation: ON ({len(NIGERIAN_STATES)} states)")
-    print(f"🎨 Professional UI: ON")
+    print(f"💾 Failures persisted: ON (survives cold starts)")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
