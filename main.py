@@ -4,7 +4,7 @@ UTME Success Bot v29 — Free English Mock + JAMB Plan Builder + Trap Detector +
 - Free users must build a 4-subject JAMB plan on first login
 - After free English, other subjects → upgrade
 - Enhanced mock feedback with failure tracking
-- JAMB Trap Detector for failed questions
+- JAMB Trap Detector for failed questions (Mr. Ellams)
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -90,8 +90,8 @@ SUBJECT_DISPLAY = {
 # ══════════════════════════════════════════════════════════
 # PLAN CONFIG
 # ══════════════════════════════════════════════════════════
-PLAN_SIZE = 4               # English + 3 others
-FREE_ENGLISH_QS = 40        # the one free mock = 40Q English
+PLAN_SIZE = 4
+FREE_ENGLISH_QS = 40
 
 # ---------- Engine ----------
 ALL_QS = []
@@ -255,7 +255,6 @@ def get_user(uid, username=""):
             "invite_code": hashlib.md5(uid.encode()).hexdigest()[:6].upper(),
             "invited_by": None, "invites": 0, "invited_users": [],
             "username": username or f"User{uid[-4:]}", "study_subject": None,
-            # ── New plan fields ──
             "jamb_plan": ["english"],
             "plan_set": False,
             "free_english_used": False,
@@ -264,7 +263,6 @@ def get_user(uid, username=""):
     u = USER_DATA[uid]
     if username:
         u["username"] = username
-    # Ensure new fields exist for old users
     u.setdefault("jamb_plan", ["english"])
     u.setdefault("plan_set", False)
     u.setdefault("free_english_used", False)
@@ -472,7 +470,7 @@ def _start_mock_session(uid, qs, subject_label, intro_text=""):
         "idx": 0,
         "score": 0,
         "subject": subject_label,
-        "failed": [],   # list of dicts
+        "failed": [],
     }
     q = qs[0]
     txt = (intro_text + "\n\n" if intro_text else "") + format_question(q, 1, len(qs))
@@ -544,23 +542,16 @@ def _plan_builder_kb(uid):
 
 
 # ══════════════════════════════════════════════════════════
-# SUBJECT ACCESS RULES
+# SUBJECT ACCESS
 # ══════════════════════════════════════════════════════════
 def can_take_subject(uid, subject) -> tuple:
-    """
-    Returns (allowed: bool, reason: str).
-    Free users: only ONE free English 40Q mock.
-    Premium users: full access.
-    """
     if is_premium(uid):
         return True, "premium"
-
     u = get_user(uid)
     if subject == "english":
         if not u.get("free_english_used", False):
             return True, "free_english"
         return False, "english_used"
-
     return False, "premium_only"
 
 
@@ -569,9 +560,7 @@ def can_take_subject(uid, subject) -> tuple:
 # ══════════════════════════════════════════════════════════
 def _mock_menu_kb(uid):
     u = get_user(uid)
-    plan = u.get("jamb_plan", ["english"])
     kb = []
-
     if is_premium(uid):
         kb.append([InlineKeyboardButton("🎯 Start Mock from My Plan",
                                         callback_data="start_plan_mock")])
@@ -581,8 +570,6 @@ def _mock_menu_kb(uid):
                                         callback_data="mock_full")])
         kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
         return kb
-
-    # Free user
     if not u.get("free_english_used", False):
         kb.append([InlineKeyboardButton("🆓 Free English Mock (40 Qs) — One-time",
                                         callback_data="start_free_english")])
@@ -615,7 +602,7 @@ def _mock_menu_text(uid):
             f"🆓 *Free Plan:* 1 × 40Q English Mock\n\n"
             f"After your free English mock, all other subjects "
             f"require Premium.\n\n"
-            f"💎 Upgrade for unlimited access to all 4 subjects in your plan!"
+            f"💎 Upgrade for unlimited access!"
         )
     return (
         f"📝 *Mock Exam Menu*\n\n"
@@ -785,14 +772,12 @@ async def cmd_start(update, context):
 
     u = get_user(uid, username)
 
-    # First-time user → plan builder
     if not u.get("plan_set", False):
         await update.message.reply_text(
             _plan_builder_text(uid), parse_mode="Markdown",
             reply_markup=_plan_builder_kb(uid))
         return
 
-    # Returning user → main menu
     t, kb = main_menu_text_kb(uid)
     await update.message.reply_text(t, reply_markup=kb, parse_mode="Markdown")
     await update.message.reply_text(
@@ -1085,7 +1070,6 @@ async def handle_callback(update, context):
             await query.answer(f"Select all {PLAN_SIZE} subjects first.",
                                show_alert=True)
             return
-        # Save plan and start
         u["plan_set"] = True
         save_data()
         await _start_plan_mock(query, uid, u)
@@ -1102,7 +1086,7 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # FREE ENGLISH MOCK (direct entry)
+    # FREE ENGLISH MOCK
     # ══════════════════════════════════════════════════════
     if data == "start_free_english":
         if is_premium(uid):
@@ -1130,7 +1114,7 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # LOCKED PREMIUM MOCKS
+    # PREMIUM GATES
     # ══════════════════════════════════════════════════════
     premium_blocked = ("mock_by_subject", "mock_full", "cbt_start", "cbt_clear")
     if data in premium_blocked and not is_premium(uid):
@@ -1206,7 +1190,7 @@ async def handle_callback(update, context):
                 f"🔒 *Premium Required*\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
-        qs = fetcher.fetch(subj, None, 5 if reason == "premium" else 5)
+        qs = fetcher.fetch(subj, None, 5)
         if not qs:
             await query.message.reply_text(
                 f"⚠️ No questions for {SUBJECT_DISPLAY.get(subj, subj)}.")
@@ -1246,7 +1230,6 @@ async def handle_callback(update, context):
             })
         session["idx"] += 1
 
-        # Simple feedback
         if is_correct:
             await query.message.reply_text("✅ Correct — Next question...")
         else:
@@ -1260,9 +1243,6 @@ async def handle_callback(update, context):
             txt = format_question(q, session["idx"] + 1, len(qs))
             await query.message.reply_text(txt, reply_markup=_answer_keyboard(q))
         else:
-            # ══════════════════════════════════════════════════════
-            # MOCK COMPLETION
-            # ══════════════════════════════════════════════════════
             score = session["score"]
             total = len(qs)
             percent = score * 100 // total if total else 0
@@ -1276,7 +1256,6 @@ async def handle_callback(update, context):
             save_data()
             leader_name, leader_score = get_leading()
 
-            # Store failed questions for the current session analysis
             USER_SESSIONS[uid] = {
                 "mode": "post_mock",
                 "failed": failed,
@@ -1290,7 +1269,7 @@ async def handle_callback(update, context):
             )
             if n_failed > 0:
                 finish_msg += f"You failed *{n_failed}* question(s).\n"
-                finish_msg += "Tap below to see your failures and use the JAMB Trap Detector.\n\n"
+                finish_msg += "Tap below to see your failures and ask AI Tutor.\n\n"
             else:
                 finish_msg += "🎯 *Flawless victory!* No failed questions.\n\n"
 
@@ -1303,7 +1282,6 @@ async def handle_callback(update, context):
                                          callback_data="ask_ellams_failures"),
                 ])
 
-            # Free-user upgrade prompt
             is_free = not is_premium(uid)
             if is_free:
                 finish_msg += (
@@ -1341,7 +1319,7 @@ async def handle_callback(update, context):
                 f"Your ans: *{f['user_ans']}* · Correct: *{f['correct_ans']}*\n"
             )
             buttons.append([InlineKeyboardButton(
-                f"🎯 Fix Q{f['q_num']} with Trap Detector",
+                f"🎯 Fix Q{f['q_num']} - Ask AI Tutor",
                 callback_data=f"trap_{i}")])
         buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                              callback_data="main_menu")])
@@ -1405,7 +1383,6 @@ async def handle_callback(update, context):
                     [InlineKeyboardButton("🏠 Main Menu",
                                           callback_data="main_menu")]]))
 
-        # Attach voice of the analysis
         if HAS_AI_TUTOR:
             try:
                 voice_if = await asyncio.to_thread(_build_voice, analysis)
@@ -1418,7 +1395,7 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # ASK MR. ELLAMS ON ALL FAILURES (batch analysis)
+    # ASK MR. ELLAMS ON ALL FAILURES
     # ══════════════════════════════════════════════════════
     if data == "ask_ellams_failures":
         session = USER_SESSIONS.get(uid, {})
@@ -1432,12 +1409,12 @@ async def handle_callback(update, context):
                 f"🔒 *Trap Detector is a Premium Feature*\n\n{msg}",
                 parse_mode="Markdown", reply_markup=kb)
             return
-        # Analyze first 2 failures in a batch
         for i, f in enumerate(failed[:2]):
             idx_btn = InlineKeyboardButton(
-                f"🎯 Fix Q{f['q_num']}", callback_data=f"trap_{i}")
+                f"🎯 Fix Q{f['q_num']} - Ask AI Tutor",
+                callback_data=f"trap_{i}")
             await query.message.reply_text(
-                f"Tap to analyse *Q{f['q_num']}* ({md(f.get('topic',''))})",
+                f"Tap to ask Mr. Ellams about *Q{f['q_num']}* ({md(f.get('topic',''))})",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([[idx_btn]]))
         return
@@ -1474,10 +1451,9 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # FULL JAMB CBT MOCK (PREMIUM, subject selection)
+    # FULL JAMB CBT MOCK (PREMIUM)
     # ══════════════════════════════════════════════════════
     if data == "mock_full":
-        # Use the user's JAMB plan subjects directly
         plan = u.get("jamb_plan", ["english"])[:4]
         if len(plan) != 4:
             await query.message.reply_text(
@@ -1486,7 +1462,6 @@ async def handle_callback(update, context):
                     [InlineKeyboardButton("✏️ Set Plan",
                                           callback_data="plan_builder")]]))
             return
-        # Start immediately with plan subjects
         qs = _fetch_cbt_questions(uid, plan, total=180)
         if len(qs) < 20:
             await query.message.reply_text(
@@ -1603,13 +1578,11 @@ async def handle_callback(update, context):
 
 
 # ══════════════════════════════════════════════════════════
-# START MOCK FROM PLAN (helper)
+# START MOCK FROM PLAN
 # ══════════════════════════════════════════════════════════
 async def _start_plan_mock(query, uid, u):
-    """Start mock from the user's JAMB plan. Free users get English only."""
     plan = u.get("jamb_plan", ["english"])
 
-    # Free user logic: 40Q English only, one-time
     if not is_premium(uid):
         if u.get("free_english_used", False):
             msg, kb = upgrade_kb(uid)
@@ -1630,15 +1603,14 @@ async def _start_plan_mock(query, uid, u):
         intro = (
             f"🆓 *Free English Mock (One-time)*\n\n"
             f"Your JAMB Plan: {', '.join(SUBJECT_DISPLAY.get(s, s.title()) for s in plan)}\n\n"
-            f"Starting with English (40 Qs) — compulsory for all UTME candidates.\n\n"
-            f"💡 After this free mock, upgrading unlocks "
-            f"{', '.join(SUBJECT_DISPLAY.get(s, s.title()) for s in plan[1:])} and unlimited practice."
+            f"Starting with English (40 Qs).\n\n"
+            f"💡 After this, upgrading unlocks "
+            f"{', '.join(SUBJECT_DISPLAY.get(s, s.title()) for s in plan[1:])}."
         )
         txt, kb = _start_mock_session(uid, qs, "english", intro_text=intro)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # Premium user → pick first subject in plan (English typically)
     subject = plan[0] if plan else "english"
     qs = fetcher.fetch(subject, None, 40)
     if len(qs) < 5:
@@ -1651,12 +1623,12 @@ async def _start_plan_mock(query, uid, u):
         f"Starting: *{display}* ({len(qs)} Qs)\n\n"
         f"Continue with other subjects from your plan after this."
     )
-    txt, kb = _start_mock_session(uid, qs, f"subject_{subject}", intro_text=intro)
+    txt, kb = _start_mock_session(uid, f"subject_{subject}", intro_text=intro)
     await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
 
 
 # ══════════════════════════════════════════════════════════
-# CBT QUESTION FETCHER
+# CBT FETCHER
 # ══════════════════════════════════════════════════════════
 def _fetch_cbt_questions(uid, subjects, total=180):
     u = get_user(uid)
@@ -1692,7 +1664,6 @@ async def handle_msg(update, context):
     text = (update.message.text or "").strip()
     u = get_user(uid, update.effective_user.first_name or "")
 
-    # ── Admin state handling ──
     if _admin_only(uid):
         admin_session = USER_SESSIONS.get(uid, {})
         admin_mode = admin_session.get("mode")
@@ -1739,12 +1710,10 @@ async def handle_msg(update, context):
                                           callback_data="admin_panel")]]))
             return
 
-    # ── Admin shortcut ──
     if text == "⚙️ Admin Panel" and _admin_only(uid):
         await cmd_admin(update, context)
         return
 
-    # ── Bottom keyboard ──
     if text == "📚 Past Questions":
         await cmd_past(update, context); return
     if text == "📝 Mock Exam":
@@ -1760,14 +1729,12 @@ async def handle_msg(update, context):
     if text == "📖 Study Plan":
         await cmd_study(update, context); return
 
-    # ── First-time plan builder interception ──
     if not u.get("plan_set", False):
         await update.message.reply_text(
             _plan_builder_text(uid), parse_mode="Markdown",
             reply_markup=_plan_builder_kb(uid))
         return
 
-    # ── Tutor mode ──
     session = USER_SESSIONS.get(uid, {})
     is_tutor = (session.get("mode") == "tutor" or
                 (session.get("mode") not in ("cbt_select", "post_mock") and
