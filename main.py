@@ -1,8 +1,11 @@
 """
-UTME Success Bot v34 — Persuasive Completion + Fixed Failures
-- New completion: mark-loss breakdown + social proof + Fix button
-- Failures stored minimal & JSON-safe (survives cold starts)
-- See Failures button always works
+UTME Success Bot v35 — Two-Step AI Why + All Previous Features
+- Real exam mode (no answer reveal during mock)
+- 2-step Ask AI Why: recap → full AI explanation
+- 3 free AI Why/day for free users, 4th locked
+- Failures persisted to user_data.json (survives cold starts)
+- Rotating state rank + option shuffle + question rotation
+- Nigerian male teacher voice (Mr. Ellams)
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -90,7 +93,7 @@ FREE_ENGLISH_QS = 40
 FREE_AI_WHY_PER_DAY = 3
 
 # ══════════════════════════════════════════════════════════
-# NIGERIAN DATA FOR SOCIAL PROOF
+# NIGERIAN DATA
 # ══════════════════════════════════════════════════════════
 NIGERIAN_STATES = [
     "Delta", "Edo", "Lagos", "Ondo", "Anambra", "Oyo", "Kano",
@@ -259,10 +262,9 @@ def _prepare_questions(qs):
 
 
 # ══════════════════════════════════════════════════════════
-# ⭐ MINIMAL FAILURE SNAPSHOT (JSON-safe)
+# MINIMAL FAILURE SNAPSHOT
 # ══════════════════════════════════════════════════════════
 def _make_failure_snapshot(q, user_ans, correct_ans, q_num):
-    """Return a minimal JSON-safe snapshot of a failed question."""
     return {
         "q_num": int(q_num),
         "question": str(q.get("question", "") or "")[:300],
@@ -338,7 +340,6 @@ def _get_user_state(uid):
 
 
 def _get_user_rank_number(uid, user_score, total):
-    """Deterministic rank number per user per day."""
     seed_str = f"{uid}_{date.today().isoformat()}_rank"
     h = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
     if user_score >= 35:
@@ -376,26 +377,22 @@ def _generate_rank(uid, subject_display, user_score, total):
 
 
 # ══════════════════════════════════════════════════════════
-# ⭐ SOCIAL PROOF GENERATOR
+# SOCIAL PROOF
 # ══════════════════════════════════════════════════════════
 def _social_proof_line(uid, prev_score, total):
-    """Return a social proof line personalised to the user."""
     seed_str = f"{uid}_{date.today().isoformat()}_sp"
     rng = random.Random(seed_str)
     name = rng.choice(NIGERIAN_NAMES).split()[0]
     city = rng.choice(NIGERIAN_CITIES)
-    # They scored "prev_score" yesterday and now score higher
     new_score = min(total, prev_score + rng.randint(6, 12))
     return f"→ *{name}* from {city}: Now scoring *{new_score}/{total}*"
 
 
 # ══════════════════════════════════════════════════════════
-# ⭐ COMPLETION MESSAGE BUILDER
+# COMPLETION MESSAGE
 # ══════════════════════════════════════════════════════════
 def _build_completion_message(uid, score, total, failed, subject_label, subj_display):
-    """Build the persuasive completion message."""
     n_failed = len(failed)
-
     header = f"🎉 *Mock Completed!* You scored *{score}/{total}*\n"
 
     if n_failed == 0:
@@ -409,7 +406,6 @@ def _build_completion_message(uid, score, total, failed, subject_label, subj_dis
             True
         )
 
-    # Mark-loss breakdown by topic
     topic_losses = {}
     for f in failed:
         t = f.get("topic", "General") or "General"
@@ -425,13 +421,11 @@ def _build_completion_message(uid, score, total, failed, subject_label, subj_dis
         + "\n".join(loss_lines)
     )
 
-    # Fear hook
     fear_line = (
         f"\n\n⚠️ *In JAMB, {n_failed} mark{'s' if n_failed > 1 else ''} = "
         f"You will lose admission to your dream course.*"
     )
 
-    # Social proof
     social_line = (
         f"\n\n*Your mates who scored {score} yesterday fixed it today:*\n"
         f"{_social_proof_line(uid, score, total)}"
@@ -1541,7 +1535,6 @@ async def handle_callback(update, context):
             txt = format_question(q, session["idx"] + 1, len(qs))
             await query.message.reply_text(txt, reply_markup=_answer_keyboard(q))
         else:
-            # ═══ MOCK COMPLETE ═══
             score = session["score"]
             total = len(qs)
             failed = session.get("failed", [])
@@ -1552,14 +1545,11 @@ async def handle_callback(update, context):
                 "subject": session.get("subject", "general"),
                 "score": score, "total": total,
                 "percent": score * 100 // total if total else 0})
-
-            # ⭐ PERSIST MINIMAL FAILURES (JSON-safe)
             u["last_mock_failed"] = failed
             u["last_mock_subject"] = session.get("subject", "general")
             u["last_mock_total"] = total
             save_data()
 
-            # Determine display label
             subj_label = session.get("subject", "general")
             if subj_label.startswith("subject_"):
                 subj_label = subj_label.replace("subject_", "")
@@ -1567,14 +1557,11 @@ async def handle_callback(update, context):
                 subj_label = "Full JAMB CBT"
             subj_display = SUBJECT_DISPLAY.get(subj_label, subj_label.title())
 
-            # ⭐ Build persuasive message
             finish_msg, is_perfect = _build_completion_message(
                 uid, score, total, failed, subj_label, subj_display)
 
             buttons = []
-
             if not is_perfect and n_failed > 0:
-                # Main button: Fix My X Failures
                 if is_premium(uid):
                     fix_label = f"🤖 Fix My {n_failed} Failures (Unlimited)"
                 else:
@@ -1627,24 +1614,19 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # SEE FAILURES — with robust fallback
+    # SEE FAILURES
     # ══════════════════════════════════════════════════════
     if data == "see_failures":
         failed = u.get("last_mock_failed", [])
-
-        # Fallback: try session memory
         if not failed:
             session = USER_SESSIONS.get(uid, {})
             failed = session.get("failed", [])
-
-        # Fallback: reload from disk (in case of concurrent write)
         if not failed:
             try:
                 reloaded = json.loads(DATA_FILE.read_text(encoding="utf-8"))
                 disk_u = reloaded.get(str(uid), {})
                 failed = disk_u.get("last_mock_failed", [])
                 if failed:
-                    # Sync into memory
                     u["last_mock_failed"] = failed
                     save_data()
             except Exception as e:
@@ -1706,13 +1688,12 @@ async def handle_callback(update, context):
         return
 
     # ══════════════════════════════════════════════════════
-    # ASK AI WHY
+    # ASK AI WHY — STEP 1 (recap + reveal button)
     # ══════════════════════════════════════════════════════
     if data.startswith("askwhy_"):
         idx = int(data.split("_")[1])
         failed = u.get("last_mock_failed", [])
         if idx >= len(failed):
-            # Try session memory
             session = USER_SESSIONS.get(uid, {})
             failed = session.get("failed", [])
         if idx >= len(failed):
@@ -1731,6 +1712,8 @@ async def handle_callback(update, context):
             await query.message.reply_text(msg, parse_mode="Markdown", reply_markup=kb)
             return
 
+        consume_ai_why(uid)
+
         f = failed[idx]
         qtext = str(f.get("question", ""))
         user_ans = str(f.get("user_ans", ""))
@@ -1738,64 +1721,164 @@ async def handle_callback(update, context):
         topic = str(f.get("topic", "General"))
         q_num = f.get("q_num", idx + 1)
 
-        # Rebuild a mini question dict for the analyser
-        mini_q = (
-            f"Question: {qtext}\n"
-            f"Topic: {topic}"
+        seed = int(hashlib.md5(f"{uid}_{q_num}_others".encode()).hexdigest(), 16)
+        others_count = 200 + (seed % 250)
+
+        USER_SESSIONS[uid] = {
+            "mode": "explaining",
+            "explain_idx": idx,
+        }
+
+        if is_premium(uid):
+            free_text = "Unlimited"
+        else:
+            _, free_left = can_use_ai_why(uid)
+            free_text = f"{free_left} FREE left"
+
+        text1 = (
+            f"❌ *Q{q_num} — {md(topic)}*  _(You lost 1 mark)_\n\n"
+            f"*Q:* {md(qtext[:300])}\n\n"
+            f"Your answer: *{user_ans}* ❌\n"
+            f"Correct: *{correct_ans}* ✅\n\n"
+            f"👥 You and *{others_count}* others chose *{user_ans}*.\n"
+            f"It's JAMB's favorite trap.\n\n"
+            f"🤖 _AI Tutor is analyzing..._"
         )
 
-        consume_ai_why(uid)
-
-        thinking = await query.message.reply_text(
-            f"🧠 *{TUTOR_NAME} is analysing your mistake…*",
-            parse_mode="Markdown")
+        keyboard1 = [[InlineKeyboardButton(
+            f"👁️ Tap to see why {user_ans} is trap — {free_text}",
+            callback_data=f"full_exp_{idx}")]]
 
         try:
-            analysis = await asyncio.to_thread(
-                _analyze_failure, mini_q, user_ans, correct_ans, topic)
+            await query.message.reply_text(
+                text1, parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(keyboard1))
         except Exception as e:
-            print(f"[askwhy] analyze failed: {e}")
-            analysis = "⚠️ AI analysis failed. Try again."
+            print(f"[askwhy] send failed: {e}")
+            await query.message.reply_text(
+                text1,
+                reply_markup=InlineKeyboardMarkup(keyboard1))
+        return
 
+    # ══════════════════════════════════════════════════════
+    # FULL AI EXPLANATION — STEP 2
+    # ══════════════════════════════════════════════════════
+    if data.startswith("full_exp_"):
         try:
-            await thinking.delete()
+            idx = int(data.split("_")[2])
+        except (ValueError, IndexError):
+            await query.message.reply_text("Invalid request.")
+            return
+
+        failed = u.get("last_mock_failed", [])
+        if idx >= len(failed):
+            session = USER_SESSIONS.get(uid, {})
+            failed = session.get("failed", [])
+        if idx >= len(failed):
+            await query.message.reply_text(
+                "That failure is no longer available.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🏠 Main Menu",
+                                          callback_data="main_menu")]]))
+            return
+
+        f = failed[idx]
+        qtext = str(f.get("question", ""))
+        user_ans = str(f.get("user_ans", ""))
+        correct_ans = str(f.get("correct_ans", ""))
+        topic = str(f.get("topic", "General"))
+        q_num = f.get("q_num", idx + 1)
+
+        thinking = None
+        try:
+            thinking = await query.message.reply_text(
+                f"🤖 *{TUTOR_NAME} is analyzing Q{q_num}...*",
+                parse_mode="Markdown")
         except Exception:
             pass
 
-        remaining_after = ""
-        if not is_premium(uid):
-            _, rem = can_use_ai_why(uid)
-            remaining_after = f"\n\n_💬 Free AI Why left today: {rem}/{FREE_AI_WHY_PER_DAY}_"
+        mini_q = f"Question: {qtext}\nTopic: {topic}"
+        try:
+            if HAS_AI_TUTOR:
+                analysis = await asyncio.to_thread(
+                    _analyze_failure, mini_q, user_ans, correct_ans, topic)
+            else:
+                analysis = "⚠️ AI Tutor is not available right now."
+        except Exception as e:
+            print(f"[full_exp] analyze failed: {e}")
+            analysis = "⚠️ Analysis failed. Please try again."
 
-        header = f"🤖 *AI Why — Q{q_num}*\n📚 _{md(topic)}_\n\n"
-        final = (header + analysis)[:3800] + remaining_after
+        if thinking is not None:
+            try:
+                await thinking.delete()
+            except Exception:
+                pass
+
+        text2 = (
+            f"✅ *Q{q_num} — Why {correct_ans} is correct:*\n\n"
+            f"{analysis}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"_You chose *{user_ans}* — that was the trap JAMB set._"
+        )
+
+        buttons = [
+            [InlineKeyboardButton("🎙️ Voice Explanation",
+                                  callback_data=f"voice_exp_{idx}")],
+            [InlineKeyboardButton("📋 Back to Failures",
+                                  callback_data="see_failures")],
+            [InlineKeyboardButton("🏠 Main Menu",
+                                  callback_data="main_menu")],
+        ]
 
         try:
             await query.message.reply_text(
-                final, parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("📋 Back to Failures",
-                                          callback_data="see_failures")],
-                    [InlineKeyboardButton("🏠 Main Menu",
-                                          callback_data="main_menu")]]))
-        except Exception:
+                text2[:4000], parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(buttons))
+        except Exception as e:
+            print(f"[full_exp] md send failed: {e}")
             await query.message.reply_text(
-                final,
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("📋 Back to Failures",
-                                          callback_data="see_failures")],
-                    [InlineKeyboardButton("🏠 Main Menu",
-                                          callback_data="main_menu")]]))
+                text2[:4000],
+                reply_markup=InlineKeyboardMarkup(buttons))
+        return
 
-        if HAS_AI_TUTOR:
-            try:
+    # ══════════════════════════════════════════════════════
+    # VOICE EXPLANATION — STEP 3 (optional)
+    # ══════════════════════════════════════════════════════
+    if data.startswith("voice_exp_"):
+        try:
+            idx = int(data.split("_")[2])
+        except (ValueError, IndexError):
+            return
+
+        failed = u.get("last_mock_failed", [])
+        if idx >= len(failed):
+            return
+        f = failed[idx]
+        qtext = str(f.get("question", ""))
+        user_ans = str(f.get("user_ans", ""))
+        correct_ans = str(f.get("correct_ans", ""))
+        topic = str(f.get("topic", "General"))
+
+        try:
+            if HAS_AI_TUTOR:
+                mini_q = f"Question: {qtext}\nTopic: {topic}"
+                analysis = await asyncio.to_thread(
+                    _analyze_failure, mini_q, user_ans, correct_ans, topic)
                 voice_if = await asyncio.to_thread(_build_voice, analysis)
                 if voice_if is not None:
                     await query.message.reply_voice(
                         voice=voice_if,
-                        caption=f"🎙️ AI Why — {TUTOR_NAME}")
-            except Exception as e:
-                print(f"[askwhy] voice failed: {e}")
+                        caption=f"🎙️ Voice — {TUTOR_NAME}")
+                else:
+                    await query.message.reply_text(
+                        "⚠️ Voice generation unavailable.")
+            else:
+                await query.message.reply_text(
+                    "⚠️ AI Tutor is not available.")
+        except Exception as e:
+            print(f"[voice_exp] failed: {e}")
+            await query.message.reply_text(
+                "⚠️ Voice failed. Please try again.")
         return
 
     if data == "ask_ellams_failures":
@@ -1900,7 +1983,6 @@ async def handle_callback(update, context):
                                       callback_data="main_menu")]]))
         return
 
-    # ── Mock menu ──
     if data == "mock_menu":
         await query.message.reply_text(
             _mock_menu_text(uid), parse_mode="Markdown",
@@ -2152,7 +2234,7 @@ async def handle_msg(update, context):
 
     session = USER_SESSIONS.get(uid, {})
     is_tutor = (session.get("mode") == "tutor" or
-                (session.get("mode") not in ("cbt_select", "post_mock") and
+                (session.get("mode") not in ("cbt_select", "post_mock", "explaining") and
                  ("?" in text or len(text) > 8)))
     if not is_tutor:
         await update.message.reply_text("Use the menu below 👇",
@@ -2227,7 +2309,7 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v34 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v35 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
 
@@ -2246,6 +2328,7 @@ def health():
         "option_shuffle": True,
         "rotation": True,
         "real_exam_mode": True,
+        "two_step_ai_why": True,
         "state_rank_rotation": True,
         "failures_persisted": True,
         "persuasive_completion": True,
@@ -2547,8 +2630,9 @@ def main():
     print(f"🎲 Option shuffler: ON")
     print(f"🔄 Rotation: ON")
     print(f"📝 Real exam mode: ON (no answer reveal)")
+    print(f"🎯 Two-step AI Why: ON (recap + reveal)")
     print(f"🏆 State rank rotation: ON")
-    print(f"💾 Failures persisted: ON (JSON-safe minimal snapshots)")
+    print(f"💾 Failures persisted: ON")
     print(f"📣 Persuasive completion: ON")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
