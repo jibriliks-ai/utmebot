@@ -23,6 +23,7 @@ try:
 except ImportError:
     OPENAI_AVAILABLE = False
 
+# ── Voice engines ───────────────────────────────────────
 try:
     from gtts import gTTS
     GTTS_AVAILABLE = True
@@ -37,15 +38,18 @@ except ImportError:
     EDGE_TTS_AVAILABLE = False
     print("[tutor] edge-tts not installed — using gTTS fallback")
 
+# ── Config ──────────────────────────────────────────────
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 DEEPSEEK_MODEL = "deepseek-flash"
 
+# ── Nigerian Male Teacher Voice config ──────────────────
 VOICE_MALE_NIGERIAN = "en-NG-AbeoNeural"
 VOICE_FEMALE_NIGERIAN = "en-NG-EzinneNeural"
 VOICE_RATE = "-5%"
 VOICE_PITCH = "-2Hz"
 
+# ── BM25 ────────────────────────────────────────────────
 try:
     from rank_bm25 import BM25Okapi
     BM25_AVAILABLE = True
@@ -54,6 +58,7 @@ except ImportError:
     BM25_AVAILABLE = False
     print("[tutor] rank_bm25 not installed — BM25 disabled")
 
+# ── Optional embedding model ────────────────────────────
 _EMBED_MODEL = None
 EMBEDDING_AVAILABLE = False
 try:
@@ -62,6 +67,7 @@ try:
 except ImportError:
     pass
 
+# ── Knowledge Base ──────────────────────────────────────
 _KB_CHUNKS = []
 _KB_BM25 = None
 _KB_EMBEDDINGS = None
@@ -69,6 +75,7 @@ _KB_TOKENIZED = []
 _KB_READY = False
 _KB_BUILDING = False
 
+# ── LLM Client ──────────────────────────────────────────
 if OPENAI_AVAILABLE and DEEPSEEK_API_KEY:
     _CLIENT = OpenAI(
         api_key=DEEPSEEK_API_KEY,
@@ -354,8 +361,8 @@ Follow this exact structure:
 4. PRACTICE QUESTION: Give 1 similar JAMB-style question to test if they learned.
    Include 4 options and mark the correct answer at the end.
 
-End your response with exactly this line (replace 18 with a random small number):
-"You want me to fix your next failure Q18?"
+End your response with exactly this line:
+"You want me to fix your next failure?"
 
 Keep it under 220 words total.
 """
