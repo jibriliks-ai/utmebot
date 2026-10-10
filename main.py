@@ -1,11 +1,9 @@
 """
-UTME Success Bot v35 — Two-Step AI Why + All Previous Features
+UTME Success Bot v36 — Join Channel Button + Two-Step AI Why + All Features
+- 📢 Join Our Channel button everywhere
 - Real exam mode (no answer reveal during mock)
 - 2-step Ask AI Why: recap → full AI explanation
 - 3 free AI Why/day for free users, 4th locked
-- Failures persisted to user_data.json (survives cold starts)
-- Rotating state rank + option shuffle + question rotation
-- Nigerian male teacher voice (Mr. Ellams)
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -76,6 +74,10 @@ except Exception as _e:
 BOT_USERNAME = "UTMESucessBot"
 SUPPORT_HANDLE = "@UTMESUCCESS"
 TUTOR_NAME = "Mr. Ellams"
+
+# ⭐ CHANNEL INVITE LINK
+CHANNEL_INVITE_LINK = "https://t.me/+Qw3DqGwCSM4wMDk0"
+
 if CHANNEL_ID:
     CHANNEL_ID = str(CHANNEL_ID).strip()
 
@@ -261,9 +263,6 @@ def _prepare_questions(qs):
     return [_shuffle_options(q) for q in qs]
 
 
-# ══════════════════════════════════════════════════════════
-# MINIMAL FAILURE SNAPSHOT
-# ══════════════════════════════════════════════════════════
 def _make_failure_snapshot(q, user_ans, correct_ans, q_num):
     return {
         "q_num": int(q_num),
@@ -278,9 +277,6 @@ def _make_failure_snapshot(q, user_ans, correct_ans, q_num):
     }
 
 
-# ══════════════════════════════════════════════════════════
-# ROTATION
-# ══════════════════════════════════════════════════════════
 def _fetch_rotated(uid, subject, limit):
     u = get_user(uid)
     used = set(str(x) for x in u.get("used_ids", []))
@@ -330,9 +326,6 @@ def _fetch_rotated_multi(uid, subjects, total):
     return picked
 
 
-# ══════════════════════════════════════════════════════════
-# STATE RANK
-# ══════════════════════════════════════════════════════════
 def _get_user_state(uid):
     seed_str = f"{uid}_{date.today().isoformat()}_state"
     h = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
@@ -376,9 +369,6 @@ def _generate_rank(uid, subject_display, user_score, total):
     return "\n".join(lines)
 
 
-# ══════════════════════════════════════════════════════════
-# SOCIAL PROOF
-# ══════════════════════════════════════════════════════════
 def _social_proof_line(uid, prev_score, total):
     seed_str = f"{uid}_{date.today().isoformat()}_sp"
     rng = random.Random(seed_str)
@@ -388,9 +378,6 @@ def _social_proof_line(uid, prev_score, total):
     return f"→ *{name}* from {city}: Now scoring *{new_score}/{total}*"
 
 
-# ══════════════════════════════════════════════════════════
-# COMPLETION MESSAGE
-# ══════════════════════════════════════════════════════════
 def _build_completion_message(uid, score, total, failed, subject_label, subj_display):
     n_failed = len(failed)
     header = f"🎉 *Mock Completed!* You scored *{score}/{total}*\n"
@@ -420,17 +407,14 @@ def _build_completion_message(uid, score, total, failed, subject_label, subj_dis
         f"\n❌ *You lost {n_failed} mark{'s' if n_failed > 1 else ''} from:*\n"
         + "\n".join(loss_lines)
     )
-
     fear_line = (
         f"\n\n⚠️ *In JAMB, {n_failed} mark{'s' if n_failed > 1 else ''} = "
         f"You will lose admission to your dream course.*"
     )
-
     social_line = (
         f"\n\n*Your mates who scored {score} yesterday fixed it today:*\n"
         f"{_social_proof_line(uid, score, total)}"
     )
-
     msg = header + marks_line + fear_line + social_line
     return msg, False
 
@@ -447,6 +431,7 @@ BOTTOM_KEYBOARD = ReplyKeyboardMarkup(
         [KeyboardButton("📚 Past Questions"), KeyboardButton("📝 Mock Exam")],
         [KeyboardButton("📊 My Score"),       KeyboardButton("💬 Ask Tutor")],
         [KeyboardButton("💎 Premium"),        KeyboardButton("👥 Invite Friends")],
+        [KeyboardButton("📢 Join Our Channel")],
     ],
     resize_keyboard=True, is_persistent=True,
 )
@@ -664,6 +649,8 @@ def upgrade_kb(uid):
     kb = plan_buttons(uid)
     kb.append([InlineKeyboardButton(f"👥 Invite {REFERRAL_REQUIRED}=FREE",
                                     callback_data="invite_friends")])
+    kb.append([InlineKeyboardButton("📢 Join Our Channel",
+                                    url=CHANNEL_INVITE_LINK)])
     kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
     return msg, InlineKeyboardMarkup(kb)
 
@@ -743,6 +730,7 @@ def main_menu_text_kb(uid):
         [InlineKeyboardButton(
             f"👥  Invite {REFERRAL_REQUIRED} = {REFERRAL_REWARD_DAYS} Days FREE",
             callback_data="invite_friends")],
+        [InlineKeyboardButton("📢  Join Our Channel", url=CHANNEL_INVITE_LINK)],
         [InlineKeyboardButton("💎  Upgrade to Premium",
                               callback_data="premium_info"),
          InlineKeyboardButton("❓  Help", callback_data="help_menu")],
@@ -765,6 +753,8 @@ def subjects_kb(prefix):
             row = []
     if row:
         buttons.append(row)
+    buttons.append([InlineKeyboardButton("📢 Join Our Channel",
+                                         url=CHANNEL_INVITE_LINK)])
     buttons.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
     return InlineKeyboardMarkup(buttons)
 
@@ -798,9 +788,6 @@ def _start_mock_session(uid, qs, subject_label, intro_text=""):
     return txt, _answer_keyboard(q)
 
 
-# ══════════════════════════════════════════════════════════
-# PLAN BUILDER
-# ══════════════════════════════════════════════════════════
 PLAN_OPTIONAL_SUBJECTS = [
     "mathematics", "biology", "physics", "chemistry",
     "economics", "government", "commerce", "accounting",
@@ -854,7 +841,8 @@ def _plan_builder_text(uid):
             f"✅  *READY TO START!*\n"
             f"━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"_Tap 🚀 Start Mock below to begin._\n"
-            f"💡 _Your first mock is FREE._"
+            f"💡 _Your first mock is FREE._\n\n"
+            f"📢 _Follow our channel for daily JAMB questions!_"
         )
     else:
         remaining = PLAN_SIZE - filled
@@ -888,6 +876,8 @@ def _plan_builder_kb(uid):
     if len(plan) > 1:
         buttons.append([InlineKeyboardButton("🗑️ Reset Plan",
                                              callback_data="plan_reset")])
+    buttons.append([InlineKeyboardButton("📢 Join Our Channel",
+                                         url=CHANNEL_INVITE_LINK)])
     buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                          callback_data="main_menu")])
     return InlineKeyboardMarkup(buttons)
@@ -914,6 +904,8 @@ def _mock_menu_kb(uid):
                                         callback_data="mock_by_subject")])
         kb.append([InlineKeyboardButton("🔥 Full JAMB CBT Mock (180 Qs)",
                                         callback_data="mock_full")])
+        kb.append([InlineKeyboardButton("📢 Join Our Channel",
+                                        url=CHANNEL_INVITE_LINK)])
         kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
         return kb
     if not u.get("free_english_used", False):
@@ -928,6 +920,8 @@ def _mock_menu_kb(uid):
                                     callback_data="premium_info")])
     kb.append([InlineKeyboardButton("💎 Upgrade Now",
                                     callback_data="premium_info")])
+    kb.append([InlineKeyboardButton("📢 Join Our Channel",
+                                    url=CHANNEL_INVITE_LINK)])
     kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
     return kb
 
@@ -962,9 +956,6 @@ def _mock_menu_text(uid):
     )
 
 
-# ══════════════════════════════════════════════════════════
-# ADMIN PANEL
-# ══════════════════════════════════════════════════════════
 def _admin_only(uid) -> bool:
     return ADMIN_ID and str(uid) == str(ADMIN_ID)
 
@@ -999,6 +990,7 @@ def _admin_menu_kb():
         [InlineKeyboardButton("📢 Broadcast Message", callback_data="admin_broadcast_prompt")],
         [InlineKeyboardButton("📤 Post to Channel Now", callback_data="admin_channel_post")],
         [InlineKeyboardButton("🧠 AI Brain Status", callback_data="admin_kb_stats")],
+        [InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)],
         [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
     ])
 
@@ -1109,6 +1101,7 @@ async def cmd_start(update, context):
     await update.message.reply_text(t, reply_markup=kb, parse_mode="Markdown")
     await update.message.reply_text(
         f"Use buttons below 👇\n"
+        f"📢 Join our channel for daily practice!\n"
         f"🚀 Invite {REFERRAL_REQUIRED} = {REFERRAL_REWARD_DAYS} days Premium FREE!",
         reply_markup=BOTTOM_KEYBOARD)
 
@@ -1187,6 +1180,7 @@ async def cmd_tutor(update, context):
         f"Type any JAMB question for text + voice explanation.",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)],
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
 
 
@@ -1203,6 +1197,7 @@ async def cmd_invite(update, context):
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("📤 Share Link", url=share_url)],
+            [InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)],
             [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
 
 
@@ -1212,6 +1207,7 @@ async def cmd_premium(update, context):
     kb = plan_buttons(uid)
     kb.append([InlineKeyboardButton(f"👥 Invite {REFERRAL_REQUIRED}=FREE",
                                     callback_data="invite_friends")])
+    kb.append([InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)])
     kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
     await update.message.reply_text(
         f"💎 *Premium Plans*\n\n"
@@ -1250,9 +1246,11 @@ async def cmd_help(update, context):
         f"• Full 180Q CBT Mock (4 subjects)\n"
         f"• Unlimited AI Why analysis\n"
         f"• Unlimited tutor + voice\n\n"
+        f"📢 *Follow our channel:*\n{CHANNEL_INVITE_LINK}\n\n"
         f"💬 *Chat Mindtech Solutions on Telegram {SUPPORT_HANDLE} for assistance.*"
     )
     kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)],
         [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]])
     if update.callback_query:
         await update.callback_query.message.reply_text(
@@ -1338,7 +1336,16 @@ async def handle_callback(update, context):
         if await _admin_handle_callback(query, uid, data, context):
             return
 
-    # ── Plan builder ──
+    if data == "join_channel":
+        try:
+            await query.answer(
+                "Opening our channel...",
+                show_alert=False,
+                url=CHANNEL_INVITE_LINK)
+        except Exception:
+            pass
+        return
+
     if data == "plan_builder":
         await query.message.reply_text(_plan_builder_text(uid), parse_mode="Markdown",
                                        reply_markup=_plan_builder_kb(uid))
@@ -1422,12 +1429,12 @@ async def handle_callback(update, context):
         save_data()
         intro = (f"🆓 *Free English Mock (One-time)*\n\n"
                  f"{len(qs)} questions · Take your time.\n\n"
-                 f"💡 After this, all other subjects require Premium.")
+                 f"💡 After this, all other subjects require Premium.\n\n"
+                 f"📢 *Join our channel for daily practice!*")
         txt, kb = _start_mock_session(uid, qs, "english", intro_text=intro)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ── Premium gates ──
     premium_blocked = ("mock_by_subject", "mock_full", "cbt_start", "cbt_clear")
     if data in premium_blocked and not is_premium(uid):
         msg, kb = upgrade_kb(uid)
@@ -1441,7 +1448,6 @@ async def handle_callback(update, context):
                                        parse_mode="Markdown", reply_markup=kb)
         return
 
-    # ── Study / Syllabus / Past ──
     if data == "study_plan":
         await query.message.reply_text("📖 *Study Plan — Choose Subject:*",
                                        reply_markup=subjects_kb("study_subject"),
@@ -1459,6 +1465,7 @@ async def handle_callback(update, context):
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton(f"💬 Ask {display}", callback_data="ask_tutor")],
+                [InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)],
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
         return
     if data == "syllabus":
@@ -1499,9 +1506,6 @@ async def handle_callback(update, context):
         await query.message.reply_text(txt, reply_markup=kb)
         return
 
-    # ══════════════════════════════════════════════════════
-    # ANSWER HANDLER
-    # ══════════════════════════════════════════════════════
     if data.startswith("ans:"):
         ans = data.split(":")[1]
         session = USER_SESSIONS.get(uid)
@@ -1596,6 +1600,9 @@ async def handle_callback(update, context):
                     "💎 Upgrade to Premium Now",
                     callback_data="premium_info")])
 
+            buttons.append([InlineKeyboardButton("📢 Join Our Channel",
+                                                 url=CHANNEL_INVITE_LINK)])
+
             buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                                  callback_data="main_menu")])
 
@@ -1613,9 +1620,6 @@ async def handle_callback(update, context):
                     print(f"[complete] plain send failed: {e2}")
         return
 
-    # ══════════════════════════════════════════════════════
-    # SEE FAILURES
-    # ══════════════════════════════════════════════════════
     if data == "see_failures":
         failed = u.get("last_mock_failed", [])
         if not failed:
@@ -1673,6 +1677,8 @@ async def handle_callback(update, context):
                                              callback_data="ask_ellams_failures")])
         buttons.append([InlineKeyboardButton("🏆 Check Rank",
                                              callback_data="check_rank")])
+        buttons.append([InlineKeyboardButton("📢 Join Our Channel",
+                                             url=CHANNEL_INVITE_LINK)])
         buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                              callback_data="main_menu")])
 
@@ -1687,9 +1693,6 @@ async def handle_callback(update, context):
                 text[:4000], reply_markup=InlineKeyboardMarkup(buttons))
         return
 
-    # ══════════════════════════════════════════════════════
-    # ASK AI WHY — STEP 1 (recap + reveal button)
-    # ══════════════════════════════════════════════════════
     if data.startswith("askwhy_"):
         idx = int(data.split("_")[1])
         failed = u.get("last_mock_failed", [])
@@ -1760,9 +1763,6 @@ async def handle_callback(update, context):
                 reply_markup=InlineKeyboardMarkup(keyboard1))
         return
 
-    # ══════════════════════════════════════════════════════
-    # FULL AI EXPLANATION — STEP 2
-    # ══════════════════════════════════════════════════════
     if data.startswith("full_exp_"):
         try:
             idx = int(data.split("_")[2])
@@ -1826,6 +1826,8 @@ async def handle_callback(update, context):
                                   callback_data=f"voice_exp_{idx}")],
             [InlineKeyboardButton("📋 Back to Failures",
                                   callback_data="see_failures")],
+            [InlineKeyboardButton("📢 Join Our Channel",
+                                  url=CHANNEL_INVITE_LINK)],
             [InlineKeyboardButton("🏠 Main Menu",
                                   callback_data="main_menu")],
         ]
@@ -1841,9 +1843,6 @@ async def handle_callback(update, context):
                 reply_markup=InlineKeyboardMarkup(buttons))
         return
 
-    # ══════════════════════════════════════════════════════
-    # VOICE EXPLANATION — STEP 3 (optional)
-    # ══════════════════════════════════════════════════════
     if data.startswith("voice_exp_"):
         try:
             idx = int(data.split("_")[2])
@@ -1954,6 +1953,8 @@ async def handle_callback(update, context):
                                       callback_data="see_failures")],
                 [InlineKeyboardButton("🏆 Check Rank",
                                       callback_data="check_rank")],
+                [InlineKeyboardButton("📢 Join Our Channel",
+                                      url=CHANNEL_INVITE_LINK)],
                 [InlineKeyboardButton("🏠 Main Menu",
                                       callback_data="main_menu")]]))
         return
@@ -1979,6 +1980,8 @@ async def handle_callback(update, context):
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📋 See Failures",
                                       callback_data="see_failures")],
+                [InlineKeyboardButton("📢 Join Our Channel",
+                                      url=CHANNEL_INVITE_LINK)],
                 [InlineKeyboardButton("🏠 Main Menu",
                                       callback_data="main_menu")]]))
         return
@@ -2071,6 +2074,7 @@ async def handle_callback(update, context):
             f"Ask anything — any subject:",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)],
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
         return
 
@@ -2078,6 +2082,8 @@ async def handle_callback(update, context):
         kb = plan_buttons(uid)
         kb.append([InlineKeyboardButton(f"👥 Invite {REFERRAL_REQUIRED}=FREE",
                                         callback_data="invite_friends")])
+        kb.append([InlineKeyboardButton("📢 Join Our Channel",
+                                        url=CHANNEL_INVITE_LINK)])
         kb.append([InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")])
         await query.message.reply_text(
             f"💎 *Premium Plans*\n\n"
@@ -2102,6 +2108,7 @@ async def handle_callback(update, context):
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("📤 Share Link", url=share_url)],
+                [InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)],
                 [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")]]))
         return
 
@@ -2143,7 +2150,8 @@ async def _start_plan_mock(query, uid, u):
             f"Your JAMB Plan: {', '.join(SUBJECT_DISPLAY.get(s, s.title()) for s in plan)}\n\n"
             f"Starting with English (40 Qs).\n\n"
             f"💡 After this, upgrading unlocks "
-            f"{', '.join(SUBJECT_DISPLAY.get(s, s.title()) for s in plan[1:])}."
+            f"{', '.join(SUBJECT_DISPLAY.get(s, s.title()) for s in plan[1:])}.\n\n"
+            f"📢 Join our channel: {CHANNEL_INVITE_LINK}"
         )
         txt, kb = _start_mock_session(uid, qs, "english", intro_text=intro)
         await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
@@ -2218,6 +2226,21 @@ async def handle_msg(update, context):
 
     if text == "⚙️ Admin Panel" and _admin_only(uid):
         await cmd_admin(update, context); return
+
+    if text == "📢 Join Our Channel":
+        await update.message.reply_text(
+            f"📢 *Join Our Official Channel*\n\n"
+            f"Get daily JAMB practice questions, tips, and updates!\n\n"
+            f"👉 {CHANNEL_INVITE_LINK}",
+            parse_mode="Markdown",
+            disable_web_page_preview=False,
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📢 Tap Here to Join",
+                                      url=CHANNEL_INVITE_LINK)],
+                [InlineKeyboardButton("🏠 Main Menu",
+                                      callback_data="main_menu")]]))
+        return
+
     if text == "📚 Past Questions": await cmd_past(update, context); return
     if text == "📝 Mock Exam":       await cmd_mock(update, context); return
     if text == "📊 My Score":        await cmd_score(update, context); return
@@ -2279,6 +2302,7 @@ async def handle_msg(update, context):
 
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("🎙️ Voice Explanation", callback_data="ask_tutor")],
+        [InlineKeyboardButton("📢 Join Our Channel", url=CHANNEL_INVITE_LINK)],
         [InlineKeyboardButton("🏠 Main Menu", callback_data="main_menu")],
     ])
     try:
@@ -2309,7 +2333,7 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v35 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v36 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
 
@@ -2332,6 +2356,7 @@ def health():
         "state_rank_rotation": True,
         "failures_persisted": True,
         "persuasive_completion": True,
+        "channel_invite_button": True,
         "tutor_ok": tutor_ok,
         "channel_configured": bool(CHANNEL_ID),
         "users": len(USER_DATA),
@@ -2624,6 +2649,7 @@ def main():
 
     print(f"🤖 Bot: @{BOT_USERNAME}")
     print(f"👨‍🏫 Tutor: {TUTOR_NAME} (Nigerian male teacher voice)")
+    print(f"📢 Channel invite: {CHANNEL_INVITE_LINK}")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
     print(f"💬 Free AI Why/day: {FREE_AI_WHY_PER_DAY}")
     print(f"📋 Plan: English + 3 chosen subjects")
@@ -2634,6 +2660,7 @@ def main():
     print(f"🏆 State rank rotation: ON")
     print(f"💾 Failures persisted: ON")
     print(f"📣 Persuasive completion: ON")
+    print(f"🔗 Join Channel button: ON")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
@@ -2678,7 +2705,8 @@ def main():
         app.add_handler(CallbackQueryHandler(handle_callback))
         app.add_handler(MessageHandler(
             filters.Regex("^(📚 Past Questions|📝 Mock Exam|📊 My Score|💬 Ask Tutor|"
-                          "💎 Premium|👥 Invite Friends|📖 Study Plan|⚙️ Admin Panel)$"),
+                          "💎 Premium|👥 Invite Friends|📖 Study Plan|📢 Join Our Channel|"
+                          "⚙️ Admin Panel)$"),
             handle_msg))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
 
