@@ -1,17 +1,15 @@
 """
-UTME Success Bot v36 — Join Channel Button + Two-Step AI Why + All Features
-- 📢 Join Our Channel button everywhere
-- Real exam mode (no answer reveal during mock)
-- 2-step Ask AI Why: recap → full AI explanation
-- 3 free AI Why/day for free users, 4th locked
+UTME Success Bot v37 — Blogger WebApp Edition
+- Full Telegram Mini App support (Blogger frontend)
+- All v36 features preserved (Join Channel, 2-step AI Why, real exam mode, etc.)
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, parse_qsl, urlparse
 
 import requests
-from flask import Flask, render_template_string, jsonify, request
+from flask import Flask, render_template_string, jsonify, request, send_file
 
 from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup,
@@ -75,7 +73,9 @@ BOT_USERNAME = "UTMESucessBot"
 SUPPORT_HANDLE = "@UTMESUCCESS"
 TUTOR_NAME = "Mr. Ellams"
 
-# ⭐ CHANNEL INVITE LINK
+# ⭐ Blogger WebApp URL ⭐
+WEBAPP_URL = "https://skoolcure.blogspot.com/p/bot.html"
+
 CHANNEL_INVITE_LINK = "https://t.me/+Qw3DqGwCSM4wMDk0"
 
 if CHANNEL_ID:
@@ -94,9 +94,6 @@ PLAN_SIZE = 4
 FREE_ENGLISH_QS = 40
 FREE_AI_WHY_PER_DAY = 3
 
-# ══════════════════════════════════════════════════════════
-# NIGERIAN DATA
-# ══════════════════════════════════════════════════════════
 NIGERIAN_STATES = [
     "Delta", "Edo", "Lagos", "Ondo", "Anambra", "Oyo", "Kano",
     "Rivers", "Kaduna", "Enugu", "Imo", "Abia", "Akwa Ibom",
@@ -185,6 +182,7 @@ try:
         build_knowledge_base as _build_kb,
         get_kb_stats as _get_kb_stats,
         ping as _tutor_ping,
+        make_voice_professional as _make_voice_professional,
     )
     HAS_AI_TUTOR = True
     print(f"[ssmain] ✅ AI Tutor module loaded ({TUTOR_NAME})")
@@ -204,6 +202,8 @@ except Exception as _e:
         return {}
     def _tutor_ping():
         return False, "not loaded"
+    def _make_voice_professional(t):
+        return None
 
 
 # ---------- Helpers ----------
@@ -215,9 +215,6 @@ def md(s):
              .replace("`", "\\`").replace("[", "\\["))
 
 
-# ══════════════════════════════════════════════════════════
-# OPTION SHUFFLER
-# ══════════════════════════════════════════════════════════
 def _shuffle_options(q):
     if not isinstance(q, dict):
         return q
@@ -719,6 +716,8 @@ def main_menu_text_kb(uid):
     )
 
     kb = [
+        [InlineKeyboardButton("🌐  Open Web App (Blogger)",
+                              web_app={"url": WEBAPP_URL})],
         [InlineKeyboardButton("🎯  Start Mock from My Plan",
                               callback_data="start_plan_mock")],
         [InlineKeyboardButton("📚  Past Questions", callback_data="past_by_subject"),
@@ -1076,6 +1075,31 @@ async def _admin_handle_callback(query, uid, data, context):
 async def cmd_start(update, context):
     uid = str(update.effective_user.id)
     username = update.effective_user.first_name or ""
+
+    # Deep-link handling (?start=premium, ?start=mock, ?start=tutor, ?start=webapp)
+    if context.args:
+        arg = context.args[0].lower()
+        if arg == "premium":
+            get_user(uid, username)
+            await cmd_premium(update, context)
+            return
+        if arg == "mock":
+            await cmd_mock(update, context)
+            return
+        if arg == "tutor":
+            await cmd_tutor(update, context)
+            return
+        if arg == "webapp":
+            u = get_user(uid, username)
+            await update.message.reply_text(
+                "🌐 *Open Full Web App*\n\n"
+                "Tap the button below to launch the full web interface.",
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🌐 Open Web App",
+                                          web_app={"url": WEBAPP_URL})]]))
+            return
+
     if context.args and context.args[0].startswith("invite_"):
         code = context.args[0].replace("invite_", "")
         u = get_user(uid, username)
@@ -1269,7 +1293,8 @@ async def cmd_debug(update, context):
         f"Engine: {'✅' if HAS_ENGINE else '❌'}",
         f"AI Tutor ({TUTOR_NAME}): {'✅' if HAS_AI_TUTOR else '❌'}",
         f"Bot: @{md(BOT_USERNAME)}",
-        f"Channel: `{CHANNEL_ID or '❌ NOT SET'}`", "",
+        f"Channel: `{CHANNEL_ID or '❌ NOT SET'}`",
+        f"WebApp: `{WEBAPP_URL}`", "",
     ]
     for s in AVAILABLE_SUBJECTS:
         icon = "✅" if per_subject[s] > 0 else "❌"
@@ -1338,10 +1363,8 @@ async def handle_callback(update, context):
 
     if data == "join_channel":
         try:
-            await query.answer(
-                "Opening our channel...",
-                show_alert=False,
-                url=CHANNEL_INVITE_LINK)
+            await query.answer("Opening our channel...", show_alert=False,
+                               url=CHANNEL_INVITE_LINK)
         except Exception:
             pass
         return
@@ -1602,7 +1625,6 @@ async def handle_callback(update, context):
 
             buttons.append([InlineKeyboardButton("📢 Join Our Channel",
                                                  url=CHANNEL_INVITE_LINK)])
-
             buttons.append([InlineKeyboardButton("🏠 Main Menu",
                                                  callback_data="main_menu")])
 
@@ -2333,9 +2355,10 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v36 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v37 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
-            f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · Running")
+            f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
+            f"WebApp: {WEBAPP_URL} · Running")
 
 
 @flask_app.route("/health")
@@ -2359,7 +2382,449 @@ def health():
         "channel_invite_button": True,
         "tutor_ok": tutor_ok,
         "channel_configured": bool(CHANNEL_ID),
+        "webapp_url": WEBAPP_URL,
+        "webapp_enabled": True,
         "users": len(USER_DATA),
+    })
+
+
+# ═══════════════════════════════════════════════════════════
+# WEBAPP API — Full Telegram-Mini-App functionality
+# ═══════════════════════════════════════════════════════════
+
+SESSION_SECRET = (BOT_TOKEN or "dev-secret").encode()
+WEBAPP_MOCKS = {}
+
+
+def _make_session(uid):
+    exp = int(time.time()) + 30 * 24 * 3600
+    msg = f"{uid}|{exp}"
+    sig = hmac.new(SESSION_SECRET, msg.encode(), hashlib.sha256).hexdigest()
+    return f"{msg}|{sig}"
+
+
+def _read_session(token):
+    try:
+        uid, exp, sig = token.split("|")
+        if int(exp) < time.time():
+            return None
+        expected = hmac.new(SESSION_SECRET, f"{uid}|{exp}".encode(),
+                            hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected):
+            return None
+        return uid
+    except Exception:
+        return None
+
+
+def _require_session():
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return None
+    return _read_session(auth[7:])
+
+
+def _verify_webapp_initdata(init_data):
+    """Verify Telegram WebApp initData signature (HMAC-SHA256)."""
+    try:
+        parsed = dict(parse_qsl(init_data, keep_blank_values=True))
+        hash_val = parsed.pop("hash", None)
+        if not hash_val:
+            return None
+        dcs = "\n".join(f"{k}={v}" for k, v in sorted(parsed.items()))
+        secret = hmac.new(BOT_TOKEN.encode(), b"WebAppData", hashlib.sha256).digest()
+        calc = hmac.new(secret, dcs.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(calc, hash_val):
+            return None
+        return json.loads(parsed.get("user", "{}"))
+    except Exception as e:
+        print(f"[webapp] initData verify failed: {e}")
+        return None
+
+
+@flask_app.after_request
+def _cors(resp):
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return resp
+
+
+@flask_app.route("/api/webapp/auth", methods=["POST", "OPTIONS"])
+def api_webapp_auth():
+    if request.method == "OPTIONS":
+        return "", 204
+    body = request.get_json(silent=True) or {}
+    init_data = body.get("initData", "")
+    if not init_data:
+        return jsonify({"status": "error", "message": "missing initData"}), 400
+    tg_user = _verify_webapp_initdata(init_data)
+    if not tg_user or not tg_user.get("id"):
+        return jsonify({"status": "error", "message": "invalid signature"}), 401
+    uid = str(tg_user["id"])
+    u = get_user(uid, tg_user.get("first_name", ""))
+    return jsonify({
+        "status": "success",
+        "token": _make_session(uid),
+        "uid": uid,
+        "user": {
+            "username": u.get("username", ""),
+            "is_premium": is_premium(uid),
+            "premium_until": u.get("premium_until"),
+            "plan": u.get("jamb_plan", ["english"]),
+            "plan_set": u.get("plan_set", False),
+            "free_english_used": u.get("free_english_used", False),
+        }
+    })
+
+
+@flask_app.route("/api/webapp/stats", methods=["GET"])
+def api_webapp_stats():
+    return jsonify({
+        "status": "success",
+        "questions": len(ALL_QS),
+        "subjects": AVAILABLE_SUBJECTS,
+        "subject_display": SUBJECT_DISPLAY,
+        "users": len(USER_DATA),
+        "tutor_name": TUTOR_NAME,
+        "free_english_qs": FREE_ENGLISH_QS,
+        "free_tutor_per_day": FREE_TUTOR_PER_DAY,
+        "free_ai_why_per_day": FREE_AI_WHY_PER_DAY,
+        "plan_size": PLAN_SIZE,
+        "bot_username": BOT_USERNAME,
+        "channel_link": CHANNEL_INVITE_LINK,
+        "referral_required": REFERRAL_REQUIRED,
+        "referral_reward_days": REFERRAL_REWARD_DAYS,
+        "plans": {
+            "monthly": {"price": PREMIUM_PRICE, "text": PREMIUM_PRICE_TEXT,
+                        "days": PREMIUM_DAYS},
+            "6months": {"price": PREMIUM_6MONTHS_PRICE, "text": PREMIUM_6MONTHS_TEXT,
+                        "days": PREMIUM_6MONTHS_DAYS},
+        },
+    })
+
+
+@flask_app.route("/api/webapp/user", methods=["GET", "OPTIONS"])
+def api_webapp_user():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    u = get_user(uid)
+    hist = u.get("history", [])
+    premium = is_premium(uid)
+    used_tutor = u.get("tutor_counts", {}).get(str(date.today()), 0)
+    _, ai_why_rem = can_use_ai_why(uid)
+    return jsonify({
+        "status": "success",
+        "uid": uid,
+        "username": u.get("username", ""),
+        "is_premium": premium,
+        "premium_until": u.get("premium_until"),
+        "plan": u.get("jamb_plan", ["english"]),
+        "plan_set": u.get("plan_set", False),
+        "free_english_used": u.get("free_english_used", False),
+        "invite_code": u.get("invite_code", ""),
+        "invites": u.get("invites", 0),
+        "history": hist[-15:],
+        "last_mock_failed": u.get("last_mock_failed", []),
+        "last_mock_subject": u.get("last_mock_subject"),
+        "last_mock_total": u.get("last_mock_total", 40),
+        "tutor_remaining": -1 if premium else max(0, FREE_TUTOR_PER_DAY - used_tutor),
+        "ai_why_remaining": -1 if premium else ai_why_rem,
+    })
+
+
+@flask_app.route("/api/webapp/plan", methods=["POST", "OPTIONS"])
+def api_webapp_plan():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    plan = body.get("plan", [])
+    if not isinstance(plan, list) or "english" not in plan:
+        return jsonify({"status": "error", "message": "english required"}), 400
+    plan = [str(s).lower() for s in plan if s][:PLAN_SIZE]
+    u = get_user(uid)
+    u["jamb_plan"] = plan
+    u["plan_set"] = len(plan) == PLAN_SIZE
+    save_data()
+    return jsonify({"status": "success", "plan": plan, "plan_set": u["plan_set"]})
+
+
+@flask_app.route("/api/webapp/mock/start", methods=["POST", "OPTIONS"])
+def api_webapp_mock_start():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    mode = body.get("mode", "plan")
+    subject = str(body.get("subject", "")).lower()
+    u = get_user(uid)
+    premium = is_premium(uid)
+    label = ""
+    qs = []
+
+    if mode == "free_english":
+        if premium or u.get("free_english_used"):
+            return jsonify({"status": "error", "message": "free english used"}), 403
+        qs = _fetch_rotated(uid, "english", FREE_ENGLISH_QS)
+        label = "english"
+        u["free_english_used"] = True
+        save_data()
+    elif mode == "subject":
+        if not premium:
+            return jsonify({"status": "error", "message": "upgrade_required"}), 403
+        if subject not in LOCAL_DATABANK:
+            return jsonify({"status": "error", "message": "invalid subject"}), 400
+        qs = _fetch_rotated(uid, subject, 40)
+        label = f"subject_{subject}"
+    elif mode == "full":
+        if not premium:
+            return jsonify({"status": "error", "message": "upgrade_required"}), 403
+        plan = u.get("jamb_plan", [])[:PLAN_SIZE]
+        if len(plan) != PLAN_SIZE:
+            return jsonify({"status": "error", "message": "plan not set"}), 400
+        qs = _fetch_rotated_multi(uid, plan, 180)
+        label = "CBT:" + ",".join(plan)
+    else:  # "plan"
+        plan = u.get("jamb_plan", ["english"])
+        if len(plan) != PLAN_SIZE:
+            return jsonify({"status": "error", "message": "plan not set"}), 400
+        if not premium:
+            if u.get("free_english_used"):
+                return jsonify({"status": "error",
+                                "message": "upgrade_required"}), 403
+            qs = _fetch_rotated(uid, "english", FREE_ENGLISH_QS)
+            label = "english"
+            u["free_english_used"] = True
+            save_data()
+        else:
+            qs = _fetch_rotated(uid, plan[0], 40)
+            label = f"subject_{plan[0]}"
+
+    if not qs or len(qs) < 5:
+        return jsonify({"status": "error", "message": "not enough questions"}), 400
+
+    qs = _prepare_questions(qs)
+    sid = hashlib.md5(f"{uid}{time.time()}{random.random()}".encode()).hexdigest()[:16]
+    WEBAPP_MOCKS[sid] = {
+        "uid": uid, "qs": qs, "idx": 0, "score": 0,
+        "failed": [], "label": label, "started": time.time(),
+    }
+    return jsonify({"status": "success", "session_id": sid,
+                    "total": len(qs), "label": label})
+
+
+@flask_app.route("/api/webapp/mock/question", methods=["POST", "OPTIONS"])
+def api_webapp_mock_question():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    s = WEBAPP_MOCKS.get(body.get("session_id", ""))
+    if not s or s["uid"] != uid:
+        return jsonify({"status": "error", "message": "expired"}), 404
+    idx = s["idx"]
+    if idx >= len(s["qs"]):
+        return jsonify({"status": "finished"})
+    q = s["qs"][idx]
+    opts = [{"letter": L, "text": q.get(f"option_{L.lower()}", "")}
+            for L in ("A", "B", "C", "D")
+            if q.get(f"option_{L.lower()}", "").strip()]
+    return jsonify({
+        "status": "success",
+        "idx": idx, "total": len(s["qs"]), "score": s["score"],
+        "question": {
+            "text": q.get("question", ""),
+            "options": opts,
+            "topic": q.get("topic", "General"),
+            "subject": q.get("subject", ""),
+        }
+    })
+
+
+@flask_app.route("/api/webapp/mock/answer", methods=["POST", "OPTIONS"])
+def api_webapp_mock_answer():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    s = WEBAPP_MOCKS.get(body.get("session_id", ""))
+    if not s or s["uid"] != uid:
+        return jsonify({"status": "error"}), 404
+    if s["idx"] >= len(s["qs"]):
+        return jsonify({"status": "finished"})
+    chosen = str(body.get("answer", "")).upper()[:1]
+    q = s["qs"][s["idx"]]
+    correct = q.get("answer", "")
+    is_correct = chosen == correct
+    if is_correct:
+        s["score"] += 1
+    else:
+        s["failed"].append(_make_failure_snapshot(q, chosen, correct, s["idx"] + 1))
+    s["idx"] += 1
+    return jsonify({
+        "status": "success",
+        "is_correct": is_correct,
+        "next_idx": s["idx"],
+        "total": len(s["qs"]),
+        "score": s["score"],
+        "finished": s["idx"] >= len(s["qs"]),
+    })
+
+
+@flask_app.route("/api/webapp/mock/complete", methods=["POST", "OPTIONS"])
+def api_webapp_mock_complete():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    s = WEBAPP_MOCKS.pop(body.get("session_id", ""), None)
+    if not s or s["uid"] != uid:
+        return jsonify({"status": "error", "message": "expired"}), 404
+    u = get_user(uid)
+    score = s["score"]
+    total = len(s["qs"])
+    failed = s["failed"]
+    label = s["label"]
+    u["history"].append({
+        "date": str(date.today()), "subject": label,
+        "score": score, "total": total,
+        "percent": score * 100 // total if total else 0,
+    })
+    u["last_mock_failed"] = failed
+    u["last_mock_subject"] = label
+    u["last_mock_total"] = total
+    save_data()
+    return jsonify({
+        "status": "success", "score": score, "total": total,
+        "failed": failed, "label": label,
+        "is_premium": is_premium(uid),
+    })
+
+
+@flask_app.route("/api/webapp/tutor", methods=["POST", "OPTIONS"])
+def api_webapp_tutor():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    question = str(body.get("question", "")).strip()[:1000]
+    subject = str(body.get("subject", "")).strip().lower()[:30]
+    if not question:
+        return jsonify({"status": "error", "message": "empty"}), 400
+    if not can_use_tutor(uid):
+        return jsonify({"status": "limit_reached",
+                        "upgrade_url": f"{PAYMENT_URL}/upgrade/{uid}"}), 403
+    consume_tutor(uid)
+    if not HAS_AI_TUTOR:
+        return jsonify({"status": "error", "message": "tutor offline"}), 503
+    try:
+        answer = _ask_tutor(question, subject)
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)[:200]}), 500
+    u = get_user(uid)
+    rem = -1 if is_premium(uid) else max(
+        0, FREE_TUTOR_PER_DAY - u["tutor_counts"].get(str(date.today()), 0))
+    return jsonify({"status": "success", "answer": answer[:3500],
+                    "remaining": rem, "tutor": TUTOR_NAME})
+
+
+@flask_app.route("/api/webapp/voice", methods=["POST", "OPTIONS"])
+def api_webapp_voice():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    text = str(body.get("text", ""))[:2500]
+    if not text.strip():
+        return jsonify({"status": "error"}), 400
+    try:
+        buf = _make_voice_professional(text)
+    except Exception as e:
+        print(f"[webapp voice] {e}")
+        buf = None
+    if buf is None:
+        return jsonify({"status": "error", "message": "voice failed"}), 500
+    return send_file(buf, mimetype="audio/mpeg", download_name="ellams.mp3")
+
+
+@flask_app.route("/api/webapp/failures", methods=["GET", "OPTIONS"])
+def api_webapp_failures():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    u = get_user(uid)
+    fails = u.get("last_mock_failed", [])
+    return jsonify({"status": "success", "failures": fails, "count": len(fails)})
+
+
+@flask_app.route("/api/webapp/failure/analyze", methods=["POST", "OPTIONS"])
+def api_webapp_failure_analyze():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    idx = int(body.get("idx", 0))
+    u = get_user(uid)
+    failed = u.get("last_mock_failed", [])
+    if idx < 0 or idx >= len(failed):
+        return jsonify({"status": "error", "message": "not found"}), 404
+    allowed, _ = can_use_ai_why(uid)
+    if not allowed:
+        return jsonify({"status": "limit_reached",
+                        "upgrade_url": f"{PAYMENT_URL}/upgrade/{uid}"}), 403
+    consume_ai_why(uid)
+    f = failed[idx]
+    mini_q = f"Question: {f.get('question','')}\nTopic: {f.get('topic','General')}"
+    try:
+        if HAS_AI_TUTOR:
+            analysis = _analyze_failure(
+                mini_q, f.get("user_ans", ""), f.get("correct_ans", ""),
+                f.get("topic", "General"))
+        else:
+            analysis = "AI Tutor unavailable."
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)[:200]}), 500
+    _, rem = can_use_ai_why(uid)
+    return jsonify({"status": "success", "analysis": analysis[:3500],
+                    "remaining": -1 if is_premium(uid) else rem})
+
+
+@flask_app.route("/api/webapp/premium/checkout", methods=["POST", "OPTIONS"])
+def api_webapp_premium_checkout():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    body = request.get_json(silent=True) or {}
+    plan = body.get("plan", "monthly")
+    if plan not in ("monthly", "6months"):
+        return jsonify({"status": "error"}), 400
+    return jsonify({
+        "status": "success",
+        "checkout_url": f"{PAYMENT_URL}/upgrade/{uid}?plan={plan}",
     })
 
 
@@ -2502,7 +2967,8 @@ def flutterwave_webhook():
         r = requests.get(f"https://api.flutterwave.com/v3/transactions/{tx_id}/verify",
                          headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"}, timeout=15)
         v = r.json()
-        if not (v.get("status") == "success" and (v.get("data") or {}).get("status") == "successful"):
+        if not (v.get("status") == "success" and
+                (v.get("data") or {}).get("status") == "successful"):
             return jsonify({"status": "not_verified"}), 200
         meta_plan = (v["data"].get("meta") or {}).get("plan", "monthly")
     except Exception:
@@ -2560,9 +3026,12 @@ def _build_evening_post(q):
 
 
 def _build_post(q, slot_name):
-    if slot_name == "morning": return _build_morning_post(q)
-    if slot_name == "afternoon": return _build_afternoon_post(q)
-    if slot_name == "evening": return _build_evening_post(q)
+    if slot_name == "morning":
+        return _build_morning_post(q)
+    if slot_name == "afternoon":
+        return _build_afternoon_post(q)
+    if slot_name == "evening":
+        return _build_evening_post(q)
     return _build_morning_post(q)
 
 
@@ -2650,6 +3119,7 @@ def main():
     print(f"🤖 Bot: @{BOT_USERNAME}")
     print(f"👨‍🏫 Tutor: {TUTOR_NAME} (Nigerian male teacher voice)")
     print(f"📢 Channel invite: {CHANNEL_INVITE_LINK}")
+    print(f"🌐 WebApp URL: {WEBAPP_URL}")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
     print(f"💬 Free AI Why/day: {FREE_AI_WHY_PER_DAY}")
     print(f"📋 Plan: English + 3 chosen subjects")
@@ -2661,6 +3131,7 @@ def main():
     print(f"💾 Failures persisted: ON")
     print(f"📣 Persuasive completion: ON")
     print(f"🔗 Join Channel button: ON")
+    print(f"✅ WebApp API: ON (Blogger frontend)")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
