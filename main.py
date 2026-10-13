@@ -1,7 +1,9 @@
 """
-UTME Success Bot v37 — Blogger WebApp Edition
-- Full Telegram Mini App support (Blogger frontend)
-- All v36 features preserved (Join Channel, 2-step AI Why, real exam mode, etc.)
+UTME Success Bot v38 — Widget Edition
+- Full Telegram bot (all v37 features)
+- Blogger WebApp API
+- Anonymous widget API (no Telegram needed)
+- Payment return URL support
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -45,7 +47,7 @@ except Exception as _e:
     BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
     BOT_USERNAME = os.getenv("BOT_USERNAME", "UTMESucessBot")
     ADMIN_ID = os.getenv("ADMIN_ID", "")
-    PAYMENT_URL = os.getenv("PAYMENT_URL", "https://your-app.onrender.com")
+    PAYMENT_URL = os.getenv("PAYMENT_URL", "https://utmebot.onrender.com")
     PORT = int(os.getenv("PORT", "5000"))
     PREMIUM_PRICE = int(os.getenv("PREMIUM_PRICE", "2000"))
     PREMIUM_PRICE_TEXT = f"\u20a6{PREMIUM_PRICE}"
@@ -606,7 +608,7 @@ def _uid_from_tx_ref(tx_ref):
     parts = tx_ref.split("-")
     if len(parts) < 3:
         return None
-    return parts[1] if parts[1].isdigit() else None
+    return parts[1] if parts[1].isdigit() or parts[1].startswith("widget_") else None
 
 
 def _grant_from_verified(tx_ref, plan_key):
@@ -964,13 +966,15 @@ def _admin_menu_text():
     premium_users = sum(1 for u in USER_DATA.values() if u.get("is_premium"))
     free_users = total_users - premium_users
     plans_set = sum(1 for u in USER_DATA.values() if u.get("plan_set"))
+    widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     return (
         f"⚙️ *Admin Panel*\n\n"
         f"👥 *Users*\n"
         f"  • Total: {total_users}\n"
         f"  • Premium: {premium_users}\n"
         f"  • Free: {free_users}\n"
-        f"  • Plans set: {plans_set}\n\n"
+        f"  • Plans set: {plans_set}\n"
+        f"  • Widget users: {widget_users}\n\n"
         f"📚 *Databank*\n"
         f"  • Questions: {len(ALL_QS)}\n"
         f"  • Subjects: {len(AVAILABLE_SUBJECTS)}\n\n"
@@ -978,6 +982,8 @@ def _admin_menu_text():
         f"  • Status: {'✅ Active' if HAS_AI_TUTOR else '❌ Offline'}\n\n"
         f"📢 *Channel*\n"
         f"  • Status: {'✅ Configured' if CHANNEL_ID else '❌ Not set'}\n\n"
+        f"🌐 *Widget*\n"
+        f"  • Status: ✅ Enabled\n\n"
         f"Select an action:"
     )
 
@@ -1017,7 +1023,8 @@ async def _admin_handle_callback(query, uid, data, context):
         for uid_k, u in list(USER_DATA.items())[-20:]:
             name = u.get("username", "User")[:20]
             prem = "💎" if u.get("is_premium") else "🆓"
-            lines.append(f"{prem} {md(name)} · `{uid_k}`")
+            tag = " 🌐" if str(uid_k).startswith("widget_") else ""
+            lines.append(f"{prem} {md(name)} · `{uid_k}`{tag}")
         lines.append(f"\n_Total: {len(USER_DATA)} users_")
         await query.message.reply_text(
             "\n".join(lines), parse_mode="Markdown",
@@ -1076,7 +1083,6 @@ async def cmd_start(update, context):
     uid = str(update.effective_user.id)
     username = update.effective_user.first_name or ""
 
-    # Deep-link handling (?start=premium, ?start=mock, ?start=tutor, ?start=webapp)
     if context.args:
         arg = context.args[0].lower()
         if arg == "premium":
@@ -1286,6 +1292,7 @@ async def cmd_help(update, context):
 
 async def cmd_debug(update, context):
     per_subject = {s: len(LOCAL_DATABANK.get(s, [])) for s in AVAILABLE_SUBJECTS}
+    widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     lines = [
         "📊 *Databank Status*",
         f"Total: *{len(ALL_QS)}* questions",
@@ -1294,7 +1301,8 @@ async def cmd_debug(update, context):
         f"AI Tutor ({TUTOR_NAME}): {'✅' if HAS_AI_TUTOR else '❌'}",
         f"Bot: @{md(BOT_USERNAME)}",
         f"Channel: `{CHANNEL_ID or '❌ NOT SET'}`",
-        f"WebApp: `{WEBAPP_URL}`", "",
+        f"WebApp: `{WEBAPP_URL}`",
+        f"Widget users: *{widget_users}*", "",
     ]
     for s in AVAILABLE_SUBJECTS:
         icon = "✅" if per_subject[s] > 0 else "❌"
@@ -2230,6 +2238,8 @@ async def handle_msg(update, context):
             status_msg = await update.message.reply_text(
                 f"📢 Broadcasting to {len(USER_DATA)} users…")
             for target_uid in list(USER_DATA.keys()):
+                if target_uid.startswith("widget_"):
+                    continue
                 try:
                     await context.bot.send_message(
                         chat_id=int(target_uid),
@@ -2355,15 +2365,18 @@ flask_app = Flask(__name__)
 
 @flask_app.route("/")
 def home():
-    return (f"UTME Bot v37 · {len(ALL_QS)} Qs · "
+    widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
+    return (f"UTME Bot v38 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
+            f"Widget users: {widget_users} · "
             f"WebApp: {WEBAPP_URL} · Running")
 
 
 @flask_app.route("/health")
 def health():
     tutor_ok, tutor_detail = _tutor_ping() if HAS_AI_TUTOR else (False, "not loaded")
+    widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     return jsonify({
         "status": "ok",
         "bot_username": BOT_USERNAME,
@@ -2384,12 +2397,14 @@ def health():
         "channel_configured": bool(CHANNEL_ID),
         "webapp_url": WEBAPP_URL,
         "webapp_enabled": True,
+        "widget_enabled": True,
+        "widget_users": widget_users,
         "users": len(USER_DATA),
     })
 
 
 # ═══════════════════════════════════════════════════════════
-# WEBAPP API — Full Telegram-Mini-App functionality
+# WEBAPP API — Telegram-Mini-App
 # ═══════════════════════════════════════════════════════════
 
 SESSION_SECRET = (BOT_TOKEN or "dev-secret").encode()
@@ -2477,6 +2492,45 @@ def api_webapp_auth():
         }
     })
 
+
+# ═══════════════════════════════════════════════════════════
+# WIDGET API — Anonymous device-based auth (no Telegram)
+# ═══════════════════════════════════════════════════════════
+
+@flask_app.route("/api/widget/register", methods=["POST", "OPTIONS"])
+def api_widget_register():
+    """Register/login an anonymous widget user via device ID (localStorage)."""
+    if request.method == "OPTIONS":
+        return "", 204
+    body = request.get_json(silent=True) or {}
+    device_id = str(body.get("device_id", "")).strip()[:80]
+    nickname = str(body.get("nickname", "")).strip()[:24]
+    if not device_id.startswith("w_") or len(device_id) < 8:
+        return jsonify({"status": "error", "message": "invalid device id"}), 400
+    uid = "widget_" + device_id[2:]
+    u = get_user(uid, nickname or "Student")
+    if nickname:
+        u["username"] = nickname
+        save_data()
+    print(f"[widget] ✅ registered uid={uid} name={u.get('username')}")
+    return jsonify({
+        "status": "success",
+        "token": _make_session(uid),
+        "uid": uid,
+        "user": {
+            "username": u.get("username", "Student"),
+            "is_premium": is_premium(uid),
+            "premium_until": u.get("premium_until"),
+            "plan": u.get("jamb_plan", ["english"]),
+            "plan_set": u.get("plan_set", False),
+            "free_english_used": u.get("free_english_used", False),
+        }
+    })
+
+
+# ═══════════════════════════════════════════════════════════
+# Shared API — used by both Widget and Telegram WebApp
+# ═══════════════════════════════════════════════════════════
 
 @flask_app.route("/api/webapp/stats", methods=["GET"])
 def api_webapp_stats():
@@ -2822,10 +2876,15 @@ def api_webapp_premium_checkout():
     plan = body.get("plan", "monthly")
     if plan not in ("monthly", "6months"):
         return jsonify({"status": "error"}), 400
-    return jsonify({
-        "status": "success",
-        "checkout_url": f"{PAYMENT_URL}/upgrade/{uid}?plan={plan}",
-    })
+    return_url = str(body.get("return_url", "")).strip()[:300]
+    if not return_url:
+        if uid.startswith("widget_"):
+            return_url = WEBAPP_URL
+        else:
+            return_url = f"https://t.me/{BOT_USERNAME}"
+    checkout = (f"{PAYMENT_URL}/upgrade/{uid}?plan={plan}"
+                f"&return={quote(return_url)}")
+    return jsonify({"status": "success", "checkout_url": checkout})
 
 
 def run_flask():
@@ -2861,10 +2920,11 @@ UPGRADE_PAGE = r"""<!DOCTYPE html>
  <a class="btn-alt" href="{{ share_link }}">👥 Invite Friends — Get {{ referral_reward_days }} Days FREE</a>
 </div>
 <p style="text-align:center;color:rgba(255,255,255,.7);font-size:12px">
-🔒 Secured by Flutterwave · <a href="https://t.me/{{ bot_username }}" style="color:#fff">Return to Bot</a></p>
+🔒 Secured by Flutterwave · <a href="https://t.me/{{ bot_username }}" style="color:#fff">Return</a></p>
 </div>
 <script>
 const UID="{{ uid }}", BOT="{{ bot_username }}", FLW_PK="{{ flw_public_key }}", API=window.location.origin;
+const RETURN_URL = "{{ return_url }}";
 function payNow(planKey, amount){
  if(typeof FlutterwaveCheckout==="undefined"){alert("Payment gateway failed to load.");return;}
  if(!FLW_PK||FLW_PK.length<20){alert("Payment not configured.");return;}
@@ -2873,16 +2933,16 @@ function payNow(planKey, amount){
   public_key:FLW_PK, tx_ref:txRef, amount:amount, currency:"NGN",
   payment_options:"card,banktransfer,ussd,account",
   redirect_url:API+"/payment/complete?uid="+UID,
-  customer:{email:"user"+UID+"@utmebot.com", name:"UTME User "+UID},
+  customer:{email:"user"+UID.replace(/[^a-z0-9]/gi,"")+"@utmebot.com", name:"UTME User"},
   customizations:{title:"UTME Success Bot Premium", description:planKey==="6months"?"6 Months":"Monthly"},
   meta:{user_id:UID, plan:planKey},
   callback:function(resp){
    fetch(API+"/verify/flutterwave",{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({transaction_id:resp.transaction_id,tx_ref:resp.tx_ref,expected_uid:UID,plan:planKey})})
    .then(r=>r.json()).then(res=>{
-    if(res.status==="success"){alert("✅ Payment successful!");window.location.href="https://t.me/"+BOT;}
-    else{alert("⚠️ Contact support if not activated.");window.location.href="https://t.me/"+BOT;}
-   }).catch(()=>{alert("⚠️ Network error.");window.location.href="https://t.me/"+BOT;});
+    if(res.status==="success"){alert("✅ Payment successful!");window.location.href=RETURN_URL;}
+    else{alert("⚠️ Contact support if not activated.");window.location.href=RETURN_URL;}
+   }).catch(()=>{alert("⚠️ Network error.");window.location.href=RETURN_URL;});
   },
   onclose:function(){console.log("closed");}
  });
@@ -2898,298 +2958,9 @@ def upgrade_page(uid):
     savings_text = f"\u20a6{savings}" if savings > 0 else ""
     invite_link = f"https://t.me/{BOT_USERNAME}?start=invite_{uid}"
     share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot!')}"
+    return_url = request.args.get("return", f"https://t.me/{BOT_USERNAME}")[:300]
     return render_template_string(
         UPGRADE_PAGE, uid=uid, bot_username=BOT_USERNAME,
         flw_public_key=FLW_PUBLIC_KEY,
         gateway_ready=bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY),
-        monthly_price=monthly["price"], monthly_price_text=monthly["price_text"],
-        monthly_days=monthly["days"], six_months_price=six["price"],
-        six_months_text=six["price_text"], six_months_days=six["days"],
-        savings_text=savings_text, referral_reward_days=REFERRAL_REWARD_DAYS,
-        share_link=share_link)
-
-
-@flask_app.route("/payment/complete")
-def payment_complete():
-    uid = request.args.get("uid", "")
-    return f"""<html><body style="font-family:sans-serif;text-align:center;padding:60px">
-    <h1 style="color:#10b981">✅ Payment Received</h1>
-    <p>Activation in progress.</p>
-    <p>Message the bot with your ID: <b>{uid}</b> if not activated in 2 minutes.</p>
-    <a href="https://t.me/{BOT_USERNAME}" style="padding:14px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:12px;font-weight:700">Return to Bot</a>
-    </body></html>"""
-
-
-@flask_app.route("/verify/flutterwave", methods=["POST"])
-def verify_flutterwave():
-    body = request.get_json(silent=True) or {}
-    tx_id = body.get("transaction_id")
-    expected_uid = str(body.get("expected_uid") or "")
-    plan_key = body.get("plan", "monthly")
-    if not tx_id or not FLW_SECRET_KEY:
-        return jsonify({"status": "failed"}), 400
-    try:
-        r = requests.get(f"https://api.flutterwave.com/v3/transactions/{tx_id}/verify",
-                         headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"}, timeout=15)
-        result = r.json()
-    except Exception:
-        return jsonify({"status": "failed"}), 502
-    data = (result or {}).get("data") or {}
-    if not (result.get("status") == "success" and data.get("status") == "successful"):
-        return jsonify({"status": "failed"}), 400
-    verified_tx_ref = data.get("tx_ref", "")
-    verified_uid = _uid_from_tx_ref(verified_tx_ref)
-    if not verified_uid:
-        return jsonify({"status": "failed"}), 400
-    if expected_uid and expected_uid != verified_uid:
-        return jsonify({"status": "failed"}), 400
-    meta_plan = (data.get("meta") or {}).get("plan")
-    if meta_plan in PLANS:
-        plan_key = meta_plan
-    uid = _grant_from_verified(verified_tx_ref, plan_key)
-    if not uid:
-        return jsonify({"status": "duplicate_or_invalid"}), 200
-    return jsonify({"status": "success", "uid": uid, "plan": plan_key})
-
-
-@flask_app.route("/webhook/flutterwave", methods=["POST"])
-def flutterwave_webhook():
-    sig = request.headers.get("verif-hash", "")
-    if not FLW_SECRET_HASH or sig != FLW_SECRET_HASH:
-        return jsonify({"status": "unauthorized"}), 401
-    payload = request.get_json(silent=True) or {}
-    data = payload.get("data") or {}
-    tx_ref = data.get("tx_ref", "")
-    tx_id = data.get("id")
-    if not tx_ref or not tx_id:
-        return jsonify({"status": "ignored"}), 200
-    try:
-        r = requests.get(f"https://api.flutterwave.com/v3/transactions/{tx_id}/verify",
-                         headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"}, timeout=15)
-        v = r.json()
-        if not (v.get("status") == "success" and
-                (v.get("data") or {}).get("status") == "successful"):
-            return jsonify({"status": "not_verified"}), 200
-        meta_plan = (v["data"].get("meta") or {}).get("plan", "monthly")
-    except Exception:
-        return jsonify({"status": "error"}), 500
-    _grant_from_verified(tx_ref, meta_plan if meta_plan in PLANS else "monthly")
-    return jsonify({"status": "success"})
-
-
-# ============================================================
-# CHANNEL AUTO-POSTING
-# ============================================================
-POST_SLOTS = ((8, 30, "morning"), (13, 0, "afternoon"), (20, 0, "evening"))
-POST_WINDOW_MIN = 30
-
-
-def _now_lagos():
-    return datetime.now(timezone.utc) + timedelta(hours=1)
-
-
-def _build_morning_post(q):
-    intro = random.choice(["🌅 *Good Morning, Champion!*", "🌅 *Rise and Grind!*",
-                           "🌅 *Morning JAMB Practice*"])
-    return (f"{intro}\n\n📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
-            f"{md(q.get('question','')[:340])}\n\n"
-            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
-            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
-            f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
-            f"🎯 You've got this!\n👉 Full practice: https://t.me/{BOT_USERNAME}")
-
-
-def _build_afternoon_post(q):
-    intro = random.choice(["☀️ *Afternoon Quick Practice*", "☀️ *Midday JAMB Challenge*"])
-    return (f"{intro}\n\nTake 30 seconds:\n\n📚 *{md(q.get('subject','JAMB'))}* | "
-            f"{md(str(q.get('year','')))}\n\n"
-            f"{md(q.get('question','')[:340])}\n\n"
-            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
-            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
-            f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
-            f"⚡ Stay sharp!\n👉 More practice: https://t.me/{BOT_USERNAME}")
-
-
-def _build_evening_post(q):
-    intro = random.choice(["🌙 *Evening Study Session*", "🌙 *End the Day Strong*"])
-    body = (f"{intro}\n\n📚 *{md(q.get('subject','JAMB'))}* | "
-            f"{md(str(q.get('year','')))}\n\n"
-            f"{md(q.get('question','')[:340])}\n\n"
-            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
-            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
-            f"💡 *Answer:* {md(q.get('answer',''))}\n")
-    expl = (q.get("explanation") or "").strip()
-    if expl:
-        body += f"\n📖 *Why?* {md(expl[:350])}\n"
-    body += f"\n🛌 Sleep well!\n👉 Full practice: https://t.me/{BOT_USERNAME}"
-    return body
-
-
-def _build_post(q, slot_name):
-    if slot_name == "morning":
-        return _build_morning_post(q)
-    if slot_name == "afternoon":
-        return _build_afternoon_post(q)
-    if slot_name == "evening":
-        return _build_evening_post(q)
-    return _build_morning_post(q)
-
-
-async def channel_post(app, slot_name="morning", slot_label="manual"):
-    if not CHANNEL_ID:
-        raise RuntimeError("CHANNEL_ID is not configured")
-    q = get_random_question()
-    if not q:
-        raise RuntimeError("No questions available")
-    msg = _build_post(q, slot_name)
-    await app.bot.send_message(chat_id=CHANNEL_ID, text=msg, parse_mode="Markdown")
-    print(f"[channel] ✅ Posted ({slot_name}/{slot_label}) to {CHANNEL_ID}")
-    return True
-
-
-async def channel_posting_job(app):
-    print("[channel] ⏰ Job started")
-    print(f"[channel]    CHANNEL_ID = {CHANNEL_ID or '❌ NOT SET'}")
-    if not CHANNEL_ID:
-        print("[channel] ❌ CHANNEL_ID missing — DISABLED")
-        return
-    try:
-        await channel_post(app, slot_name="morning", slot_label="startup-test")
-    except Exception as e:
-        print(f"[channel] ❌ Startup post failed: {type(e).__name__}: {e}")
-
-    posted_slots = set()
-    while True:
-        try:
-            now = _now_lagos()
-            now_total = now.hour * 60 + now.minute
-            today = now.date().isoformat()
-            for (h, m, slot_name) in POST_SLOTS:
-                slot_key = f"{today}_{h:02d}{m:02d}"
-                target_total = h * 60 + m
-                if (target_total <= now_total < target_total + POST_WINDOW_MIN
-                        and slot_key not in posted_slots):
-                    try:
-                        await channel_post(app, slot_name=slot_name,
-                                           slot_label=f"{h:02d}:{m:02d}")
-                        posted_slots.add(slot_key)
-                    except Exception as e:
-                        print(f"[channel] ❌ {slot_name}: {e}")
-            posted_slots = {k for k in posted_slots if k.startswith(today)}
-            await asyncio.sleep(300)
-        except Exception as e:
-            print(f"[channel] ❌ Loop error: {e}")
-            await asyncio.sleep(600)
-
-
-async def post_init(app):
-    try:
-        commands = [
-            BotCommand("start", "🏠 Main Menu"),
-            BotCommand("mock", "📝 Mock Exam"),
-            BotCommand("past", "📚 Past Questions"),
-            BotCommand("study", "📖 Study Plan"),
-            BotCommand("syllabus", "📋 JAMB Syllabus"),
-            BotCommand("score", "📊 My Score"),
-            BotCommand("tutor", f"💬 Ask {TUTOR_NAME}"),
-            BotCommand("invite", "👥 Invite Friends"),
-            BotCommand("premium", "💎 Upgrade Premium"),
-            BotCommand("help", "❓ Help"),
-        ]
-        await app.bot.set_my_commands(commands)
-        await app.bot.set_chat_menu_button(
-            menu_button=MenuButtonCommands(text="📋 Menu"))
-        print("✅ Commands registered")
-        try:
-            asyncio.create_task(channel_posting_job(app))
-            print("✅ Channel poster launched")
-        except Exception as e:
-            print(f"⚠️ Channel poster: {e}")
-    except Exception as e:
-        print(f"Menu setup failed: {e}")
-
-
-# ============================================================
-# MAIN
-# ============================================================
-def main():
-    load_data()
-    load_processed_tx()
-
-    print(f"🤖 Bot: @{BOT_USERNAME}")
-    print(f"👨‍🏫 Tutor: {TUTOR_NAME} (Nigerian male teacher voice)")
-    print(f"📢 Channel invite: {CHANNEL_INVITE_LINK}")
-    print(f"🌐 WebApp URL: {WEBAPP_URL}")
-    print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
-    print(f"💬 Free AI Why/day: {FREE_AI_WHY_PER_DAY}")
-    print(f"📋 Plan: English + 3 chosen subjects")
-    print(f"🎲 Option shuffler: ON")
-    print(f"🔄 Rotation: ON")
-    print(f"📝 Real exam mode: ON (no answer reveal)")
-    print(f"🎯 Two-step AI Why: ON (recap + reveal)")
-    print(f"🏆 State rank rotation: ON")
-    print(f"💾 Failures persisted: ON")
-    print(f"📣 Persuasive completion: ON")
-    print(f"🔗 Join Channel button: ON")
-    print(f"✅ WebApp API: ON (Blogger frontend)")
-    if ADMIN_ID:
-        print(f"⚙️  Admin ID: {ADMIN_ID}")
-
-    if HAS_AI_TUTOR:
-        try:
-            print(f"🧠 Building {TUTOR_NAME} knowledge base…")
-            _build_kb()
-            ok, detail = _tutor_ping()
-            print(f"🧠 Tutor ping: {detail}")
-        except Exception as e:
-            print(f"⚠️ Tutor init: {e}")
-
-    threading.Thread(target=run_flask, daemon=True).start()
-    print(f"🌐 Flask on port {PORT}")
-    print(f"📚 Loaded: {len(ALL_QS)} Qs | {len(AVAILABLE_SUBJECTS)} subjects")
-    print(f"📢 Channel: {CHANNEL_ID or '❌ NOT CONFIGURED'}")
-
-    if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE" or len(BOT_TOKEN) < 20:
-        print("❌ BOT_TOKEN not set!")
-        while True:
-            time.sleep(60)
-
-    try:
-        app = ApplicationBuilder().token(BOT_TOKEN).build()
-
-        app.add_handler(CommandHandler("start", cmd_start))
-        app.add_handler(CommandHandler("menu", cmd_start))
-        app.add_handler(CommandHandler("mock", cmd_mock))
-        app.add_handler(CommandHandler("past", cmd_past))
-        app.add_handler(CommandHandler("study", cmd_study))
-        app.add_handler(CommandHandler("syllabus", cmd_syllabus))
-        app.add_handler(CommandHandler("score", cmd_score))
-        app.add_handler(CommandHandler("tutor", cmd_tutor))
-        app.add_handler(CommandHandler("invite", cmd_invite))
-        app.add_handler(CommandHandler("premium", cmd_premium))
-        app.add_handler(CommandHandler("admin", cmd_admin))
-        app.add_handler(CommandHandler("debug", cmd_debug))
-        app.add_handler(CommandHandler("kbstats", cmd_kbstats))
-        app.add_handler(CommandHandler("postnow", cmd_postnow))
-        app.add_handler(CommandHandler("help", cmd_help))
-
-        app.add_handler(CallbackQueryHandler(handle_callback))
-        app.add_handler(MessageHandler(
-            filters.Regex("^(📚 Past Questions|📝 Mock Exam|📊 My Score|💬 Ask Tutor|"
-                          "💎 Premium|👥 Invite Friends|📖 Study Plan|📢 Join Our Channel|"
-                          "⚙️ Admin Panel)$"),
-            handle_msg))
-        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
-
-        app.post_init = post_init
-        print("✅ Bot running")
-        app.run_polling()
-    except Exception as e:
-        print(f"❌ Bot failed: {e}")
-        traceback.print_exc()
-        while True:
-            time.sleep(60)
-
-
-if __name__ == "__main__":
-    main()
+        monthly_price=monthly["price"], monthly_price_text=
