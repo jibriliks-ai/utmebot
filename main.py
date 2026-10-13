@@ -1,8 +1,6 @@
 """
-UTME Success Bot v39 — Server-Side Payment Fix
-- Payment no longer requires Flutterwave JS SDK
-- Generates hosted payment link on backend → redirects user
-- Works with ad blockers, slow networks, strict browsers
+UTME Success Bot v40 — Payment Debug Edition
+- Adds /debug/flw-key to diagnose Flutterwave key issues
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -2368,7 +2366,7 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
-    return (f"UTME Bot v39 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v40 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
             f"Widget users: {widget_users} · "
@@ -2381,7 +2379,7 @@ def health():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     return jsonify({
         "status": "ok",
-        "version": "v39-server-payment",
+        "version": "v40-debug",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2395,6 +2393,46 @@ def health():
         "widget_users": widget_users,
         "users": len(USER_DATA),
     })
+
+
+# ═══════════════════════════════════════════════════════════
+# 🔍 DEBUG ENDPOINT — REMOVE AFTER FIXING PAYMENT
+# ═══════════════════════════════════════════════════════════
+
+@flask_app.route("/debug/flw-key")
+def debug_flw_key():
+    """Test whether the Flutterwave secret key is valid."""
+    key_raw = FLW_SECRET_KEY or ""
+    key = key_raw.strip()
+    pub = (FLW_PUBLIC_KEY or "").strip()
+
+    info = {
+        "secret_key_present": bool(key),
+        "secret_key_length": len(key),
+        "secret_key_prefix": key[:12] if key else "(empty)",
+        "secret_key_suffix": key[-4:] if key else "(empty)",
+        "secret_has_leading_space": bool(key_raw and key_raw != key_raw.lstrip()),
+        "secret_has_trailing_space": bool(key_raw and key_raw != key_raw.rstrip()),
+        "secret_has_newline": "\n" in key_raw or "\r" in key_raw,
+        "public_key_present": bool(pub),
+        "public_key_prefix": pub[:12] if pub else "(empty)",
+        "public_key_mode": "TEST" if pub.startswith("FLWPUBK_TEST") else ("LIVE" if pub.startswith("FLWPUBK") else "UNKNOWN"),
+        "secret_key_mode": "TEST" if key.startswith("FLWSECK_TEST") else ("LIVE" if key.startswith("FLWSECK") else "UNKNOWN"),
+    }
+
+    if key:
+        try:
+            r = requests.get(
+                "https://api.flutterwave.com/v3/transactions?per_page=1",
+                headers={"Authorization": f"Bearer {key}"},
+                timeout=10,
+            )
+            info["flw_http_status"] = r.status_code
+            info["flw_response"] = r.text[:400]
+        except Exception as e:
+            info["flw_error"] = f"{type(e).__name__}: {str(e)[:200]}"
+
+    return jsonify(info)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -2458,10 +2496,6 @@ def _cors(resp):
     return resp
 
 
-# ═══════════════════════════════════════════════════════════
-# TELEGRAM WEBAPP AUTH
-# ═══════════════════════════════════════════════════════════
-
 @flask_app.route("/api/webapp/auth", methods=["POST", "OPTIONS"])
 def api_webapp_auth():
     if request.method == "OPTIONS":
@@ -2489,10 +2523,6 @@ def api_webapp_auth():
         }
     })
 
-
-# ═══════════════════════════════════════════════════════════
-# WIDGET AUTH (anonymous device-based)
-# ═══════════════════════════════════════════════════════════
 
 @flask_app.route("/api/widget/register", methods=["POST", "OPTIONS"])
 def api_widget_register():
@@ -2527,10 +2557,6 @@ def api_widget_register():
         }
     })
 
-
-# ═══════════════════════════════════════════════════════════
-# SHARED WEBAPP API
-# ═══════════════════════════════════════════════════════════
 
 @flask_app.route("/api/webapp/stats", methods=["GET"])
 def api_webapp_stats():
@@ -2889,15 +2915,12 @@ def api_webapp_premium_checkout():
 
 
 # ═══════════════════════════════════════════════════════════
-# SERVER-SIDE PAYMENT LINK — NO Flutterwave JS REQUIRED
+# SERVER-SIDE PAYMENT LINK
 # ═══════════════════════════════════════════════════════════
 
 @flask_app.route("/api/payment/create_link", methods=["POST", "OPTIONS"])
 def api_payment_create_link():
-    """
-    Generate a Flutterwave hosted payment link server-side.
-    Works even with ad blockers, slow networks, and strict browsers.
-    """
+    """Generate a Flutterwave hosted payment link server-side."""
     if request.method == "OPTIONS":
         return "", 204
     body = request.get_json(silent=True) or {}
@@ -2915,7 +2938,6 @@ def api_payment_create_link():
     plan = PLANS[plan_key]
     tx_ref = f"UTME-{uid}-{int(time.time())}"
 
-    # Build redirect URL with return_url preserved
     redirect = f"{PAYMENT_URL}/payment/complete?uid={uid}&tx_ref={tx_ref}"
     if return_url:
         redirect += f"&return={quote(return_url)}"
@@ -2943,15 +2965,14 @@ def api_payment_create_link():
     }
 
     headers = {
-        "Authorization": f"Bearer {FLW_SECRET_KEY}",
+        "Authorization": f"Bearer {FLW_SECRET_KEY.strip()}",
         "Content-Type": "application/json",
     }
 
-    # Try up to 2 times
     last_err = None
     for attempt in (1, 2):
         try:
-            r = requests.post(f"https://api.flutterwave.com/v3/payments",
+            r = requests.post("https://api.flutterwave.com/v3/payments",
                               json=payload, headers=headers, timeout=25)
             data = r.json()
             link = (data.get("data") or {}).get("link")
@@ -2974,7 +2995,7 @@ def api_payment_create_link():
 
 
 # ═══════════════════════════════════════════════════════════
-# UPGRADE PAGE — SERVER-SIDE LINK (NO Flutterwave JS)
+# UPGRADE PAGE
 # ═══════════════════════════════════════════════════════════
 
 UPGRADE_PAGE = r"""<!DOCTYPE html>
@@ -3027,10 +3048,6 @@ UPGRADE_PAGE = r"""<!DOCTYPE html>
  @keyframes sp{to{transform:rotate(360deg)}}
  .alert{background:#fef2f2;color:#991b1b;padding:14px;border-radius:12px;
         font-size:13.5px;border-left:4px solid #dc2626;margin-bottom:16px;line-height:1.5}
- .success{text-align:center;padding:40px 20px}
- .success .icon{font-size:72px;margin-bottom:16px}
- .success h2{color:#065f46;font-size:24px;margin-bottom:8px}
- .success p{color:#475569;font-size:14px;line-height:1.6}
  .benefits{list-style:none;margin:12px 0 0;padding:0}
  .benefits li{padding:8px 0 8px 26px;position:relative;font-size:13.5px;color:#334155;
               border-bottom:1px solid #f1f5f9;line-height:1.5}
@@ -3090,7 +3107,6 @@ async function payNow(planKey) {
   const label = btn.querySelector('.btn-label');
   const orig = label.textContent;
 
-  // Disable both buttons
   document.querySelectorAll('.pay').forEach(b => b.disabled = true);
   label.innerHTML = '<span class="sp"></span> Creating payment link…';
 
@@ -3108,14 +3124,12 @@ async function payNow(planKey) {
 
     if (data.status === 'success' && data.link) {
       label.innerHTML = '<span class="sp"></span> Redirecting to Flutterwave…';
-      // Small delay so user sees the feedback
       setTimeout(() => {
         window.location.href = data.link;
       }, 300);
       return;
     }
 
-    // Failure
     label.textContent = orig;
     document.querySelectorAll('.pay').forEach(b => b.disabled = false);
     showError(data.message || 'Could not create payment link. Please try again.');
@@ -3165,16 +3179,14 @@ def payment_complete():
     uid = request.args.get("uid", "")
     tx_ref = request.args.get("tx_ref", "")
     return_url = request.args.get("return", "")
-    status = request.args.get("status", "")
     transaction_id = request.args.get("transaction_id", "")
 
-    # Try to verify automatically if we have a transaction ID
     verified = False
     if transaction_id and FLW_SECRET_KEY:
         try:
             r = requests.get(
                 f"https://api.flutterwave.com/v3/transactions/{transaction_id}/verify",
-                headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"},
+                headers={"Authorization": f"Bearer {FLW_SECRET_KEY.strip()}"},
                 timeout=15,
             )
             data = r.json()
@@ -3192,7 +3204,6 @@ def payment_complete():
         except Exception as e:
             print(f"[payment/complete] verify error: {e}")
 
-    # Determine return target
     if not return_url:
         if uid.startswith("widget_"):
             return_url = WEBAPP_URL
@@ -3271,7 +3282,7 @@ def verify_flutterwave():
         return jsonify({"status": "failed"}), 400
     try:
         r = requests.get(f"https://api.flutterwave.com/v3/transactions/{tx_id}/verify",
-                         headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"}, timeout=15)
+                         headers={"Authorization": f"Bearer {FLW_SECRET_KEY.strip()}"}, timeout=15)
         result = r.json()
     except Exception:
         return jsonify({"status": "failed"}), 502
@@ -3306,7 +3317,7 @@ def flutterwave_webhook():
         return jsonify({"status": "ignored"}), 200
     try:
         r = requests.get(f"https://api.flutterwave.com/v3/transactions/{tx_id}/verify",
-                         headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"}, timeout=15)
+                         headers={"Authorization": f"Bearer {FLW_SECRET_KEY.strip()}"}, timeout=15)
         v = r.json()
         if not (v.get("status") == "success" and
                 (v.get("data") or {}).get("status") == "successful"):
@@ -3467,7 +3478,8 @@ def main():
     print(f"📢 Channel invite: {CHANNEL_INVITE_LINK}")
     print(f"🌐 WebApp URL: {WEBAPP_URL}")
     print(f"🧩 Widget: ENABLED ({widget_users} anonymous users so far)")
-    print(f"💰 Payment: SERVER-SIDE HOSTED LINK (no JS SDK)")
+    print(f"💰 Payment: SERVER-SIDE HOSTED LINK")
+    print(f"🔍 Debug endpoint: /debug/flw-key")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
