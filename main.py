@@ -2963,4 +2963,296 @@ def upgrade_page(uid):
         UPGRADE_PAGE, uid=uid, bot_username=BOT_USERNAME,
         flw_public_key=FLW_PUBLIC_KEY,
         gateway_ready=bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY),
-        monthly_price=monthly["price"], monthly_price_text=
+        monthly_price=monthly["price"], monthly_price_text=monthly["price_text"],
+        monthly_days=monthly["days"], six_months_price=six["price"],
+        six_months_text=six["price_text"], six_months_days=six["days"],
+        savings_text=savings_text, referral_reward_days=REFERRAL_REWARD_DAYS,
+        share_link=share_link, return_url=return_url)
+
+
+@flask_app.route("/payment/complete")
+def payment_complete():
+    uid = request.args.get("uid", "")
+    return f"""<html><body style="font-family:sans-serif;text-align:center;padding:60px">
+    <h1 style="color:#10b981">✅ Payment Received</h1>
+    <p>Activation in progress.</p>
+    <p>You can close this page and return to the app.</p>
+    <p style="color:#888;font-size:13px;">User ID: <b>{uid}</b></p>
+    <a href="{PAYMENT_URL}/upgrade/{uid}" style="padding:14px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:12px;font-weight:700">Back to Upgrade Page</a>
+    </body></html>"""
+
+
+@flask_app.route("/verify/flutterwave", methods=["POST"])
+def verify_flutterwave():
+    body = request.get_json(silent=True) or {}
+    tx_id = body.get("transaction_id")
+    expected_uid = str(body.get("expected_uid") or "")
+    plan_key = body.get("plan", "monthly")
+    if not tx_id or not FLW_SECRET_KEY:
+        return jsonify({"status": "failed"}), 400
+    try:
+        r = requests.get(f"https://api.flutterwave.com/v3/transactions/{tx_id}/verify",
+                         headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"}, timeout=15)
+        result = r.json()
+    except Exception:
+        return jsonify({"status": "failed"}), 502
+    data = (result or {}).get("data") or {}
+    if not (result.get("status") == "success" and data.get("status") == "successful"):
+        return jsonify({"status": "failed"}), 400
+    verified_tx_ref = data.get("tx_ref", "")
+    verified_uid = _uid_from_tx_ref(verified_tx_ref)
+    if not verified_uid:
+        return jsonify({"status": "failed"}), 400
+    if expected_uid and expected_uid != verified_uid:
+        return jsonify({"status": "failed"}), 400
+    meta_plan = (data.get("meta") or {}).get("plan")
+    if meta_plan in PLANS:
+        plan_key = meta_plan
+    uid = _grant_from_verified(verified_tx_ref, plan_key)
+    if not uid:
+        return jsonify({"status": "duplicate_or_invalid"}), 200
+    return jsonify({"status": "success", "uid": uid, "plan": plan_key})
+
+
+@flask_app.route("/webhook/flutterwave", methods=["POST"])
+def flutterwave_webhook():
+    sig = request.headers.get("verif-hash", "")
+    if not FLW_SECRET_HASH or sig != FLW_SECRET_HASH:
+        return jsonify({"status": "unauthorized"}), 401
+    payload = request.get_json(silent=True) or {}
+    data = payload.get("data") or {}
+    tx_ref = data.get("tx_ref", "")
+    tx_id = data.get("id")
+    if not tx_ref or not tx_id:
+        return jsonify({"status": "ignored"}), 200
+    try:
+        r = requests.get(f"https://api.flutterwave.com/v3/transactions/{tx_id}/verify",
+                         headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"}, timeout=15)
+        v = r.json()
+        if not (v.get("status") == "success" and
+                (v.get("data") or {}).get("status") == "successful"):
+            return jsonify({"status": "not_verified"}), 200
+        meta_plan = (v["data"].get("meta") or {}).get("plan", "monthly")
+    except Exception:
+        return jsonify({"status": "error"}), 500
+    _grant_from_verified(tx_ref, meta_plan if meta_plan in PLANS else "monthly")
+    return jsonify({"status": "success"})
+
+
+# ============================================================
+# CHANNEL AUTO-POSTING
+# ============================================================
+POST_SLOTS = ((8, 30, "morning"), (13, 0, "afternoon"), (20, 0, "evening"))
+POST_WINDOW_MIN = 30
+
+
+def _now_lagos():
+    return datetime.now(timezone.utc) + timedelta(hours=1)
+
+
+def _build_morning_post(q):
+    intro = random.choice(["🌅 *Good Morning, Champion!*", "🌅 *Rise and Grind!*",
+                           "🌅 *Morning JAMB Practice*"])
+    return (f"{intro}\n\n📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
+            f"{md(q.get('question','')[:340])}\n\n"
+            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
+            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
+            f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
+            f"🎯 You've got this!\n👉 Full practice: https://t.me/{BOT_USERNAME}")
+
+
+def _build_afternoon_post(q):
+    intro = random.choice(["☀️ *Afternoon Quick Practice*", "☀️ *Midday JAMB Challenge*"])
+    return (f"{intro}\n\nTake 30 seconds:\n\n📚 *{md(q.get('subject','JAMB'))}* | "
+            f"{md(str(q.get('year','')))}\n\n"
+            f"{md(q.get('question','')[:340])}\n\n"
+            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
+            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
+            f"💡 *Answer:* {md(q.get('answer',''))}\n\n"
+            f"⚡ Stay sharp!\n👉 More practice: https://t.me/{BOT_USERNAME}")
+
+
+def _build_evening_post(q):
+    intro = random.choice(["🌙 *Evening Study Session*", "🌙 *End the Day Strong*"])
+    body = (f"{intro}\n\n📚 *{md(q.get('subject','JAMB'))}* | "
+            f"{md(str(q.get('year','')))}\n\n"
+            f"{md(q.get('question','')[:340])}\n\n"
+            f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
+            f"C) {md(q.get('option_c','')[:80])}\nD) {md(q.get('option_d','')[:80])}\n\n"
+            f"💡 *Answer:* {md(q.get('answer',''))}\n")
+    expl = (q.get("explanation") or "").strip()
+    if expl:
+        body += f"\n📖 *Why?* {md(expl[:350])}\n"
+    body += f"\n🛌 Sleep well!\n👉 Full practice: https://t.me/{BOT_USERNAME}"
+    return body
+
+
+def _build_post(q, slot_name):
+    if slot_name == "morning":
+        return _build_morning_post(q)
+    if slot_name == "afternoon":
+        return _build_afternoon_post(q)
+    if slot_name == "evening":
+        return _build_evening_post(q)
+    return _build_morning_post(q)
+
+
+async def channel_post(app, slot_name="morning", slot_label="manual"):
+    if not CHANNEL_ID:
+        raise RuntimeError("CHANNEL_ID is not configured")
+    q = get_random_question()
+    if not q:
+        raise RuntimeError("No questions available")
+    msg = _build_post(q, slot_name)
+    await app.bot.send_message(chat_id=CHANNEL_ID, text=msg, parse_mode="Markdown")
+    print(f"[channel] ✅ Posted ({slot_name}/{slot_label}) to {CHANNEL_ID}")
+    return True
+
+
+async def channel_posting_job(app):
+    print("[channel] ⏰ Job started")
+    print(f"[channel]    CHANNEL_ID = {CHANNEL_ID or '❌ NOT SET'}")
+    if not CHANNEL_ID:
+        print("[channel] ❌ CHANNEL_ID missing — DISABLED")
+        return
+    try:
+        await channel_post(app, slot_name="morning", slot_label="startup-test")
+    except Exception as e:
+        print(f"[channel] ❌ Startup post failed: {type(e).__name__}: {e}")
+
+    posted_slots = set()
+    while True:
+        try:
+            now = _now_lagos()
+            now_total = now.hour * 60 + now.minute
+            today = now.date().isoformat()
+            for (h, m, slot_name) in POST_SLOTS:
+                slot_key = f"{today}_{h:02d}{m:02d}"
+                target_total = h * 60 + m
+                if (target_total <= now_total < target_total + POST_WINDOW_MIN
+                        and slot_key not in posted_slots):
+                    try:
+                        await channel_post(app, slot_name=slot_name,
+                                           slot_label=f"{h:02d}:{m:02d}")
+                        posted_slots.add(slot_key)
+                    except Exception as e:
+                        print(f"[channel] ❌ {slot_name}: {e}")
+            posted_slots = {k for k in posted_slots if k.startswith(today)}
+            await asyncio.sleep(300)
+        except Exception as e:
+            print(f"[channel] ❌ Loop error: {e}")
+            await asyncio.sleep(600)
+
+
+async def post_init(app):
+    try:
+        commands = [
+            BotCommand("start", "🏠 Main Menu"),
+            BotCommand("mock", "📝 Mock Exam"),
+            BotCommand("past", "📚 Past Questions"),
+            BotCommand("study", "📖 Study Plan"),
+            BotCommand("syllabus", "📋 JAMB Syllabus"),
+            BotCommand("score", "📊 My Score"),
+            BotCommand("tutor", f"💬 Ask {TUTOR_NAME}"),
+            BotCommand("invite", "👥 Invite Friends"),
+            BotCommand("premium", "💎 Upgrade Premium"),
+            BotCommand("help", "❓ Help"),
+        ]
+        await app.bot.set_my_commands(commands)
+        await app.bot.set_chat_menu_button(
+            menu_button=MenuButtonCommands(text="📋 Menu"))
+        print("✅ Commands registered")
+        try:
+            asyncio.create_task(channel_posting_job(app))
+            print("✅ Channel poster launched")
+        except Exception as e:
+            print(f"⚠️ Channel poster: {e}")
+    except Exception as e:
+        print(f"Menu setup failed: {e}")
+
+
+# ============================================================
+# MAIN
+# ============================================================
+def main():
+    load_data()
+    load_processed_tx()
+
+    widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
+    print(f"🤖 Bot: @{BOT_USERNAME}")
+    print(f"👨‍🏫 Tutor: {TUTOR_NAME} (Nigerian male teacher voice)")
+    print(f"📢 Channel invite: {CHANNEL_INVITE_LINK}")
+    print(f"🌐 WebApp URL: {WEBAPP_URL}")
+    print(f"🧩 Widget: ENABLED ({widget_users} anonymous users so far)")
+    print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
+    print(f"💬 Free AI Why/day: {FREE_AI_WHY_PER_DAY}")
+    print(f"📋 Plan: English + 3 chosen subjects")
+    print(f"🎲 Option shuffler: ON")
+    print(f"🔄 Rotation: ON")
+    print(f"📝 Real exam mode: ON (no answer reveal)")
+    print(f"🎯 Two-step AI Why: ON (recap + reveal)")
+    print(f"🏆 State rank rotation: ON")
+    print(f"💾 Failures persisted: ON")
+    print(f"📣 Persuasive completion: ON")
+    print(f"🔗 Join Channel button: ON")
+    if ADMIN_ID:
+        print(f"⚙️  Admin ID: {ADMIN_ID}")
+
+    if HAS_AI_TUTOR:
+        try:
+            print(f"🧠 Building {TUTOR_NAME} knowledge base…")
+            _build_kb()
+            ok, detail = _tutor_ping()
+            print(f"🧠 Tutor ping: {detail}")
+        except Exception as e:
+            print(f"⚠️ Tutor init: {e}")
+
+    threading.Thread(target=run_flask, daemon=True).start()
+    print(f"🌐 Flask on port {PORT}")
+    print(f"📚 Loaded: {len(ALL_QS)} Qs | {len(AVAILABLE_SUBJECTS)} subjects")
+    print(f"📢 Channel: {CHANNEL_ID or '❌ NOT CONFIGURED'}")
+
+    if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN_HERE" or len(BOT_TOKEN) < 20:
+        print("❌ BOT_TOKEN not set!")
+        while True:
+            time.sleep(60)
+
+    try:
+        app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+        app.add_handler(CommandHandler("start", cmd_start))
+        app.add_handler(CommandHandler("menu", cmd_start))
+        app.add_handler(CommandHandler("mock", cmd_mock))
+        app.add_handler(CommandHandler("past", cmd_past))
+        app.add_handler(CommandHandler("study", cmd_study))
+        app.add_handler(CommandHandler("syllabus", cmd_syllabus))
+        app.add_handler(CommandHandler("score", cmd_score))
+        app.add_handler(CommandHandler("tutor", cmd_tutor))
+        app.add_handler(CommandHandler("invite", cmd_invite))
+        app.add_handler(CommandHandler("premium", cmd_premium))
+        app.add_handler(CommandHandler("admin", cmd_admin))
+        app.add_handler(CommandHandler("debug", cmd_debug))
+        app.add_handler(CommandHandler("kbstats", cmd_kbstats))
+        app.add_handler(CommandHandler("postnow", cmd_postnow))
+        app.add_handler(CommandHandler("help", cmd_help))
+
+        app.add_handler(CallbackQueryHandler(handle_callback))
+        app.add_handler(MessageHandler(
+            filters.Regex("^(📚 Past Questions|📝 Mock Exam|📊 My Score|💬 Ask Tutor|"
+                          "💎 Premium|👥 Invite Friends|📖 Study Plan|📢 Join Our Channel|"
+                          "⚙️ Admin Panel)$"),
+            handle_msg))
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_msg))
+
+        app.post_init = post_init
+        print("✅ Bot running")
+        app.run_polling()
+    except Exception as e:
+        print(f"❌ Bot failed: {e}")
+        traceback.print_exc()
+        while True:
+            time.sleep(60)
+
+
+if __name__ == "__main__":
+    main()
