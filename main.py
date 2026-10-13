@@ -1,6 +1,5 @@
 """
-UTME Success Bot v40 — Payment Debug Edition
-- Adds /debug/flw-key to diagnose Flutterwave key issues
+UTME Success Bot v41 — Widget Merge + Install + Share
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -72,9 +71,7 @@ BOT_USERNAME = "UTMESucessBot"
 SUPPORT_HANDLE = "@UTMESUCCESS"
 TUTOR_NAME = "Mr. Ellams"
 
-# ⭐ Blogger WebApp URL ⭐
 WEBAPP_URL = "https://skoolcure.blogspot.com/p/bot.html"
-
 CHANNEL_INVITE_LINK = "https://t.me/+Qw3DqGwCSM4wMDk0"
 
 if CHANNEL_ID:
@@ -513,6 +510,84 @@ def get_user(uid, username=""):
         except Exception:
             pass
     return u
+
+
+def _merge_widget_user(widget_uid, tg_uid):
+    """Merge widget user's data into Telegram user account."""
+    widget_uid = str(widget_uid)
+    tg_uid = str(tg_uid)
+
+    widget_u = USER_DATA.get(widget_uid)
+    if not widget_u:
+        return False, "Web app account not found. It may have been cleared."
+
+    tg_u = get_user(tg_uid)
+
+    if tg_u.get("linked_widget_uid") == widget_uid:
+        return True, "already"
+
+    # Merge history (dedupe)
+    widget_hist = list(widget_u.get("history", []))
+    tg_hist = list(tg_u.get("history", []))
+    seen = set()
+    merged_hist = []
+    for h in tg_hist + widget_hist:
+        key = (h.get("date", ""), h.get("subject", ""),
+               h.get("score", 0), h.get("total", 0))
+        if key not in seen:
+            seen.add(key)
+            merged_hist.append(h)
+    tg_u["history"] = merged_hist[-50:]
+
+    # Merge premium (take longer expiry)
+    w_until_str = widget_u.get("premium_until")
+    if w_until_str:
+        try:
+            w_dt = datetime.fromisoformat(w_until_str)
+            t_until_str = tg_u.get("premium_until")
+            t_dt = datetime.fromisoformat(t_until_str) if t_until_str else None
+            if t_dt is None or w_dt > t_dt:
+                tg_u["premium_until"] = w_until_str
+                tg_u["is_premium"] = True
+                tg_u["premium_plan"] = widget_u.get("premium_plan") or "widget_merge"
+        except Exception:
+            pass
+
+    # Merge plan (only if TG has no plan set)
+    if not tg_u.get("plan_set") and widget_u.get("plan_set"):
+        tg_u["jamb_plan"] = widget_u.get("jamb_plan", ["english"])
+        tg_u["plan_set"] = True
+
+    # Free English mock usage carries over
+    if widget_u.get("free_english_used"):
+        tg_u["free_english_used"] = True
+
+    # Merge used_ids (avoid repeats)
+    w_used = list(widget_u.get("used_ids", []))
+    t_used = list(tg_u.get("used_ids", []))
+    tg_u["used_ids"] = list(set(t_used) | set(w_used))[-5000:]
+
+    # Merge last-mock failures
+    if not tg_u.get("last_mock_failed") and widget_u.get("last_mock_failed"):
+        tg_u["last_mock_failed"] = widget_u["last_mock_failed"]
+        tg_u["last_mock_subject"] = widget_u.get("last_mock_subject")
+        tg_u["last_mock_total"] = widget_u.get("last_mock_total", 40)
+
+    # Merge name + phone
+    w_name = (widget_u.get("username") or "").strip()
+    t_name = (tg_u.get("username") or "").strip()
+    if w_name and (not t_name or t_name.startswith("User")):
+        tg_u["username"] = w_name
+    if widget_u.get("phone"):
+        tg_u["phone"] = widget_u["phone"]
+
+    # Mark linked both ways
+    tg_u["linked_widget_uid"] = widget_uid
+    widget_u["linked_tg_uid"] = tg_uid
+
+    save_data()
+    print(f"[link] ✅ merged {widget_uid} → TG {tg_uid}")
+    return True, "merged"
 
 
 def is_premium(uid):
@@ -1084,7 +1159,27 @@ async def cmd_start(update, context):
     username = update.effective_user.first_name or ""
 
     if context.args:
-        arg = context.args[0].lower()
+        raw_arg = context.args[0]
+        arg = raw_arg.lower()
+
+        # ⭐ Deep link from Blogger widget
+        if arg.startswith("link_widget_"):
+            widget_uid = raw_arg.replace("link_", "", 1)
+            ok, msg = _merge_widget_user(widget_uid, uid)
+            if ok:
+                if msg != "already":
+                    await update.message.reply_text(
+                        "✅ *Web app linked!*\n\n"
+                        "Your progress, mocks, and Premium (if any) "
+                        "have been transferred to this Telegram account.\n\n"
+                        "Everything is now available here too. Enjoy! 🎓",
+                        parse_mode="Markdown")
+            else:
+                await update.message.reply_text(
+                    "ℹ️ " + msg + "\n\nDon't worry — you can continue using the "
+                    "bot normally here on Telegram.",
+                    parse_mode="Markdown")
+
         if arg == "premium":
             get_user(uid, username)
             await cmd_premium(update, context)
@@ -1293,6 +1388,7 @@ async def cmd_help(update, context):
 async def cmd_debug(update, context):
     per_subject = {s: len(LOCAL_DATABANK.get(s, [])) for s in AVAILABLE_SUBJECTS}
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
+    linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     lines = [
         "📊 *Databank Status*",
         f"Total: *{len(ALL_QS)}* questions",
@@ -1302,7 +1398,8 @@ async def cmd_debug(update, context):
         f"Bot: @{md(BOT_USERNAME)}",
         f"Channel: `{CHANNEL_ID or '❌ NOT SET'}`",
         f"WebApp: `{WEBAPP_URL}`",
-        f"Widget users: *{widget_users}*", "",
+        f"Widget users: *{widget_users}*",
+        f"Linked to Telegram: *{linked}*", "",
     ]
     for s in AVAILABLE_SUBJECTS:
         icon = "✅" if per_subject[s] > 0 else "❌"
@@ -2366,20 +2463,22 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
-    return (f"UTME Bot v40 · {len(ALL_QS)} Qs · "
+    linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
+    return (f"UTME Bot v41 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
-            f"Widget users: {widget_users} · "
-            f"WebApp: {WEBAPP_URL} · Server-Side Payment · Running")
+            f"Widget users: {widget_users} (linked: {linked}) · "
+            f"WebApp: {WEBAPP_URL} · Running")
 
 
 @flask_app.route("/health")
 def health():
     tutor_ok, tutor_detail = _tutor_ping() if HAS_AI_TUTOR else (False, "not loaded")
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
+    linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     return jsonify({
         "status": "ok",
-        "version": "v40-debug",
+        "version": "v41-merge-install-share",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2391,21 +2490,16 @@ def health():
         "webapp_enabled": True,
         "widget_enabled": True,
         "widget_users": widget_users,
+        "linked_to_telegram": linked,
         "users": len(USER_DATA),
     })
 
 
-# ═══════════════════════════════════════════════════════════
-# 🔍 DEBUG ENDPOINT — REMOVE AFTER FIXING PAYMENT
-# ═══════════════════════════════════════════════════════════
-
 @flask_app.route("/debug/flw-key")
 def debug_flw_key():
-    """Test whether the Flutterwave secret key is valid."""
     key_raw = FLW_SECRET_KEY or ""
     key = key_raw.strip()
     pub = (FLW_PUBLIC_KEY or "").strip()
-
     info = {
         "secret_key_present": bool(key),
         "secret_key_length": len(key),
@@ -2419,7 +2513,6 @@ def debug_flw_key():
         "public_key_mode": "TEST" if pub.startswith("FLWPUBK_TEST") else ("LIVE" if pub.startswith("FLWPUBK") else "UNKNOWN"),
         "secret_key_mode": "TEST" if key.startswith("FLWSECK_TEST") else ("LIVE" if key.startswith("FLWSECK") else "UNKNOWN"),
     }
-
     if key:
         try:
             r = requests.get(
@@ -2431,7 +2524,6 @@ def debug_flw_key():
             info["flw_response"] = r.text[:400]
         except Exception as e:
             info["flw_error"] = f"{type(e).__name__}: {str(e)[:200]}"
-
     return jsonify(info)
 
 
@@ -2914,13 +3006,8 @@ def api_webapp_premium_checkout():
     return jsonify({"status": "success", "checkout_url": checkout})
 
 
-# ═══════════════════════════════════════════════════════════
-# SERVER-SIDE PAYMENT LINK
-# ═══════════════════════════════════════════════════════════
-
 @flask_app.route("/api/payment/create_link", methods=["POST", "OPTIONS"])
 def api_payment_create_link():
-    """Generate a Flutterwave hosted payment link server-side."""
     if request.method == "OPTIONS":
         return "", 204
     body = request.get_json(silent=True) or {}
@@ -2993,10 +3080,6 @@ def api_payment_create_link():
 
     return jsonify({"status": "error", "message": last_err or "payment unavailable"}), 502
 
-
-# ═══════════════════════════════════════════════════════════
-# UPGRADE PAGE
-# ═══════════════════════════════════════════════════════════
 
 UPGRADE_PAGE = r"""<!DOCTYPE html>
 <html lang="en"><head>
@@ -3473,11 +3556,12 @@ def main():
     load_processed_tx()
 
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
+    linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     print(f"🤖 Bot: @{BOT_USERNAME}")
     print(f"👨‍🏫 Tutor: {TUTOR_NAME}")
     print(f"📢 Channel invite: {CHANNEL_INVITE_LINK}")
     print(f"🌐 WebApp URL: {WEBAPP_URL}")
-    print(f"🧩 Widget: ENABLED ({widget_users} anonymous users so far)")
+    print(f"🧩 Widget: ENABLED ({widget_users} anonymous, {linked} linked)")
     print(f"💰 Payment: SERVER-SIDE HOSTED LINK")
     print(f"🔍 Debug endpoint: /debug/flw-key")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
