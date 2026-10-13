@@ -1,9 +1,8 @@
 """
-UTME Success Bot v38 — Widget Edition
-- Full Telegram bot (all v37 features)
-- Blogger WebApp API
-- Anonymous widget API (no Telegram needed)
-- Payment return URL support
+UTME Success Bot v39 — Server-Side Payment Fix
+- Payment no longer requires Flutterwave JS SDK
+- Generates hosted payment link on backend → redirects user
+- Works with ad blockers, slow networks, strict browsers
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -11,7 +10,7 @@ from pathlib import Path
 from urllib.parse import quote, parse_qsl, urlparse
 
 import requests
-from flask import Flask, render_template_string, jsonify, request, send_file
+from flask import Flask, render_template_string, jsonify, request, send_file, redirect
 
 from telegram import (
     Update, InlineKeyboardButton, InlineKeyboardMarkup,
@@ -608,7 +607,10 @@ def _uid_from_tx_ref(tx_ref):
     parts = tx_ref.split("-")
     if len(parts) < 3:
         return None
-    return parts[1] if parts[1].isdigit() or parts[1].startswith("widget_") else None
+    uid_part = parts[1]
+    if uid_part.isdigit() or uid_part.startswith("widget_"):
+        return uid_part
+    return None
 
 
 def _grant_from_verified(tx_ref, plan_key):
@@ -2366,11 +2368,11 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
-    return (f"UTME Bot v38 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v39 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
             f"Widget users: {widget_users} · "
-            f"WebApp: {WEBAPP_URL} · Running")
+            f"WebApp: {WEBAPP_URL} · Server-Side Payment · Running")
 
 
 @flask_app.route("/health")
@@ -2379,20 +2381,12 @@ def health():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     return jsonify({
         "status": "ok",
+        "version": "v39-server-payment",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
-        "free_plan": "1 × 40Q English mock (one-time)",
-        "free_ai_why_per_day": FREE_AI_WHY_PER_DAY,
         "plan_size": PLAN_SIZE,
-        "option_shuffle": True,
-        "rotation": True,
-        "real_exam_mode": True,
-        "two_step_ai_why": True,
-        "state_rank_rotation": True,
-        "failures_persisted": True,
-        "persuasive_completion": True,
-        "channel_invite_button": True,
+        "payment_method": "server_side_hosted_link",
         "tutor_ok": tutor_ok,
         "channel_configured": bool(CHANNEL_ID),
         "webapp_url": WEBAPP_URL,
@@ -2404,7 +2398,7 @@ def health():
 
 
 # ═══════════════════════════════════════════════════════════
-# WEBAPP API — Telegram-Mini-App
+# SESSION HELPERS
 # ═══════════════════════════════════════════════════════════
 
 SESSION_SECRET = (BOT_TOKEN or "dev-secret").encode()
@@ -2440,7 +2434,6 @@ def _require_session():
 
 
 def _verify_webapp_initdata(init_data):
-    """Verify Telegram WebApp initData signature (HMAC-SHA256)."""
     try:
         parsed = dict(parse_qsl(init_data, keep_blank_values=True))
         hash_val = parsed.pop("hash", None)
@@ -2464,6 +2457,10 @@ def _cors(resp):
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return resp
 
+
+# ═══════════════════════════════════════════════════════════
+# TELEGRAM WEBAPP AUTH
+# ═══════════════════════════════════════════════════════════
 
 @flask_app.route("/api/webapp/auth", methods=["POST", "OPTIONS"])
 def api_webapp_auth():
@@ -2494,31 +2491,34 @@ def api_webapp_auth():
 
 
 # ═══════════════════════════════════════════════════════════
-# WIDGET API — Anonymous device-based auth (no Telegram)
+# WIDGET AUTH (anonymous device-based)
 # ═══════════════════════════════════════════════════════════
 
 @flask_app.route("/api/widget/register", methods=["POST", "OPTIONS"])
 def api_widget_register():
-    """Register/login an anonymous widget user via device ID (localStorage)."""
     if request.method == "OPTIONS":
         return "", 204
     body = request.get_json(silent=True) or {}
     device_id = str(body.get("device_id", "")).strip()[:80]
     nickname = str(body.get("nickname", "")).strip()[:24]
+    phone = str(body.get("phone", "")).strip()[:20]
     if not device_id.startswith("w_") or len(device_id) < 8:
         return jsonify({"status": "error", "message": "invalid device id"}), 400
     uid = "widget_" + device_id[2:]
     u = get_user(uid, nickname or "Student")
     if nickname:
         u["username"] = nickname
-        save_data()
-    print(f"[widget] ✅ registered uid={uid} name={u.get('username')}")
+    if phone:
+        u["phone"] = phone
+    save_data()
+    print(f"[widget] ✅ registered uid={uid} name={u.get('username')} phone={u.get('phone','—')}")
     return jsonify({
         "status": "success",
         "token": _make_session(uid),
         "uid": uid,
         "user": {
             "username": u.get("username", "Student"),
+            "phone": u.get("phone", ""),
             "is_premium": is_premium(uid),
             "premium_until": u.get("premium_until"),
             "plan": u.get("jamb_plan", ["english"]),
@@ -2529,7 +2529,7 @@ def api_widget_register():
 
 
 # ═══════════════════════════════════════════════════════════
-# Shared API — used by both Widget and Telegram WebApp
+# SHARED WEBAPP API
 # ═══════════════════════════════════════════════════════════
 
 @flask_app.route("/api/webapp/stats", methods=["GET"])
@@ -2574,6 +2574,7 @@ def api_webapp_user():
         "status": "success",
         "uid": uid,
         "username": u.get("username", ""),
+        "phone": u.get("phone", ""),
         "is_premium": premium,
         "premium_until": u.get("premium_until"),
         "plan": u.get("jamb_plan", ["english"]),
@@ -2646,7 +2647,7 @@ def api_webapp_mock_start():
             return jsonify({"status": "error", "message": "plan not set"}), 400
         qs = _fetch_rotated_multi(uid, plan, 180)
         label = "CBT:" + ",".join(plan)
-    else:  # "plan"
+    else:
         plan = u.get("jamb_plan", ["english"])
         if len(plan) != PLAN_SIZE:
             return jsonify({"status": "error", "message": "plan not set"}), 400
@@ -2887,67 +2888,257 @@ def api_webapp_premium_checkout():
     return jsonify({"status": "success", "checkout_url": checkout})
 
 
-def run_flask():
-    flask_app.run(host="0.0.0.0", port=PORT, threaded=True)
+# ═══════════════════════════════════════════════════════════
+# SERVER-SIDE PAYMENT LINK — NO Flutterwave JS REQUIRED
+# ═══════════════════════════════════════════════════════════
 
+@flask_app.route("/api/payment/create_link", methods=["POST", "OPTIONS"])
+def api_payment_create_link():
+    """
+    Generate a Flutterwave hosted payment link server-side.
+    Works even with ad blockers, slow networks, and strict browsers.
+    """
+    if request.method == "OPTIONS":
+        return "", 204
+    body = request.get_json(silent=True) or {}
+    uid = str(body.get("uid", "")).strip()
+    plan_key = str(body.get("plan", "monthly")).strip()
+    return_url = str(body.get("return_url", "")).strip()[:300]
+
+    if not uid:
+        return jsonify({"status": "error", "message": "missing uid"}), 400
+    if plan_key not in PLANS:
+        return jsonify({"status": "error", "message": "invalid plan"}), 400
+    if not FLW_SECRET_KEY:
+        return jsonify({"status": "error", "message": "payment not configured"}), 503
+
+    plan = PLANS[plan_key]
+    tx_ref = f"UTME-{uid}-{int(time.time())}"
+
+    # Build redirect URL with return_url preserved
+    redirect = f"{PAYMENT_URL}/payment/complete?uid={uid}&tx_ref={tx_ref}"
+    if return_url:
+        redirect += f"&return={quote(return_url)}"
+
+    payload = {
+        "tx_ref": tx_ref,
+        "amount": str(plan["price"]),
+        "currency": "NGN",
+        "redirect_url": redirect,
+        "payment_options": "card,banktransfer,ussd,account",
+        "customer": {
+            "email": f"user{uid.replace('_', '')}@utmebot.com",
+            "name": get_user(uid).get("username", "UTME Student"),
+        },
+        "customizations": {
+            "title": f"UTME Success Bot — {plan['label']}",
+            "description": f"{plan['label']} Premium: unlimited mocks, tutor, voice",
+            "logo": "",
+        },
+        "meta": {
+            "user_id": uid,
+            "plan": plan_key,
+            "product": f"premium_{plan_key}",
+        },
+    }
+
+    headers = {
+        "Authorization": f"Bearer {FLW_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    # Try up to 2 times
+    last_err = None
+    for attempt in (1, 2):
+        try:
+            r = requests.post(f"https://api.flutterwave.com/v3/payments",
+                              json=payload, headers=headers, timeout=25)
+            data = r.json()
+            link = (data.get("data") or {}).get("link")
+            if data.get("status") == "success" and link:
+                print(f"[payment] ✅ link created uid={uid} plan={plan_key}")
+                return jsonify({
+                    "status": "success",
+                    "link": link,
+                    "tx_ref": tx_ref,
+                    "amount": plan["price"],
+                })
+            last_err = data.get("message") or "link creation failed"
+            print(f"[payment] attempt {attempt} failed: {last_err}")
+        except Exception as e:
+            last_err = f"{type(e).__name__}: {str(e)[:200]}"
+            print(f"[payment] attempt {attempt} exception: {last_err}")
+        time.sleep(1.2)
+
+    return jsonify({"status": "error", "message": last_err or "payment unavailable"}), 502
+
+
+# ═══════════════════════════════════════════════════════════
+# UPGRADE PAGE — SERVER-SIDE LINK (NO Flutterwave JS)
+# ═══════════════════════════════════════════════════════════
 
 UPGRADE_PAGE = r"""<!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Upgrade — UTME Success Bot</title>
-<script src="https://checkout.flutterwave.com/v3.js"></script>
 <style>
- body{margin:0;font-family:-apple-system,sans-serif;background:linear-gradient(135deg,#1e1b4b,#7c3aed);min-height:100vh;padding:20px;color:#0f172a}
- .wrap{max-width:480px;margin:0 auto}
- .card{background:#fff;border-radius:20px;padding:24px;margin-bottom:18px;box-shadow:0 20px 50px -12px rgba(0,0,0,.35)}
- h1{color:#fff;text-align:center;font-size:26px}
- p.sub{color:rgba(255,255,255,.85);text-align:center;margin-top:0}
- .plan{border:2px solid #e2e8f0;border-radius:16px;padding:20px;margin-bottom:14px}
- .plan.best{border-color:#f59e0b;background:#fffbeb}
- .pay{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,#7c3aed,#4c1d95);cursor:pointer;margin-top:10px}
- .plan.best .pay{background:linear-gradient(135deg,#f59e0b,#d97706)}
- .btn-alt{display:block;padding:14px;text-align:center;border-radius:12px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-decoration:none;font-weight:700;margin-top:8px}
- .alert{background:#fef2f2;color:#991b1b;padding:12px;border-radius:12px;font-size:13px;border-left:4px solid #dc2626;margin-bottom:16px}
-</style></head><body><div class="wrap">
+ *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:linear-gradient(135deg,#1e1b4b 0%,#5b21b6 50%,#7c3aed 100%);
+      min-height:100vh;padding:20px;color:#0f172a;display:flex;align-items:flex-start;justify-content:center}
+ .wrap{max-width:480px;width:100%;margin:0 auto}
+ h1{color:#fff;text-align:center;font-size:26px;font-weight:900;letter-spacing:-.5px;margin-bottom:6px}
+ p.sub{color:rgba(255,255,255,.85);text-align:center;font-size:14px;margin-bottom:22px;line-height:1.5}
+ .card{background:#fff;border-radius:22px;padding:24px;margin-bottom:16px;
+       box-shadow:0 20px 50px -12px rgba(0,0,0,.4);animation:in .4s ease-out}
+ @keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+ .plan{border:2px solid #e2e8f0;border-radius:18px;padding:22px;margin-bottom:14px;
+       transition:all .2s;position:relative;overflow:hidden}
+ .plan.best{border-color:#f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7)}
+ .plan-tag{position:absolute;top:0;right:0;background:linear-gradient(135deg,#f59e0b,#ea580c);
+           color:#fff;font-size:10.5px;font-weight:800;padding:6px 12px;
+           border-bottom-left-radius:14px;letter-spacing:.6px;text-transform:uppercase}
+ .plan h3{font-size:19px;margin-bottom:6px;color:#0f172a}
+ .plan .price{font-size:32px;font-weight:900;color:#1e1b4b;letter-spacing:-1px;margin:6px 0}
+ .plan .price small{font-size:14px;font-weight:500;color:#64748b}
+ .plan .desc{font-size:13px;color:#64748b;margin-bottom:14px;line-height:1.4}
+ .plan .save{display:inline-block;background:#10b981;color:#fff;font-size:11px;font-weight:800;
+             padding:4px 10px;border-radius:100px;margin-bottom:10px;letter-spacing:.4px}
+ .pay{width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:800;
+      color:#fff;background:linear-gradient(135deg,#7c3aed,#4c1d95);cursor:pointer;
+      transition:all .15s;letter-spacing:.2px;box-shadow:0 8px 20px rgba(124,58,237,.35);
+      display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+ .pay:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 28px rgba(124,58,237,.5)}
+ .pay:active:not(:disabled){transform:translateY(0);box-shadow:0 4px 12px rgba(124,58,237,.4)}
+ .pay:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+ .plan.best .pay{background:linear-gradient(135deg,#f59e0b,#ea580c);
+                  box-shadow:0 8px 20px rgba(245,158,11,.4)}
+ .btn-alt{display:flex;align-items:center;justify-content:center;gap:8px;
+          padding:14px;border-radius:14px;
+          background:linear-gradient(135deg,#10b981,#059669);color:#fff;
+          text-decoration:none;font-weight:700;font-size:14.5px;margin-top:12px;
+          box-shadow:0 6px 16px rgba(16,185,129,.3)}
+ .trust{display:flex;align-items:center;justify-content:center;gap:8px;
+        color:rgba(255,255,255,.85);font-size:12.5px;text-align:center;
+        padding:14px;margin-top:8px;line-height:1.5}
+ .sp{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);
+     border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+ @keyframes sp{to{transform:rotate(360deg)}}
+ .alert{background:#fef2f2;color:#991b1b;padding:14px;border-radius:12px;
+        font-size:13.5px;border-left:4px solid #dc2626;margin-bottom:16px;line-height:1.5}
+ .success{text-align:center;padding:40px 20px}
+ .success .icon{font-size:72px;margin-bottom:16px}
+ .success h2{color:#065f46;font-size:24px;margin-bottom:8px}
+ .success p{color:#475569;font-size:14px;line-height:1.6}
+ .benefits{list-style:none;margin:12px 0 0;padding:0}
+ .benefits li{padding:8px 0 8px 26px;position:relative;font-size:13.5px;color:#334155;
+              border-bottom:1px solid #f1f5f9;line-height:1.5}
+ .benefits li:last-child{border:none}
+ .benefits li::before{content:'✓';position:absolute;left:0;top:8px;
+                      width:18px;height:18px;background:#10b981;color:#fff;
+                      border-radius:50%;text-align:center;line-height:18px;
+                      font-size:11px;font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
 <h1>👑 Upgrade to Premium</h1>
-<p class="sub">Unlock unlimited practice. Score higher in UTME.</p>
-{% if not gateway_ready %}<div class="alert">⚠️ Payment not configured. Contact support.</div>{% endif %}
-<div class="card">
- <div class="plan"><b>Monthly</b> — {{ monthly_price_text }}<br><small>{{ monthly_days }} days full access</small>
- <button class="pay" onclick="payNow('monthly', {{ monthly_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay Monthly</button></div>
- <div class="plan best"><b>⭐ 6 Months</b> — {{ six_months_text }}<br><small>Save {{ savings_text }} · {{ six_months_days }} days</small>
- <button class="pay" onclick="payNow('6months', {{ six_months_price }})" {% if not gateway_ready %}disabled{% endif %}>💳 Pay 6 Months</button></div>
- <a class="btn-alt" href="{{ share_link }}">👥 Invite Friends — Get {{ referral_reward_days }} Days FREE</a>
+<p class="sub">Unlock unlimited practice. Score higher in JAMB.</p>
+{% if not gateway_ready %}
+<div class="alert">⚠️ Payment is not fully configured. Please contact support.</div>
+{% endif %}
+<div class="card" id="main-card">
+  <div class="plan best">
+    <div class="plan-tag">Best Value</div>
+    <h3>6 Months</h3>
+    <span class="save">SAVE ₦6,000 (50% OFF)</span>
+    <div class="price">{{ six_months_text }} <small>/ {{ six_months_days }} days</small></div>
+    <div class="desc">Full access for 6 months — the smart choice for serious candidates.</div>
+    <ul class="benefits">
+      <li>Unlimited mocks — all subjects</li>
+      <li>Full 180Q JAMB CBT Mock</li>
+      <li>Unlimited AI Tutor + voice</li>
+      <li>Unlimited Trap Detector</li>
+    </ul>
+    <button class="pay" id="pay-6m" onclick="payNow('6months')" {% if not gateway_ready %}disabled{% endif %}>
+      <span class="btn-label">💳 Pay {{ six_months_text }} Now</span>
+    </button>
+  </div>
+  <div class="plan">
+    <h3>Monthly</h3>
+    <div class="price">{{ monthly_price_text }} <small>/ {{ monthly_days }} days</small></div>
+    <div class="desc">Try Premium for one month and see the difference.</div>
+    <button class="pay" id="pay-1m" onclick="payNow('monthly')" {% if not gateway_ready %}disabled{% endif %}>
+      <span class="btn-label">💳 Pay {{ monthly_price_text }} Now</span>
+    </button>
+  </div>
+  <a class="btn-alt" href="{{ share_link }}">👥 Invite Friends — Get {{ referral_reward_days }} Days FREE</a>
 </div>
-<p style="text-align:center;color:rgba(255,255,255,.7);font-size:12px">
-🔒 Secured by Flutterwave · <a href="https://t.me/{{ bot_username }}" style="color:#fff">Return</a></p>
+<div class="trust">
+  🔒 Secured by Flutterwave · Card · Bank Transfer · USSD · Instant activation
 </div>
+</div>
+
 <script>
-const UID="{{ uid }}", BOT="{{ bot_username }}", FLW_PK="{{ flw_public_key }}", API=window.location.origin;
+const UID = "{{ uid }}";
 const RETURN_URL = "{{ return_url }}";
-function payNow(planKey, amount){
- if(typeof FlutterwaveCheckout==="undefined"){alert("Payment gateway failed to load.");return;}
- if(!FLW_PK||FLW_PK.length<20){alert("Payment not configured.");return;}
- const txRef="UTME-"+UID+"-"+Date.now();
- FlutterwaveCheckout({
-  public_key:FLW_PK, tx_ref:txRef, amount:amount, currency:"NGN",
-  payment_options:"card,banktransfer,ussd,account",
-  redirect_url:API+"/payment/complete?uid="+UID,
-  customer:{email:"user"+UID.replace(/[^a-z0-9]/gi,"")+"@utmebot.com", name:"UTME User"},
-  customizations:{title:"UTME Success Bot Premium", description:planKey==="6months"?"6 Months":"Monthly"},
-  meta:{user_id:UID, plan:planKey},
-  callback:function(resp){
-   fetch(API+"/verify/flutterwave",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({transaction_id:resp.transaction_id,tx_ref:resp.tx_ref,expected_uid:UID,plan:planKey})})
-   .then(r=>r.json()).then(res=>{
-    if(res.status==="success"){alert("✅ Payment successful!");window.location.href=RETURN_URL;}
-    else{alert("⚠️ Contact support if not activated.");window.location.href=RETURN_URL;}
-   }).catch(()=>{alert("⚠️ Network error.");window.location.href=RETURN_URL;});
-  },
-  onclose:function(){console.log("closed");}
- });
+const API = window.location.origin;
+
+async function payNow(planKey) {
+  const btn = document.getElementById(planKey === '6months' ? 'pay-6m' : 'pay-1m');
+  const label = btn.querySelector('.btn-label');
+  const orig = label.textContent;
+
+  // Disable both buttons
+  document.querySelectorAll('.pay').forEach(b => b.disabled = true);
+  label.innerHTML = '<span class="sp"></span> Creating payment link…';
+
+  try {
+    const res = await fetch(API + '/api/payment/create_link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uid: UID,
+        plan: planKey,
+        return_url: RETURN_URL
+      })
+    });
+    const data = await res.json();
+
+    if (data.status === 'success' && data.link) {
+      label.innerHTML = '<span class="sp"></span> Redirecting to Flutterwave…';
+      // Small delay so user sees the feedback
+      setTimeout(() => {
+        window.location.href = data.link;
+      }, 300);
+      return;
+    }
+
+    // Failure
+    label.textContent = orig;
+    document.querySelectorAll('.pay').forEach(b => b.disabled = false);
+    showError(data.message || 'Could not create payment link. Please try again.');
+  } catch (err) {
+    label.textContent = orig;
+    document.querySelectorAll('.pay').forEach(b => b.disabled = false);
+    showError('Network error. Please check your connection and try again.');
+  }
 }
-</script></body></html>"""
+
+function showError(msg) {
+  const existing = document.getElementById('err-box');
+  if (existing) existing.remove();
+  const box = document.createElement('div');
+  box.id = 'err-box';
+  box.className = 'alert';
+  box.style.marginTop = '14px';
+  box.innerHTML = '⚠️ ' + msg + '<br><br>If this keeps happening, contact us on Telegram: <b>@UTMESUCCESS</b>';
+  document.getElementById('main-card').appendChild(box);
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+</script>
+</body></html>"""
 
 
 @flask_app.route("/upgrade/<uid>")
@@ -2961,8 +3152,7 @@ def upgrade_page(uid):
     return_url = request.args.get("return", f"https://t.me/{BOT_USERNAME}")[:300]
     return render_template_string(
         UPGRADE_PAGE, uid=uid, bot_username=BOT_USERNAME,
-        flw_public_key=FLW_PUBLIC_KEY,
-        gateway_ready=bool(FLW_PUBLIC_KEY and FLW_SECRET_KEY),
+        gateway_ready=bool(FLW_SECRET_KEY),
         monthly_price=monthly["price"], monthly_price_text=monthly["price_text"],
         monthly_days=monthly["days"], six_months_price=six["price"],
         six_months_text=six["price_text"], six_months_days=six["days"],
@@ -2973,13 +3163,102 @@ def upgrade_page(uid):
 @flask_app.route("/payment/complete")
 def payment_complete():
     uid = request.args.get("uid", "")
-    return f"""<html><body style="font-family:sans-serif;text-align:center;padding:60px">
-    <h1 style="color:#10b981">✅ Payment Received</h1>
-    <p>Activation in progress.</p>
-    <p>You can close this page and return to the app.</p>
-    <p style="color:#888;font-size:13px;">User ID: <b>{uid}</b></p>
-    <a href="{PAYMENT_URL}/upgrade/{uid}" style="padding:14px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:12px;font-weight:700">Back to Upgrade Page</a>
-    </body></html>"""
+    tx_ref = request.args.get("tx_ref", "")
+    return_url = request.args.get("return", "")
+    status = request.args.get("status", "")
+    transaction_id = request.args.get("transaction_id", "")
+
+    # Try to verify automatically if we have a transaction ID
+    verified = False
+    if transaction_id and FLW_SECRET_KEY:
+        try:
+            r = requests.get(
+                f"https://api.flutterwave.com/v3/transactions/{transaction_id}/verify",
+                headers={"Authorization": f"Bearer {FLW_SECRET_KEY}"},
+                timeout=15,
+            )
+            data = r.json()
+            tx = (data or {}).get("data") or {}
+            if data.get("status") == "success" and tx.get("status") == "successful":
+                vref = tx.get("tx_ref", tx_ref)
+                vuid = _uid_from_tx_ref(vref)
+                plan_key = (tx.get("meta") or {}).get("plan", "monthly")
+                if vuid:
+                    if mark_processed(vref):
+                        plan = _resolve_plan(plan_key)
+                        add_premium(vuid, days=plan["days"], plan=plan["key"])
+                        verified = True
+                        print(f"[payment/complete] ✅ auto-granted {vuid} {plan_key}")
+        except Exception as e:
+            print(f"[payment/complete] verify error: {e}")
+
+    # Determine return target
+    if not return_url:
+        if uid.startswith("widget_"):
+            return_url = WEBAPP_URL
+        else:
+            return_url = f"https://t.me/{BOT_USERNAME}"
+
+    if verified:
+        return f"""<!DOCTYPE html><html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payment Successful</title>
+<style>
+ body{{margin:0;font-family:-apple-system,sans-serif;
+     background:linear-gradient(135deg,#10b981,#059669);
+     min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center}}
+ .card{{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);
+       border-radius:24px;padding:40px 28px;max-width:420px;width:100%}}
+ .icon{{font-size:72px;margin-bottom:16px}}
+ h1{{font-size:26px;margin:0 0 10px;color:#fff;font-weight:900}}
+ p{{font-size:15px;margin:0 0 8px;opacity:.95;line-height:1.5}}
+ .btn{{display:inline-block;margin-top:22px;padding:14px 28px;border-radius:12px;
+      background:#fff;color:#059669;text-decoration:none;font-weight:800;font-size:15px;
+      box-shadow:0 8px 20px rgba(0,0,0,.15)}}
+ .countdown{{font-size:13px;opacity:.85;margin-top:14px}}
+</style></head><body>
+<div class="card">
+  <div class="icon">🎉</div>
+  <h1>Payment Successful!</h1>
+  <p>Premium is now active on your account.</p>
+  <p>You can now enjoy unlimited mocks, AI Tutor, and voice explanations.</p>
+  <a class="btn" href="{return_url}">Return to App →</a>
+  <div class="countdown">Auto-redirecting in <span id="cd">5</span>s…</div>
+</div>
+<script>
+let t = 5;
+const el = document.getElementById('cd');
+const iv = setInterval(() => {{
+  t--;
+  if (el) el.textContent = t;
+  if (t <= 0) {{ clearInterval(iv); window.location.href = "{return_url}"; }}
+}}, 1000);
+</script>
+</body></html>"""
+    else:
+        return f"""<!DOCTYPE html><html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verifying Payment</title>
+<style>
+ body{{margin:0;font-family:-apple-system,sans-serif;
+     background:linear-gradient(135deg,#7c3aed,#4c1d95);
+     min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center}}
+ .card{{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);
+       border-radius:24px;padding:40px 28px;max-width:420px;width:100%}}
+ .icon{{font-size:64px;margin-bottom:16px}}
+ h1{{font-size:24px;margin:0 0 10px;color:#fff;font-weight:900}}
+ p{{font-size:14.5px;margin:0 0 8px;opacity:.95;line-height:1.55}}
+ .btn{{display:inline-block;margin-top:22px;padding:14px 28px;border-radius:12px;
+      background:#fff;color:#7c3aed;text-decoration:none;font-weight:800;font-size:15px}}
+</style></head><body>
+<div class="card">
+  <div class="icon">⏳</div>
+  <h1>Verifying Payment…</h1>
+  <p>We received your payment reference. Activation may take up to 60 seconds.</p>
+  <p style="font-size:13px;opacity:.85;margin-top:12px;">If your Premium doesn't activate within 2 minutes, contact support on Telegram with your transaction ID.</p>
+  <a class="btn" href="{return_url}">Return to App →</a>
+</div>
+</body></html>"""
 
 
 @flask_app.route("/verify/flutterwave", methods=["POST"])
@@ -3037,6 +3316,10 @@ def flutterwave_webhook():
         return jsonify({"status": "error"}), 500
     _grant_from_verified(tx_ref, meta_plan if meta_plan in PLANS else "monthly")
     return jsonify({"status": "success"})
+
+
+def run_flask():
+    flask_app.run(host="0.0.0.0", port=PORT, threaded=True)
 
 
 # ============================================================
@@ -3180,21 +3463,12 @@ def main():
 
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     print(f"🤖 Bot: @{BOT_USERNAME}")
-    print(f"👨‍🏫 Tutor: {TUTOR_NAME} (Nigerian male teacher voice)")
+    print(f"👨‍🏫 Tutor: {TUTOR_NAME}")
     print(f"📢 Channel invite: {CHANNEL_INVITE_LINK}")
     print(f"🌐 WebApp URL: {WEBAPP_URL}")
     print(f"🧩 Widget: ENABLED ({widget_users} anonymous users so far)")
+    print(f"💰 Payment: SERVER-SIDE HOSTED LINK (no JS SDK)")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
-    print(f"💬 Free AI Why/day: {FREE_AI_WHY_PER_DAY}")
-    print(f"📋 Plan: English + 3 chosen subjects")
-    print(f"🎲 Option shuffler: ON")
-    print(f"🔄 Rotation: ON")
-    print(f"📝 Real exam mode: ON (no answer reveal)")
-    print(f"🎯 Two-step AI Why: ON (recap + reveal)")
-    print(f"🏆 State rank rotation: ON")
-    print(f"💾 Failures persisted: ON")
-    print(f"📣 Persuasive completion: ON")
-    print(f"🔗 Join Channel button: ON")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
