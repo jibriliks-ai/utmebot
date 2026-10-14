@@ -1,5 +1,5 @@
 """
-UTME Success Bot v41 — Widget Merge + Install + Share
+UTME Success Bot v42 — Phone Recognition + Referrals + Install + Share
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -479,6 +479,7 @@ def get_user(uid, username=""):
             "joined": str(date.today()), "history": [],
             "invite_code": hashlib.md5(uid.encode()).hexdigest()[:6].upper(),
             "invited_by": None, "invites": 0, "invited_users": [],
+            "referral_rewards_claimed": 0,
             "username": username or f"User{uid[-4:]}", "study_subject": None,
             "jamb_plan": ["english"],
             "plan_set": False,
@@ -500,6 +501,10 @@ def get_user(uid, username=""):
     u.setdefault("last_mock_failed", [])
     u.setdefault("last_mock_subject", None)
     u.setdefault("last_mock_total", 40)
+    u.setdefault("invite_code", hashlib.md5(uid.encode()).hexdigest()[:6].upper())
+    u.setdefault("invites", 0)
+    u.setdefault("invited_users", [])
+    u.setdefault("referral_rewards_claimed", 0)
     if u.get("premium_until"):
         try:
             if datetime.now() > datetime.fromisoformat(u["premium_until"]):
@@ -589,6 +594,77 @@ def _merge_widget_user(widget_uid, tg_uid):
     print(f"[link] ✅ merged {widget_uid} → TG {tg_uid}")
     return True, "merged"
 
+
+# ═══════════════════════════════════════════════════════════
+# PHONE RECOGNITION + REFERRAL HELPERS (NEW)
+# ═══════════════════════════════════════════════════════════
+
+def _find_user_by_phone(phone):
+    """Find existing user uid by phone number (normalized across formats)."""
+    if not phone:
+        return None
+    normalized = re.sub(r'\D', '', str(phone))
+    if not normalized or len(normalized) < 10:
+        return None
+    candidates = {normalized}
+    if normalized.startswith("0") and len(normalized) == 11:
+        candidates.add("234" + normalized[1:])
+        candidates.add(normalized[1:])
+    if normalized.startswith("234") and len(normalized) == 13:
+        candidates.add("0" + normalized[3:])
+        candidates.add(normalized[3:])
+    for uid_k, u in USER_DATA.items():
+        stored = re.sub(r'\D', '', str(u.get("phone", "")))
+        if stored and stored in candidates:
+            return uid_k
+    return None
+
+
+def _apply_referral_code(new_uid, code):
+    """Apply a referral code to a newly registered user.
+    Grants reward to the inviter once they hit REFERRAL_REQUIRED active referrals."""
+    if not code or not new_uid:
+        return None
+    code = str(code).strip().upper()
+    new_uid = str(new_uid)
+    if not code:
+        return None
+    u = get_user(new_uid)
+    if u.get("invited_by"):
+        return None
+    for inviter_id, inv_data in USER_DATA.items():
+        if inviter_id == new_uid:
+            continue
+        if str(inv_data.get("invite_code", "")).upper() == code:
+            if new_uid not in inv_data.get("invited_users", []):
+                u["invited_by"] = inviter_id
+                inv_data["invites"] = inv_data.get("invites", 0) + 1
+                inv_data.setdefault("invited_users", []).append(new_uid)
+                if inv_data["invites"] >= REFERRAL_REQUIRED:
+                    add_premium(inviter_id, days=REFERRAL_REWARD_DAYS, plan="referral")
+                    inv_data["invites"] = 0
+                    inv_data["referral_rewards_claimed"] = inv_data.get("referral_rewards_claimed", 0) + 1
+                save_data()
+                print(f"[referral] ✅ {new_uid} referred by {inviter_id} (total={inv_data['invites']})")
+                return inviter_id
+    return None
+
+
+def _get_referral_status(uid):
+    u = get_user(uid)
+    code = u.get("invite_code", "")
+    count = u.get("invites", 0)
+    return {
+        "invite_code": code,
+        "invite_link": f"https://skoolcure.blogspot.com/p/bot.html?ref={code}",
+        "invites": count,
+        "required": REFERRAL_REQUIRED,
+        "reward_days": REFERRAL_REWARD_DAYS,
+        "referral_rewards_claimed": u.get("referral_rewards_claimed", 0),
+    }
+
+
+# ═══════════════════════════════════════════════════════════
 
 def is_premium(uid):
     u = get_user(uid)
@@ -1215,6 +1291,7 @@ async def cmd_start(update, context):
                             add_premium(inviter_id, days=REFERRAL_REWARD_DAYS,
                                         plan="referral")
                             inv_data["invites"] = 0
+                            inv_data["referral_rewards_claimed"] = inv_data.get("referral_rewards_claimed", 0) + 1
                         save_data()
                     break
     u = get_user(uid, username)
@@ -2294,7 +2371,7 @@ async def _start_plan_mock(query, uid, u):
     intro = (f"🎯 *Mock from Your Plan*\n\n"
              f"Starting: *{display}* ({len(qs)} Qs)\n\n"
              f"Continue with other subjects from your plan after this.")
-    txt, kb = _start_mock_session(uid, qs, f"subject_{subject}", intro_text=intro)  # ✅ FIXED
+    txt, kb = _start_mock_session(uid, qs, f"subject_{subject}", intro_text=intro)
     await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
 
 
@@ -2464,7 +2541,7 @@ flask_app = Flask(__name__)
 def home():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
-    return (f"UTME Bot v41 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v42 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
             f"Widget users: {widget_users} (linked: {linked}) · "
@@ -2478,7 +2555,7 @@ def health():
     linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     return jsonify({
         "status": "ok",
-        "version": "v41-merge-install-share",
+        "version": "v42-phone-recognition-referrals",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2624,20 +2701,45 @@ def api_widget_register():
     device_id = str(body.get("device_id", "")).strip()[:80]
     nickname = str(body.get("nickname", "")).strip()[:24]
     phone = str(body.get("phone", "")).strip()[:20]
+    ref_code = str(body.get("ref", "")).strip()[:20]
+
     if not device_id.startswith("w_") or len(device_id) < 8:
         return jsonify({"status": "error", "message": "invalid device id"}), 400
-    uid = "widget_" + device_id[2:]
-    u = get_user(uid, nickname or "Student")
-    if nickname:
-        u["username"] = nickname
-    if phone:
-        u["phone"] = phone
-    save_data()
-    print(f"[widget] ✅ registered uid={uid} name={u.get('username')} phone={u.get('phone','—')}")
+
+    # ⭐ PHONE-BASED RECOGNITION: if phone matches an existing user, reuse that account
+    existing_uid = _find_user_by_phone(phone) if phone else None
+    reused = False
+
+    if existing_uid:
+        uid = existing_uid
+        u = get_user(uid)
+        if nickname and (not u.get("username") or u.get("username", "").startswith("User")):
+            u["username"] = nickname
+        if phone and not u.get("phone"):
+            u["phone"] = phone
+        u["linked_device_id"] = device_id
+        save_data()
+        reused = True
+        print(f"[widget] 🔄 login-by-phone uid={uid} phone={phone}")
+    else:
+        uid = "widget_" + device_id[2:]
+        u = get_user(uid, nickname or "Student")
+        if nickname:
+            u["username"] = nickname
+        if phone:
+            u["phone"] = phone
+        u["linked_device_id"] = device_id
+        save_data()
+        print(f"[widget] ✅ registered uid={uid} phone={phone}")
+        # Apply referral code (only for brand-new users)
+        if ref_code:
+            _apply_referral_code(uid, ref_code)
+
     return jsonify({
         "status": "success",
         "token": _make_session(uid),
         "uid": uid,
+        "reused": reused,
         "user": {
             "username": u.get("username", "Student"),
             "phone": u.get("phone", ""),
@@ -2688,6 +2790,7 @@ def api_webapp_user():
     premium = is_premium(uid)
     used_tutor = u.get("tutor_counts", {}).get(str(date.today()), 0)
     _, ai_why_rem = can_use_ai_why(uid)
+    invite_code = u.get("invite_code", "")
     return jsonify({
         "status": "success",
         "uid": uid,
@@ -2698,8 +2801,12 @@ def api_webapp_user():
         "plan": u.get("jamb_plan", ["english"]),
         "plan_set": u.get("plan_set", False),
         "free_english_used": u.get("free_english_used", False),
-        "invite_code": u.get("invite_code", ""),
+        "invite_code": invite_code,
         "invites": u.get("invites", 0),
+        "referral_required": REFERRAL_REQUIRED,
+        "referral_reward_days": REFERRAL_REWARD_DAYS,
+        "referral_link": f"https://skoolcure.blogspot.com/p/bot.html?ref={invite_code}",
+        "referral_rewards_claimed": u.get("referral_rewards_claimed", 0),
         "history": hist[-15:],
         "last_mock_failed": u.get("last_mock_failed", []),
         "last_mock_subject": u.get("last_mock_subject"),
@@ -2982,6 +3089,16 @@ def api_webapp_failure_analyze():
     _, rem = can_use_ai_why(uid)
     return jsonify({"status": "success", "analysis": analysis[:3500],
                     "remaining": -1 if is_premium(uid) else rem})
+
+
+@flask_app.route("/api/webapp/referral", methods=["GET", "OPTIONS"])
+def api_webapp_referral():
+    if request.method == "OPTIONS":
+        return "", 204
+    uid = _require_session()
+    if not uid:
+        return jsonify({"status": "error"}), 401
+    return jsonify({"status": "success", **_get_referral_status(uid)})
 
 
 @flask_app.route("/api/webapp/premium/checkout", methods=["POST", "OPTIONS"])
@@ -3565,6 +3682,8 @@ def main():
     print(f"💰 Payment: SERVER-SIDE HOSTED LINK")
     print(f"🔍 Debug endpoint: /debug/flw-key")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
+    print(f"🎁 Referral: {REFERRAL_REQUIRED} invites = {REFERRAL_REWARD_DAYS} days free")
+    print(f"📱 Phone recognition: ENABLED")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
