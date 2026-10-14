@@ -2294,7 +2294,7 @@ async def _start_plan_mock(query, uid, u):
     intro = (f"🎯 *Mock from Your Plan*\n\n"
              f"Starting: *{display}* ({len(qs)} Qs)\n\n"
              f"Continue with other subjects from your plan after this.")
-    txt, kb = _start_mock_session(uid, f"subject_{subject}", intro_text=intro)
+    txt, kb = _start_mock_session(uid, qs, f"subject_{subject}", intro_text=intro)  # ✅ FIXED
     await query.message.reply_text(txt, parse_mode="Markdown", reply_markup=kb)
 
 
