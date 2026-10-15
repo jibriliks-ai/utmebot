@@ -1,5 +1,5 @@
 """
-UTME Success Bot v43 — PostgreSQL + Phone Recognition + Referrals
+UTME Success Bot v44 — PostgreSQL + Admin Panel + Web-bot Referrals
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -2742,7 +2742,7 @@ def home():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     db_status = "PostgreSQL" if DATABASE_URL else "NO DATABASE"
-    return (f"UTME Bot v43 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v44 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
             f"DB: {db_status} · Users: {len(USER_DATA)} · "
@@ -2757,7 +2757,7 @@ def health():
     linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     return jsonify({
         "status": "ok",
-        "version": "v43-postgres-referrals",
+        "version": "v44-admin-referrals-postgres",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2843,6 +2843,16 @@ def _require_session():
     return _read_session(auth[7:])
 
 
+def _admin_required():
+    """Return the uid if the session belongs to the admin, else None."""
+    uid = _require_session()
+    if not uid:
+        return None
+    if not ADMIN_ID or str(uid) != str(ADMIN_ID):
+        return None
+    return uid
+
+
 def _verify_webapp_initdata(init_data):
     try:
         parsed = dict(parse_qsl(init_data, keep_blank_values=True))
@@ -2888,6 +2898,7 @@ def api_webapp_auth():
         "user": {
             "username": u.get("username", ""),
             "is_premium": is_premium(uid),
+            "is_admin": (str(uid) == str(ADMIN_ID)) if ADMIN_ID else False,
             "premium_until": u.get("premium_until"),
             "plan": u.get("jamb_plan", ["english"]),
             "plan_set": u.get("plan_set", False),
@@ -2947,6 +2958,7 @@ def api_widget_register():
             "username": u.get("username", "Student"),
             "phone": u.get("phone", ""),
             "is_premium": is_premium(uid),
+            "is_admin": (str(uid) == str(ADMIN_ID)) if ADMIN_ID else False,
             "premium_until": u.get("premium_until"),
             "plan": u.get("jamb_plan", ["english"]),
             "plan_set": u.get("plan_set", False),
@@ -2994,12 +3006,14 @@ def api_webapp_user():
     used_tutor = u.get("tutor_counts", {}).get(str(date.today()), 0)
     _, ai_why_rem = can_use_ai_why(uid)
     invite_code = u.get("invite_code", "")
+    is_admin = (str(uid) == str(ADMIN_ID)) if ADMIN_ID else False
     return jsonify({
         "status": "success",
         "uid": uid,
         "username": u.get("username", ""),
         "phone": u.get("phone", ""),
         "is_premium": premium,
+        "is_admin": is_admin,
         "premium_until": u.get("premium_until"),
         "plan": u.get("jamb_plan", ["english"]),
         "plan_set": u.get("plan_set", False),
@@ -3326,6 +3340,125 @@ def api_webapp_premium_checkout():
     return jsonify({"status": "success", "checkout_url": checkout})
 
 
+# ═══════════════════════════════════════════════════════════
+# ADMIN WEB APP ENDPOINTS
+# ═══════════════════════════════════════════════════════════
+
+@flask_app.route("/api/webapp/admin/stats", methods=["GET", "OPTIONS"])
+def api_admin_stats():
+    if request.method == "OPTIONS":
+        return "", 204
+    if not _admin_required():
+        return jsonify({"status": "error", "message": "admin only"}), 403
+
+    total = len(USER_DATA)
+    premium_users = sum(1 for u in USER_DATA.values() if u.get("is_premium"))
+    widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
+
+    sorted_users = sorted(
+        USER_DATA.items(),
+        key=lambda kv: kv[1].get("joined", ""),
+        reverse=True
+    )[:25]
+    recent = []
+    for uid_k, u in sorted_users:
+        recent.append({
+            "uid": uid_k,
+            "username": u.get("username", "User"),
+            "is_premium": bool(u.get("is_premium")),
+            "joined": u.get("joined", ""),
+        })
+
+    return jsonify({
+        "status": "success",
+        "total_users": total,
+        "premium_users": premium_users,
+        "free_users": total - premium_users,
+        "widget_users": widget_users,
+        "recent_users": recent,
+    })
+
+
+@flask_app.route("/api/webapp/admin/grant_premium", methods=["POST", "OPTIONS"])
+def api_admin_grant_premium():
+    if request.method == "OPTIONS":
+        return "", 204
+    if not _admin_required():
+        return jsonify({"status": "error", "message": "admin only"}), 403
+    body = request.get_json(silent=True) or {}
+    target_uid = str(body.get("uid", "")).strip()
+    try:
+        days = int(body.get("days", 30))
+    except Exception:
+        days = 30
+    if not target_uid:
+        return jsonify({"status": "error", "message": "missing uid"}), 400
+    if days < 1 or days > 3650:
+        return jsonify({"status": "error", "message": "days out of range"}), 400
+    if target_uid not in USER_DATA:
+        try:
+            get_user(target_uid)
+        except Exception:
+            pass
+        if target_uid not in USER_DATA:
+            return jsonify({"status": "error", "message": "uid not found"}), 404
+    add_premium(target_uid, days=days, plan="admin-grant")
+    return jsonify({"status": "success", "uid": target_uid, "days": days})
+
+
+@flask_app.route("/api/webapp/admin/broadcast", methods=["POST", "OPTIONS"])
+def api_admin_broadcast():
+    if request.method == "OPTIONS":
+        return "", 204
+    if not _admin_required():
+        return jsonify({"status": "error", "message": "admin only"}), 403
+    body = request.get_json(silent=True) or {}
+    text = str(body.get("text", "")).strip()[:4000]
+    if not text:
+        return jsonify({"status": "error", "message": "empty text"}), 400
+
+    sent = 0
+    failed = 0
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        async def _do_broadcast():
+            nonlocal sent, failed
+            bot_app = None
+            try:
+                bot_app = ApplicationBuilder().token(BOT_TOKEN).build()
+                await bot_app.initialize()
+                for target_uid in list(USER_DATA.keys()):
+                    if target_uid.startswith("widget_"):
+                        continue
+                    try:
+                        await bot_app.bot.send_message(
+                            chat_id=int(target_uid),
+                            text=text,
+                            parse_mode="Markdown"
+                        )
+                        sent += 1
+                    except Exception:
+                        failed += 1
+                    await asyncio.sleep(0.05)
+                await bot_app.shutdown()
+            except Exception as e:
+                print(f"[admin/broadcast] error: {e}")
+
+        loop.run_until_complete(_do_broadcast())
+        loop.close()
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)[:200]}), 500
+
+    print(f"[admin/broadcast] sent={sent} failed={failed}")
+    return jsonify({"status": "success", "sent": sent, "failed": failed})
+
+
+# ═══════════════════════════════════════════════════════════
+# PAYMENT
+# ═══════════════════════════════════════════════════════════
+
 @flask_app.route("/api/payment/create_link", methods=["POST", "OPTIONS"])
 def api_payment_create_link():
     if request.method == "OPTIONS":
@@ -3443,6 +3576,11 @@ UPGRADE_PAGE = r"""<!DOCTYPE html>
           background:linear-gradient(135deg,#10b981,#059669);color:#fff;
           text-decoration:none;font-weight:700;font-size:14.5px;margin-top:12px;
           box-shadow:0 6px 16px rgba(16,185,129,.3)}
+ .btn-copy{display:flex;align-items:center;justify-content:center;gap:8px;
+           padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;
+           color:#0f172a;font-weight:800;font-size:13px;cursor:pointer;margin-top:8px;
+           font-family:inherit;transition:all .15s;width:100%}
+ .btn-copy:hover{background:#f8fafc;border-color:#cbd5e1}
  .trust{display:flex;align-items:center;justify-content:center;gap:8px;
         color:rgba(255,255,255,.85);font-size:12.5px;text-align:center;
         padding:14px;margin-top:8px;line-height:1.5}
@@ -3451,14 +3589,12 @@ UPGRADE_PAGE = r"""<!DOCTYPE html>
  @keyframes sp{to{transform:rotate(360deg)}}
  .alert{background:#fef2f2;color:#991b1b;padding:14px;border-radius:12px;
         font-size:13.5px;border-left:4px solid #dc2626;margin-bottom:16px;line-height:1.5}
- .benefits{list-style:none;margin:12px 0 0;padding:0}
- .benefits li{padding:8px 0 8px 26px;position:relative;font-size:13.5px;color:#334155;
-              border-bottom:1px solid #f1f5f9;line-height:1.5}
- .benefits li:last-child{border:none}
- .benefits li::before{content:'✓';position:absolute;left:0;top:8px;
-                      width:18px;height:18px;background:#10b981;color:#fff;
-                      border-radius:50%;text-align:center;line-height:18px;
-                      font-size:11px;font-weight:800}
+ .ref-prog{display:flex;align-items:center;gap:10px;padding:12px;background:#f8fafc;
+           border-radius:10px;margin:12px 0;border:1px solid #e2e8f0}
+ .ref-bar{flex:1;height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+ .ref-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#16a34a,#22c55e);
+           transition:width .3s}
+ .ref-txt{font-size:12px;font-weight:900;color:#16a34a;min-width:34px;text-align:right}
 </style>
 </head>
 <body>
@@ -3475,12 +3611,6 @@ UPGRADE_PAGE = r"""<!DOCTYPE html>
     <span class="save">SAVE ₦6,000 (50% OFF)</span>
     <div class="price">{{ six_months_text }} <small>/ {{ six_months_days }} days</small></div>
     <div class="desc">Full access for 6 months — the smart choice for serious candidates.</div>
-    <ul class="benefits">
-      <li>Unlimited mocks — all subjects</li>
-      <li>Full 180Q JAMB CBT Mock</li>
-      <li>Unlimited AI Tutor + voice</li>
-      <li>Unlimited Trap Detector</li>
-    </ul>
     <button class="pay" id="pay-6m" onclick="payNow('6months')" {% if not gateway_ready %}disabled{% endif %}>
       <span class="btn-label">💳 Pay {{ six_months_text }} Now</span>
     </button>
@@ -3493,8 +3623,19 @@ UPGRADE_PAGE = r"""<!DOCTYPE html>
       <span class="btn-label">💳 Pay {{ monthly_price_text }} Now</span>
     </button>
   </div>
-  <a class="btn-alt" href="{{ share_link }}">👥 Invite Friends — Get {{ referral_reward_days }} Days FREE</a>
 </div>
+
+<div class="card">
+  <h3 style="font-size:17px;margin-bottom:6px;color:#0f172a;">🎁 Or earn it FREE</h3>
+  <p style="font-size:13px;color:#64748b;margin-bottom:12px;">Invite <b>{{ referral_required }} friends</b> to join UTME Bot through your link. When they sign up, you get <b>{{ referral_reward_days }} days of Premium</b> — free.</p>
+  <div class="ref-prog">
+    <div class="ref-bar"><div class="ref-fill" id="ref-fill" style="width:0%"></div></div>
+    <div class="ref-txt" id="ref-txt">0/{{ referral_required }}</div>
+  </div>
+  <button class="btn-copy" onclick="copyRef()">📋 Copy My Referral Link</button>
+  <a class="btn-alt" href="{{ share_link }}" target="_blank" rel="noopener">📤 Share My Link</a>
+</div>
+
 <div class="trust">
   🔒 Secured by Flutterwave · Card · Bank Transfer · USSD · Instant activation
 </div>
@@ -3504,6 +3645,18 @@ UPGRADE_PAGE = r"""<!DOCTYPE html>
 const UID = "{{ uid }}";
 const RETURN_URL = "{{ return_url }}";
 const API = window.location.origin;
+const REF_LINK = "https://skoolcure.blogspot.com/p/bot.html?ref={{ uid }}";
+const REF_REQUIRED = {{ referral_required }};
+
+async function loadRef() {
+  try {
+    const r = await fetch(API + '/api/webapp/referral', {
+      headers: { 'Authorization': 'Bearer ' + new URLSearchParams(window.location.search).get('t') || '' }
+    });
+  } catch(e) {}
+  // Progressive: fetch count via stats endpoint (optional). Fallback: 0.
+  // For now, keep 0/3 display; the main theme shows the accurate count.
+}
 
 async function payNow(planKey) {
   const btn = document.getElementById(planKey === '6months' ? 'pay-6m' : 'pay-1m');
@@ -3543,6 +3696,26 @@ async function payNow(planKey) {
   }
 }
 
+function copyRef() {
+  try {
+    navigator.clipboard.writeText(REF_LINK);
+    toast('✅ Referral link copied!');
+  } catch(e) {
+    const t = document.createElement('textarea');
+    t.value = REF_LINK; document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); toast('✅ Copied!'); } catch(err){ toast(REF_LINK); }
+    document.body.removeChild(t);
+  }
+}
+
+function toast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 20px;border-radius:999px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 12px 30px rgba(0,0,0,.3);';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2400);
+}
+
 function showError(msg) {
   const existing = document.getElementById('err-box');
   if (existing) existing.remove();
@@ -3564,8 +3737,9 @@ def upgrade_page(uid):
     six = _resolve_plan("6months")
     savings = PREMIUM_PRICE * 6 - PREMIUM_6MONTHS_PRICE
     savings_text = f"\u20a6{savings}" if savings > 0 else ""
-    invite_link = f"https://t.me/{BOT_USERNAME}?start=invite_{uid}"
-    share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot!')}"
+    # Web-bot referral link (not Telegram!)
+    invite_link = f"https://skoolcure.blogspot.com/p/bot.html?ref={uid}"
+    share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot — free JAMB prep!')}"
     return_url = request.args.get("return", f"https://t.me/{BOT_USERNAME}")[:300]
     return render_template_string(
         UPGRADE_PAGE, uid=uid, bot_username=BOT_USERNAME,
@@ -3574,6 +3748,7 @@ def upgrade_page(uid):
         monthly_days=monthly["days"], six_months_price=six["price"],
         six_months_text=six["price_text"], six_months_days=six["days"],
         savings_text=savings_text, referral_reward_days=REFERRAL_REWARD_DAYS,
+        referral_required=REFERRAL_REQUIRED,
         share_link=share_link, return_url=return_url)
 
 
@@ -3883,10 +4058,10 @@ def main():
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
     print(f"🎁 Referral: {REFERRAL_REQUIRED} invites = {REFERRAL_REWARD_DAYS} days free")
     print(f"📱 Phone recognition: ENABLED")
+    print(f"⚙️  Admin web panel: ENABLED (via /api/webapp/admin/*)")
 
     if not DATABASE_URL:
         print("❌ DATABASE_URL not set! Bot cannot start without a database.")
-        print("   Set the DATABASE_URL environment variable and restart.")
         while True:
             time.sleep(60)
     try:
