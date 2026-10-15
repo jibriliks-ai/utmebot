@@ -1,5 +1,5 @@
 """
-UTME Success Bot v42 — Phone Recognition + Referrals + Install + Share
+UTME Success Bot v43 — PostgreSQL + Phone Recognition + Referrals
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -7,6 +7,8 @@ from pathlib import Path
 from urllib.parse import quote, parse_qsl, urlparse
 
 import requests
+import psycopg2
+import psycopg2.extras
 from flask import Flask, render_template_string, jsonify, request, send_file, redirect
 
 from telegram import (
@@ -412,11 +414,69 @@ def _build_completion_message(uid, score, total, failed, subject_label, subj_dis
     return msg, False
 
 
+# ============================================================
+# POSTGRESQL LAYER
+# ============================================================
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+
+
+def _get_db_conn():
+    """Create a new connection to PostgreSQL. Caller must close it."""
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not set")
+    is_external = "render.com" in DATABASE_URL and "dpg-" not in DATABASE_URL.split("@")[-1].split("/")[0]
+    sslmode = "require" if is_external else "prefer"
+    conn = psycopg2.connect(DATABASE_URL, sslmode=sslmode)
+    return conn
+
+
+def init_db():
+    """Create the users table if it doesn't exist."""
+    conn = _get_db_conn()
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                uid TEXT PRIMARY KEY,
+                username TEXT DEFAULT 'Student',
+                phone TEXT,
+                invite_code TEXT UNIQUE,
+                invited_by TEXT,
+                invites INTEGER DEFAULT 0,
+                invited_users JSONB DEFAULT '[]'::jsonb,
+                referral_rewards_claimed INTEGER DEFAULT 0,
+                is_premium BOOLEAN DEFAULT FALSE,
+                premium_until TEXT,
+                premium_plan TEXT,
+                jamb_plan JSONB DEFAULT '["english"]'::jsonb,
+                plan_set BOOLEAN DEFAULT FALSE,
+                free_english_used BOOLEAN DEFAULT FALSE,
+                tutor_counts JSONB DEFAULT '{}'::jsonb,
+                ai_why_counts JSONB DEFAULT '{}'::jsonb,
+                history JSONB DEFAULT '[]'::jsonb,
+                last_mock_failed JSONB DEFAULT '[]'::jsonb,
+                last_mock_subject TEXT,
+                last_mock_total INTEGER DEFAULT 40,
+                used_ids JSONB DEFAULT '[]'::jsonb,
+                linked_widget_uid TEXT,
+                linked_tg_uid TEXT,
+                linked_device_id TEXT,
+                joined TEXT DEFAULT CURRENT_DATE::text
+            );
+            CREATE INDEX IF NOT EXISTS idx_users_phone ON users (phone);
+            CREATE INDEX IF NOT EXISTS idx_users_invite_code ON users (invite_code);
+        """)
+        conn.commit()
+        cur.close()
+        print("[db] ✅ Table 'users' ready")
+    finally:
+        conn.close()
+
+
 # ---------- Storage ----------
-DATA_FILE = Path(USER_DATA_FILE)
-PROCESSED_TX_FILE = Path("processed_tx.json")
 USER_DATA = {}
 USER_SESSIONS = {}
+PROCESSED_TX_FILE = Path("processed_tx.json")
 PROCESSED_TX = set()
 
 BOTTOM_KEYBOARD = ReplyKeyboardMarkup(
@@ -428,22 +488,6 @@ BOTTOM_KEYBOARD = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True, is_persistent=True,
 )
-
-
-def load_data():
-    global USER_DATA
-    if DATA_FILE.exists():
-        try:
-            USER_DATA = json.loads(DATA_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            USER_DATA = {}
-
-
-def save_data():
-    try:
-        DATA_FILE.write_text(json.dumps(USER_DATA, indent=2), encoding="utf-8")
-    except Exception as e:
-        print(f"[save_data] ⚠️ failed to write: {e}")
 
 
 def load_processed_tx():
@@ -470,51 +514,189 @@ def mark_processed(tx_ref):
     return True
 
 
-def get_user(uid, username=""):
-    uid = str(uid)
-    if uid not in USER_DATA:
-        USER_DATA[uid] = {
-            "tutor_counts": {}, "used_ids": [],
-            "is_premium": False, "premium_until": None, "premium_plan": None,
-            "joined": str(date.today()), "history": [],
-            "invite_code": hashlib.md5(uid.encode()).hexdigest()[:6].upper(),
-            "invited_by": None, "invites": 0, "invited_users": [],
-            "referral_rewards_claimed": 0,
-            "username": username or f"User{uid[-4:]}", "study_subject": None,
-            "jamb_plan": ["english"],
-            "plan_set": False,
-            "free_english_used": False,
-            "ai_why_counts": {},
-            "last_mock_failed": [],
-            "last_mock_subject": None,
-            "last_mock_total": 40,
-        }
-        save_data()
-    u = USER_DATA[uid]
-    if username:
-        u["username"] = username
-    u.setdefault("jamb_plan", ["english"])
-    u.setdefault("plan_set", False)
-    u.setdefault("free_english_used", False)
-    u.setdefault("used_ids", [])
-    u.setdefault("ai_why_counts", {})
-    u.setdefault("last_mock_failed", [])
-    u.setdefault("last_mock_subject", None)
-    u.setdefault("last_mock_total", 40)
-    u.setdefault("invite_code", hashlib.md5(uid.encode()).hexdigest()[:6].upper())
-    u.setdefault("invites", 0)
-    u.setdefault("invited_users", [])
-    u.setdefault("referral_rewards_claimed", 0)
-    if u.get("premium_until"):
+def load_data():
+    """Load all users from PostgreSQL into the in-memory USER_DATA dict."""
+    global USER_DATA
+    conn = _get_db_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM users")
+        rows = cur.fetchall()
+        USER_DATA = {}
+        for row in rows:
+            u = dict(row)
+            for field in ["invited_users", "jamb_plan", "tutor_counts",
+                          "ai_why_counts", "history", "last_mock_failed", "used_ids"]:
+                if isinstance(u.get(field), str):
+                    try:
+                        u[field] = json.loads(u[field])
+                    except Exception:
+                        u[field] = {} if field in ("tutor_counts", "ai_why_counts") else []
+                if u.get(field) is None:
+                    u[field] = {} if field in ("tutor_counts", "ai_why_counts") else []
+            USER_DATA[u["uid"]] = u
+        cur.close()
+        print(f"[db] ✅ Loaded {len(USER_DATA)} users from PostgreSQL")
+    finally:
+        conn.close()
+
+
+def save_data():
+    """Persist all in-memory USER_DATA to PostgreSQL (upsert)."""
+    if not USER_DATA:
+        return
+    conn = _get_db_conn()
+    try:
+        cur = conn.cursor()
+        for uid, u in USER_DATA.items():
+            cur.execute("""
+                INSERT INTO users (
+                    uid, username, phone, invite_code, invited_by,
+                    invites, invited_users, referral_rewards_claimed,
+                    is_premium, premium_until, premium_plan,
+                    jamb_plan, plan_set, free_english_used,
+                    tutor_counts, ai_why_counts, history,
+                    last_mock_failed, last_mock_subject, last_mock_total,
+                    used_ids, linked_widget_uid, linked_tg_uid, linked_device_id
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                ON CONFLICT (uid) DO UPDATE SET
+                    username = EXCLUDED.username,
+                    phone = EXCLUDED.phone,
+                    invited_by = EXCLUDED.invited_by,
+                    invites = EXCLUDED.invites,
+                    invited_users = EXCLUDED.invited_users,
+                    referral_rewards_claimed = EXCLUDED.referral_rewards_claimed,
+                    is_premium = EXCLUDED.is_premium,
+                    premium_until = EXCLUDED.premium_until,
+                    premium_plan = EXCLUDED.premium_plan,
+                    jamb_plan = EXCLUDED.jamb_plan,
+                    plan_set = EXCLUDED.plan_set,
+                    free_english_used = EXCLUDED.free_english_used,
+                    tutor_counts = EXCLUDED.tutor_counts,
+                    ai_why_counts = EXCLUDED.ai_why_counts,
+                    history = EXCLUDED.history,
+                    last_mock_failed = EXCLUDED.last_mock_failed,
+                    last_mock_subject = EXCLUDED.last_mock_subject,
+                    last_mock_total = EXCLUDED.last_mock_total,
+                    used_ids = EXCLUDED.used_ids,
+                    linked_widget_uid = EXCLUDED.linked_widget_uid,
+                    linked_tg_uid = EXCLUDED.linked_tg_uid,
+                    linked_device_id = EXCLUDED.linked_device_id
+            """, (
+                uid,
+                u.get("username", "Student"),
+                u.get("phone"),
+                u.get("invite_code"),
+                u.get("invited_by"),
+                u.get("invites", 0),
+                json.dumps(u.get("invited_users", [])),
+                u.get("referral_rewards_claimed", 0),
+                u.get("is_premium", False),
+                u.get("premium_until"),
+                u.get("premium_plan"),
+                json.dumps(u.get("jamb_plan", ["english"])),
+                u.get("plan_set", False),
+                u.get("free_english_used", False),
+                json.dumps(u.get("tutor_counts", {})),
+                json.dumps(u.get("ai_why_counts", {})),
+                json.dumps(u.get("history", [])),
+                json.dumps(u.get("last_mock_failed", [])),
+                u.get("last_mock_subject"),
+                u.get("last_mock_total", 40),
+                json.dumps(u.get("used_ids", [])),
+                u.get("linked_widget_uid"),
+                u.get("linked_tg_uid"),
+                u.get("linked_device_id"),
+            ))
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        print(f"[save_data] ⚠️ failed to write: {e}")
         try:
-            if datetime.now() > datetime.fromisoformat(u["premium_until"]):
-                u["is_premium"] = False
-                u["premium_until"] = None
-                u["premium_plan"] = None
-                save_data()
+            conn.rollback()
         except Exception:
             pass
-    return u
+    finally:
+        conn.close()
+
+
+def get_user(uid, username=""):
+    """Fetch a user by UID. Creates the row if it doesn't exist."""
+    uid = str(uid)
+
+    if uid in USER_DATA:
+        u = USER_DATA[uid]
+        if username and (not u.get("username") or str(u.get("username", "")).startswith("User")):
+            u["username"] = username
+            save_data()
+        if u.get("premium_until"):
+            try:
+                if datetime.now() > datetime.fromisoformat(u["premium_until"]):
+                    u["is_premium"] = False
+                    u["premium_until"] = None
+                    u["premium_plan"] = None
+                    save_data()
+            except Exception:
+                pass
+        return u
+
+    conn = _get_db_conn()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM users WHERE uid = %s", (uid,))
+        row = cur.fetchone()
+
+        if row is None:
+            invite_code = hashlib.md5(uid.encode()).hexdigest()[:6].upper()
+            cur.execute("""
+                INSERT INTO users (uid, username, invite_code)
+                VALUES (%s, %s, %s)
+                RETURNING *
+            """, (uid, username or f"User{uid[-4:]}", invite_code))
+            row = cur.fetchone()
+            conn.commit()
+            print(f"[db] ✅ Created user {uid}")
+
+        u = dict(row)
+        for field in ["invited_users", "jamb_plan", "tutor_counts",
+                      "ai_why_counts", "history", "last_mock_failed", "used_ids"]:
+            if isinstance(u.get(field), str):
+                try:
+                    u[field] = json.loads(u[field])
+                except Exception:
+                    u[field] = {} if field in ("tutor_counts", "ai_why_counts") else []
+            if u.get(field) is None:
+                u[field] = {} if field in ("tutor_counts", "ai_why_counts") else []
+
+        if username and (not u.get("username") or str(u.get("username", "")).startswith("User")):
+            u["username"] = username
+            cur.execute("UPDATE users SET username = %s WHERE uid = %s",
+                        (username, uid))
+            conn.commit()
+
+        if u.get("premium_until"):
+            try:
+                if datetime.now() > datetime.fromisoformat(u["premium_until"]):
+                    u["is_premium"] = False
+                    u["premium_until"] = None
+                    u["premium_plan"] = None
+                    cur.execute("""
+                        UPDATE users SET is_premium = FALSE,
+                        premium_until = NULL, premium_plan = NULL
+                        WHERE uid = %s
+                    """, (uid,))
+                    conn.commit()
+            except Exception:
+                pass
+
+        cur.close()
+        USER_DATA[uid] = u
+        return u
+    finally:
+        conn.close()
 
 
 def _merge_widget_user(widget_uid, tg_uid):
@@ -524,6 +706,26 @@ def _merge_widget_user(widget_uid, tg_uid):
 
     widget_u = USER_DATA.get(widget_uid)
     if not widget_u:
+        try:
+            conn = _get_db_conn()
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur.execute("SELECT * FROM users WHERE uid = %s", (widget_uid,))
+            row = cur.fetchone()
+            cur.close()
+            conn.close()
+            if row:
+                widget_u = dict(row)
+                for field in ["invited_users", "jamb_plan", "tutor_counts",
+                              "ai_why_counts", "history", "last_mock_failed", "used_ids"]:
+                    if isinstance(widget_u.get(field), str):
+                        try:
+                            widget_u[field] = json.loads(widget_u[field])
+                        except Exception:
+                            widget_u[field] = {} if field in ("tutor_counts", "ai_why_counts") else []
+        except Exception:
+            pass
+
+    if not widget_u:
         return False, "Web app account not found. It may have been cleared."
 
     tg_u = get_user(tg_uid)
@@ -531,7 +733,6 @@ def _merge_widget_user(widget_uid, tg_uid):
     if tg_u.get("linked_widget_uid") == widget_uid:
         return True, "already"
 
-    # Merge history (dedupe)
     widget_hist = list(widget_u.get("history", []))
     tg_hist = list(tg_u.get("history", []))
     seen = set()
@@ -544,7 +745,6 @@ def _merge_widget_user(widget_uid, tg_uid):
             merged_hist.append(h)
     tg_u["history"] = merged_hist[-50:]
 
-    # Merge premium (take longer expiry)
     w_until_str = widget_u.get("premium_until")
     if w_until_str:
         try:
@@ -558,27 +758,22 @@ def _merge_widget_user(widget_uid, tg_uid):
         except Exception:
             pass
 
-    # Merge plan (only if TG has no plan set)
     if not tg_u.get("plan_set") and widget_u.get("plan_set"):
         tg_u["jamb_plan"] = widget_u.get("jamb_plan", ["english"])
         tg_u["plan_set"] = True
 
-    # Free English mock usage carries over
     if widget_u.get("free_english_used"):
         tg_u["free_english_used"] = True
 
-    # Merge used_ids (avoid repeats)
     w_used = list(widget_u.get("used_ids", []))
     t_used = list(tg_u.get("used_ids", []))
     tg_u["used_ids"] = list(set(t_used) | set(w_used))[-5000:]
 
-    # Merge last-mock failures
     if not tg_u.get("last_mock_failed") and widget_u.get("last_mock_failed"):
         tg_u["last_mock_failed"] = widget_u["last_mock_failed"]
         tg_u["last_mock_subject"] = widget_u.get("last_mock_subject")
         tg_u["last_mock_total"] = widget_u.get("last_mock_total", 40)
 
-    # Merge name + phone
     w_name = (widget_u.get("username") or "").strip()
     t_name = (tg_u.get("username") or "").strip()
     if w_name and (not t_name or t_name.startswith("User")):
@@ -586,21 +781,19 @@ def _merge_widget_user(widget_uid, tg_uid):
     if widget_u.get("phone"):
         tg_u["phone"] = widget_u["phone"]
 
-    # Mark linked both ways
     tg_u["linked_widget_uid"] = widget_uid
     widget_u["linked_tg_uid"] = tg_uid
 
+    USER_DATA[widget_uid] = widget_u
     save_data()
     print(f"[link] ✅ merged {widget_uid} → TG {tg_uid}")
     return True, "merged"
 
 
-# ═══════════════════════════════════════════════════════════
-# PHONE RECOGNITION + REFERRAL HELPERS (NEW)
-# ═══════════════════════════════════════════════════════════
+# ---------- Phone Recognition + Referrals ----------
 
 def _find_user_by_phone(phone):
-    """Find existing user uid by phone number (normalized across formats)."""
+    """Find existing user UID by phone number (normalized). Queries the DB directly."""
     if not phone:
         return None
     normalized = re.sub(r'\D', '', str(phone))
@@ -613,16 +806,24 @@ def _find_user_by_phone(phone):
     if normalized.startswith("234") and len(normalized) == 13:
         candidates.add("0" + normalized[3:])
         candidates.add(normalized[3:])
-    for uid_k, u in USER_DATA.items():
-        stored = re.sub(r'\D', '', str(u.get("phone", "")))
-        if stored and stored in candidates:
-            return uid_k
-    return None
+
+    conn = _get_db_conn()
+    try:
+        cur = conn.cursor()
+        placeholders = ",".join(["%s"] * len(candidates))
+        cur.execute(
+            f"SELECT uid FROM users WHERE phone IN ({placeholders}) LIMIT 1",
+            tuple(candidates)
+        )
+        row = cur.fetchone()
+        cur.close()
+        return row[0] if row else None
+    finally:
+        conn.close()
 
 
 def _apply_referral_code(new_uid, code):
-    """Apply a referral code to a newly registered user.
-    Grants reward to the inviter once they hit REFERRAL_REQUIRED active referrals."""
+    """Apply a referral code to a newly registered user."""
     if not code or not new_uid:
         return None
     code = str(code).strip().upper()
@@ -663,8 +864,6 @@ def _get_referral_status(uid):
         "referral_rewards_claimed": u.get("referral_rewards_claimed", 0),
     }
 
-
-# ═══════════════════════════════════════════════════════════
 
 def is_premium(uid):
     u = get_user(uid)
@@ -1133,8 +1332,9 @@ def _admin_menu_text():
         f"  • Status: {'✅ Active' if HAS_AI_TUTOR else '❌ Offline'}\n\n"
         f"📢 *Channel*\n"
         f"  • Status: {'✅ Configured' if CHANNEL_ID else '❌ Not set'}\n\n"
-        f"🌐 *Widget*\n"
-        f"  • Status: ✅ Enabled\n\n"
+        f"💾 *Database*\n"
+        f"  • Backend: PostgreSQL\n"
+        f"  • Status: {'✅ Connected' if DATABASE_URL else '❌ Not set'}\n\n"
         f"Select an action:"
     )
 
@@ -1238,7 +1438,6 @@ async def cmd_start(update, context):
         raw_arg = context.args[0]
         arg = raw_arg.lower()
 
-        # ⭐ Deep link from Blogger widget
         if arg.startswith("link_widget_"):
             widget_uid = raw_arg.replace("link_", "", 1)
             ok, msg = _merge_widget_user(widget_uid, uid)
@@ -1475,6 +1674,8 @@ async def cmd_debug(update, context):
         f"Bot: @{md(BOT_USERNAME)}",
         f"Channel: `{CHANNEL_ID or '❌ NOT SET'}`",
         f"WebApp: `{WEBAPP_URL}`",
+        f"Database: {'✅ PostgreSQL' if DATABASE_URL else '❌ NOT SET'}",
+        f"Users in DB: *{len(USER_DATA)}*",
         f"Widget users: *{widget_users}*",
         f"Linked to Telegram: *{linked}*", "",
     ]
@@ -1831,14 +2032,13 @@ async def handle_callback(update, context):
             failed = session.get("failed", [])
         if not failed:
             try:
-                reloaded = json.loads(DATA_FILE.read_text(encoding="utf-8"))
-                disk_u = reloaded.get(str(uid), {})
-                failed = disk_u.get("last_mock_failed", [])
+                reloaded = get_user(uid)
+                failed = reloaded.get("last_mock_failed", [])
                 if failed:
                     u["last_mock_failed"] = failed
                     save_data()
             except Exception as e:
-                print(f"[see_failures] disk reload failed: {e}")
+                print(f"[see_failures] reload failed: {e}")
 
         if not failed:
             await query.message.reply_text(
@@ -2541,9 +2741,11 @@ flask_app = Flask(__name__)
 def home():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
-    return (f"UTME Bot v42 · {len(ALL_QS)} Qs · "
+    db_status = "PostgreSQL" if DATABASE_URL else "NO DATABASE"
+    return (f"UTME Bot v43 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
+            f"DB: {db_status} · Users: {len(USER_DATA)} · "
             f"Widget users: {widget_users} (linked: {linked}) · "
             f"WebApp: {WEBAPP_URL} · Running")
 
@@ -2555,7 +2757,7 @@ def health():
     linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     return jsonify({
         "status": "ok",
-        "version": "v42-phone-recognition-referrals",
+        "version": "v43-postgres-referrals",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2569,6 +2771,7 @@ def health():
         "widget_users": widget_users,
         "linked_to_telegram": linked,
         "users": len(USER_DATA),
+        "database": "postgresql" if DATABASE_URL else "none",
     })
 
 
@@ -2706,7 +2909,6 @@ def api_widget_register():
     if not device_id.startswith("w_") or len(device_id) < 8:
         return jsonify({"status": "error", "message": "invalid device id"}), 400
 
-    # ⭐ PHONE-BASED RECOGNITION: if phone matches an existing user, reuse that account
     existing_uid = _find_user_by_phone(phone) if phone else None
     reused = False
 
@@ -2718,6 +2920,7 @@ def api_widget_register():
         if phone and not u.get("phone"):
             u["phone"] = phone
         u["linked_device_id"] = device_id
+        USER_DATA[uid] = u
         save_data()
         reused = True
         print(f"[widget] 🔄 login-by-phone uid={uid} phone={phone}")
@@ -2729,9 +2932,9 @@ def api_widget_register():
         if phone:
             u["phone"] = phone
         u["linked_device_id"] = device_id
+        USER_DATA[uid] = u
         save_data()
         print(f"[widget] ✅ registered uid={uid} phone={phone}")
-        # Apply referral code (only for brand-new users)
         if ref_code:
             _apply_referral_code(uid, ref_code)
 
@@ -3669,21 +3872,36 @@ async def post_init(app):
 # MAIN
 # ============================================================
 def main():
-    load_data()
     load_processed_tx()
 
-    widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
-    linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     print(f"🤖 Bot: @{BOT_USERNAME}")
     print(f"👨‍🏫 Tutor: {TUTOR_NAME}")
     print(f"📢 Channel invite: {CHANNEL_INVITE_LINK}")
     print(f"🌐 WebApp URL: {WEBAPP_URL}")
-    print(f"🧩 Widget: ENABLED ({widget_users} anonymous, {linked} linked)")
     print(f"💰 Payment: SERVER-SIDE HOSTED LINK")
     print(f"🔍 Debug endpoint: /debug/flw-key")
     print(f"🆓 Free plan: 1 × {FREE_ENGLISH_QS}Q English mock (one-time)")
     print(f"🎁 Referral: {REFERRAL_REQUIRED} invites = {REFERRAL_REWARD_DAYS} days free")
     print(f"📱 Phone recognition: ENABLED")
+
+    if not DATABASE_URL:
+        print("❌ DATABASE_URL not set! Bot cannot start without a database.")
+        print("   Set the DATABASE_URL environment variable and restart.")
+        while True:
+            time.sleep(60)
+    try:
+        init_db()
+        load_data()
+    except Exception as e:
+        print(f"❌ FATAL: Database initialization failed: {e}")
+        traceback.print_exc()
+        while True:
+            time.sleep(60)
+
+    widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
+    linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
+    print(f"🧩 Widget: ENABLED ({widget_users} anonymous, {linked} linked)")
+    print(f"💾 Database: PostgreSQL · {len(USER_DATA)} users loaded")
     if ADMIN_ID:
         print(f"⚙️  Admin ID: {ADMIN_ID}")
 
