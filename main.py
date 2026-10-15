@@ -3648,16 +3648,6 @@ const API = window.location.origin;
 const REF_LINK = "https://skoolcure.blogspot.com/p/bot.html?ref={{ uid }}";
 const REF_REQUIRED = {{ referral_required }};
 
-async function loadRef() {
-  try {
-    const r = await fetch(API + '/api/webapp/referral', {
-      headers: { 'Authorization': 'Bearer ' + new URLSearchParams(window.location.search).get('t') || '' }
-    });
-  } catch(e) {}
-  // Progressive: fetch count via stats endpoint (optional). Fallback: 0.
-  // For now, keep 0/3 display; the main theme shows the accurate count.
-}
-
 async function payNow(planKey) {
   const btn = document.getElementById(planKey === '6months' ? 'pay-6m' : 'pay-1m');
   const label = btn.querySelector('.btn-label');
@@ -3737,7 +3727,7 @@ def upgrade_page(uid):
     six = _resolve_plan("6months")
     savings = PREMIUM_PRICE * 6 - PREMIUM_6MONTHS_PRICE
     savings_text = f"\u20a6{savings}" if savings > 0 else ""
-    # Web-bot referral link (not Telegram!)
+    # ⭐ Web-bot referral link (NOT Telegram) — user shares on WhatsApp/etc.
     invite_link = f"https://skoolcure.blogspot.com/p/bot.html?ref={uid}"
     share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot — free JAMB prep!')}"
     return_url = request.args.get("return", f"https://t.me/{BOT_USERNAME}")[:300]
@@ -4062,6 +4052,7 @@ def main():
 
     if not DATABASE_URL:
         print("❌ DATABASE_URL not set! Bot cannot start without a database.")
+        print("   Set the DATABASE_URL environment variable and restart.")
         while True:
             time.sleep(60)
     try:
