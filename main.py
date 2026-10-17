@@ -1,5 +1,5 @@
 """
-UTME Success Bot v44 — PostgreSQL + Admin Panel + Web-bot Referrals
+UTME Success Bot v45 — PostgreSQL + Admin Panel + Web-bot Referrals + Leaderboard
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -914,6 +914,43 @@ def get_leading():
         if avg > best_score:
             best_score, best_name = avg, d.get("username", f"User{str(uid_k)[-4:]}")
     return best_name, int(best_score)
+
+
+# ⭐⭐⭐ LEADERBOARD ADDITION #1 ⭐⭐⭐
+def get_leaderboard(limit=10):
+    """Return top scorers across all users, ranked by best mock percentage."""
+    leaders = []
+    for uid, u in USER_DATA.items():
+        hist = u.get("history", []) or []
+        if not hist:
+            continue
+        best = None
+        best_pct = -1.0
+        for entry in hist:
+            try:
+                total = int(entry.get("total", 0) or 0)
+                score = int(entry.get("score", 0) or 0)
+            except Exception:
+                continue
+            if total <= 0:
+                continue
+            pct = (score * 100.0) / total
+            if pct > best_pct:
+                best_pct = pct
+                best = entry
+        if best is None:
+            continue
+        leaders.append({
+            "uid": uid,
+            "username": (u.get("username") or f"User{uid[-4:]}")[:24],
+            "score": int(best.get("score", 0)),
+            "total": int(best.get("total", 0)),
+            "percent": int(round(best_pct)),
+            "is_premium": bool(u.get("is_premium")),
+        })
+    leaders.sort(key=lambda x: (-x["percent"], -x["score"], -x["total"]))
+    return leaders[:limit]
+# ⭐⭐⭐ END LEADERBOARD ADDITION #1 ⭐⭐⭐
 
 
 def add_premium(uid, days=None, plan="monthly"):
@@ -2742,7 +2779,7 @@ def home():
     widget_users = sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     db_status = "PostgreSQL" if DATABASE_URL else "NO DATABASE"
-    return (f"UTME Bot v44 · {len(ALL_QS)} Qs · "
+    return (f"UTME Bot v45 · {len(ALL_QS)} Qs · "
             f"Tutor: {TUTOR_NAME} ({'ON' if HAS_AI_TUTOR else 'OFF'}) · "
             f"Bot: @{BOT_USERNAME} · Channel: {CHANNEL_ID or 'OFF'} · "
             f"DB: {db_status} · Users: {len(USER_DATA)} · "
@@ -2757,7 +2794,7 @@ def health():
     linked = sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     return jsonify({
         "status": "ok",
-        "version": "v44-admin-referrals-postgres",
+        "version": "v45-leaderboard",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2772,6 +2809,7 @@ def health():
         "linked_to_telegram": linked,
         "users": len(USER_DATA),
         "database": "postgresql" if DATABASE_URL else "none",
+        "leaderboard_enabled": True,
     })
 
 
@@ -2993,6 +3031,18 @@ def api_webapp_stats():
     })
 
 
+# ⭐⭐⭐ LEADERBOARD ADDITION #2 ⭐⭐⭐
+@flask_app.route("/api/webapp/leaderboard", methods=["GET"])
+def api_webapp_leaderboard():
+    total_players = sum(1 for u in USER_DATA.values() if u.get("history"))
+    return jsonify({
+        "status": "success",
+        "leaders": get_leaderboard(limit=10),
+        "total_players": total_players,
+    })
+# ⭐⭐⭐ END LEADERBOARD ADDITION #2 ⭐⭐⭐
+
+
 @flask_app.route("/api/webapp/user", methods=["GET", "OPTIONS"])
 def api_webapp_user():
     if request.method == "OPTIONS":
@@ -3031,6 +3081,7 @@ def api_webapp_user():
         "tutor_remaining": -1 if premium else max(0, FREE_TUTOR_PER_DAY - used_tutor),
         "ai_why_remaining": -1 if premium else ai_why_rem,
     })
+
 
 
 @flask_app.route("/api/webapp/plan", methods=["POST", "OPTIONS"])
@@ -3727,7 +3778,6 @@ def upgrade_page(uid):
     six = _resolve_plan("6months")
     savings = PREMIUM_PRICE * 6 - PREMIUM_6MONTHS_PRICE
     savings_text = f"\u20a6{savings}" if savings > 0 else ""
-    # ⭐ Web-bot referral link (NOT Telegram) — user shares on WhatsApp/etc.
     invite_link = f"https://skoolcure.blogspot.com/p/bot.html?ref={uid}"
     share_link = f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot — free JAMB prep!')}"
     return_url = request.args.get("return", f"https://t.me/{BOT_USERNAME}")[:300]
@@ -4049,6 +4099,7 @@ def main():
     print(f"🎁 Referral: {REFERRAL_REQUIRED} invites = {REFERRAL_REWARD_DAYS} days free")
     print(f"📱 Phone recognition: ENABLED")
     print(f"⚙️  Admin web panel: ENABLED (via /api/webapp/admin/*)")
+    print(f"🏆 Leaderboard: ENABLED (via /api/webapp/leaderboard)")
 
     if not DATABASE_URL:
         print("❌ DATABASE_URL not set! Bot cannot start without a database.")
