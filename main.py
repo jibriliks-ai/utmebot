@@ -1,5 +1,5 @@
 """
-UTME Success Bot v46 — PostgreSQL + Admin + Meta WhatsApp Integration
+UTME Success Bot v47 — PostgreSQL + Admin + WhatsApp + Leaderboard
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -41,7 +41,7 @@ try:
         FLW_PUBLIC_KEY, FLW_SECRET_KEY, FLW_SECRET_HASH,
         PAYSTACK_SECRET_KEY, ALL_SUBJECTS,
     )
-    print("[config] ✅ loaded")
+    print("[config] loaded")
 except Exception as _e:
     print(f"[config] using env defaults ({_e})")
     BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
@@ -73,12 +73,8 @@ SUPPORT_HANDLE = "@UTMESUCCESS"
 TUTOR_NAME = "Mr. Ellams"
 WEBAPP_URL = "https://www.schoolsecure.com.ng/p/bot.html"
 CHANNEL_INVITE_LINK = "https://t.me/+Qw3DqGwCSM4wMDk0"
-LOGO_URL = os.getenv(
-    "LOGO_URL",
-    "https://cdn.jsdelivr.net/gh/jibriliks-ai/utmebot@main/logo.png"
-)
+LOGO_URL = os.getenv("LOGO_URL", "https://cdn.jsdelivr.net/gh/jibriliks-ai/utmebot@main/logo.png")
 
-# ── Meta WhatsApp Business API ──
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
 PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID", "")
 WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "utmebot_verify_2026")
@@ -114,7 +110,7 @@ NIGERIAN_NAMES = ["Chinedu O.","Amina B.","Tunde A.","Ngozi E.","Emeka N.",
     "Bashir A.","Ebere N.","Yemi O.","Hauwa A.","Chidi N.","Funmi D.","Mustapha K."]
 
 # ============================================================
-# ENGINE (CBT databank)
+# ENGINE
 # ============================================================
 ALL_QS = []
 LOCAL_DATABANK = {}
@@ -138,9 +134,9 @@ try:
     ALL_QS = list(_AQS)
     AVAILABLE_SUBJECTS = list(_AVS) if _AVS else list(ALL_SUBJECTS)
     HAS_ENGINE = True
-    print(f"[engine] ✅ {len(ALL_QS)} Qs across {len(AVAILABLE_SUBJECTS)} subjects")
+    print(f"[engine] {len(ALL_QS)} Qs across {len(AVAILABLE_SUBJECTS)} subjects")
 except Exception as _e:
-    print(f"[engine] ❌ {_e}")
+    print(f"[engine] failed: {_e}")
     def _fmt(q,i,t):
         lines=[f"Q{i}/{t}", q.get("question","")]
         for L in ("A","B","C","D"):
@@ -169,11 +165,11 @@ try:
         make_voice_professional as _make_voice_professional,
     )
     HAS_AI_TUTOR = True
-    print(f"[tutor] ✅ AI Tutor loaded ({TUTOR_NAME})")
+    print(f"[tutor] AI Tutor loaded ({TUTOR_NAME})")
 except Exception as _e:
-    print(f"[tutor] ⚠️ unavailable: {_e}")
-    def _ask_tutor(q,s=""): return "⚠️ AI Tutor not available."
-    def _analyze_failure(q,ua,ca,t=""): return "⚠️ Trap Detector not available."
+    print(f"[tutor] unavailable: {_e}")
+    def _ask_tutor(q,s=""): return "AI Tutor not available."
+    def _analyze_failure(q,ua,ca,t=""): return "Trap Detector not available."
     def _build_voice(t): return None
     def _build_kb(f=False): return False
     def _get_kb_stats(): return {}
@@ -433,7 +429,7 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_users_wa_phone ON users (wa_phone);
         """)
         conn.commit(); cur.close()
-        print("[db] ✅ Table 'users' ready")
+        print("[db] Table 'users' ready")
     finally:
         conn.close()
 
@@ -493,7 +489,7 @@ def load_data():
             u=_coerce_jsonb(dict(row))
             USER_DATA[u["uid"]]=u
         cur.close()
-        print(f"[db] ✅ Loaded {len(USER_DATA)} users")
+        print(f"[db] Loaded {len(USER_DATA)} users")
     finally:
         conn.close()
 
@@ -559,7 +555,7 @@ def save_data():
             ))
         conn.commit(); cur.close()
     except Exception as e:
-        print(f"[save_data] ⚠️ {e}")
+        print(f"[save_data] failed: {e}")
         try: conn.rollback()
         except: pass
     finally:
@@ -589,7 +585,7 @@ def get_user(uid, username=""):
             cur.execute("INSERT INTO users (uid,username,invite_code) VALUES (%s,%s,%s) RETURNING *",
                         (uid, username or f"User{uid[-4:]}", invite_code))
             row=cur.fetchone(); conn.commit()
-            print(f"[db] ✅ Created user {uid}")
+            print(f"[db] Created user {uid}")
         u=_coerce_jsonb(dict(row))
         if username and (not u.get("username") or str(u.get("username","")).startswith("User")):
             u["username"]=username
@@ -655,7 +651,7 @@ def _merge_widget_user(widget_uid, tg_uid):
     widget_u["linked_tg_uid"]=tg_uid
     USER_DATA[widget_uid]=widget_u
     save_data()
-    print(f"[link] ✅ merged {widget_uid} → TG {tg_uid}")
+    print(f"[link] merged {widget_uid} -> TG {tg_uid}")
     return True, "merged"
 
 
@@ -704,7 +700,7 @@ def _apply_referral_code(new_uid, code):
 def _get_referral_status(uid):
     u=get_user(uid); code=u.get("invite_code","")
     return {"invite_code":code,
-            "invite_link":f"https://www.schoolsecure.com.ng/p/bot.html?ref={code}",
+            "invite_link":f"{WEBAPP_URL}?ref={code}",
             "invites":u.get("invites",0), "required":REFERRAL_REQUIRED,
             "reward_days":REFERRAL_REWARD_DAYS,
             "referral_rewards_claimed":u.get("referral_rewards_claimed",0)}
@@ -743,6 +739,41 @@ def consume_tutor(uid):
     save_data()
 
 
+def get_leaderboard(limit=10):
+    """Return top scorers across all users, ranked by best mock percentage."""
+    leaders = []
+    for uid, u in USER_DATA.items():
+        hist = u.get("history", []) or []
+        if not hist:
+            continue
+        best = None
+        best_pct = -1.0
+        for entry in hist:
+            try:
+                total = int(entry.get("total", 0) or 0)
+                score = int(entry.get("score", 0) or 0)
+            except Exception:
+                continue
+            if total <= 0:
+                continue
+            pct = (score * 100.0) / total
+            if pct > best_pct:
+                best_pct = pct
+                best = entry
+        if best is None:
+            continue
+        leaders.append({
+            "uid": uid,
+            "username": (u.get("username") or f"User{uid[-4:]}")[:24],
+            "score": int(best.get("score", 0)),
+            "total": int(best.get("total", 0)),
+            "percent": int(round(best_pct)),
+            "is_premium": bool(u.get("is_premium")),
+        })
+    leaders.sort(key=lambda x: (-x["percent"], -x["score"], -x["total"]))
+    return leaders[:limit]
+
+
 def get_leading():
     best_name,best_score="No scores yet",0
     for uid_k,d in USER_DATA.items():
@@ -766,7 +797,7 @@ def add_premium(uid, days=None, plan="monthly"):
     u["premium_until"]=(base+timedelta(days=days)).isoformat()
     u["premium_plan"]=plan
     save_data()
-    print(f"[premium] ✅ {plan} ({days}d) → uid={uid}")
+    print(f"[premium] {plan} ({days}d) -> uid={uid}")
     return True
 
 
@@ -1938,7 +1969,7 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     wa_count = sum(1 for u in USER_DATA.values() if u.get("source") == "whatsapp")
-    return (f"UTME Bot v46 · {len(ALL_QS)} Qs · Tutor: {TUTOR_NAME} · "
+    return (f"UTME Bot v47 · {len(ALL_QS)} Qs · Tutor: {TUTOR_NAME} · "
             f"Users: {len(USER_DATA)} (WhatsApp: {wa_count}) · "
             f"DB: {'PG' if DATABASE_URL else 'NONE'} · Running")
 
@@ -1949,7 +1980,7 @@ def health():
     widget=sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked=sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     wa=sum(1 for u in USER_DATA.values() if u.get("wa_phone"))
-    return jsonify({"status":"ok","version":"v46-whatsapp-meta",
+    return jsonify({"status":"ok","version":"v47-leaderboard",
         "bot_username":BOT_USERNAME,"tutor_name":TUTOR_NAME,
         "total_questions":len(ALL_QS),"tutor_ok":tutor_ok,
         "channel_configured":bool(CHANNEL_ID),
@@ -1969,7 +2000,6 @@ def debug_flw_key():
         "mode":"TEST" if key.startswith("FLWSECK_TEST") else ("LIVE" if key.startswith("FLWSECK") else "UNKNOWN")})
 
 
-# ---------- Session helpers ----------
 SESSION_SECRET = (BOT_TOKEN or "dev-secret").encode()
 WEBAPP_MOCKS = {}
 
@@ -2065,25 +2095,20 @@ def api_widget_register():
     wa_phone=str(body.get("wa","")).strip()[:20]
     subjects_raw=body.get("subjects","")
     wa_name=str(body.get("wa_name","")).strip()[:40]
-
     if not device_id.startswith("w_") or len(device_id)<8:
         return jsonify({"status":"error","message":"invalid device id"}),400
-
     source=_normalize_source(source_raw)
     subjects=_normalize_subjects(subjects_raw)
     final_name=nickname or wa_name or "Student"
     final_phone=phone or wa_phone
-
     existing_uid=_find_user_by_phone(final_phone) if final_phone else None
     reused=False
-
     if existing_uid:
         uid=existing_uid
         u=get_user(uid)
         if final_name and (not u.get("username") or u.get("username","").startswith("User")):
             u["username"]=final_name
-        if final_phone and not u.get("phone"):
-            u["phone"]=final_phone
+        if final_phone and not u.get("phone"): u["phone"]=final_phone
         if source and not u.get("source"): u["source"]=source
         if source and not u.get("first_seen_platform"): u["first_seen_platform"]=source
         if wa_phone and not u.get("wa_phone"): u["wa_phone"]=wa_phone
@@ -2092,7 +2117,6 @@ def api_widget_register():
         USER_DATA[uid]=u
         save_data()
         reused=True
-        print(f"[widget] 🔄 login uid={uid} phone={final_phone} source={source}")
     else:
         uid="widget_"+device_id[2:]
         u=get_user(uid, final_name)
@@ -2105,9 +2129,7 @@ def api_widget_register():
         if subjects: u["subject_combination"]=subjects
         USER_DATA[uid]=u
         save_data()
-        print(f"[widget] ✅ register uid={uid} phone={final_phone} source={source} subs={subjects}")
         if ref_code: _apply_referral_code(uid,ref_code)
-
     return jsonify({"status":"success","token":_make_session(uid),"uid":uid,
         "reused":reused,
         "user":{"username":u.get("username","Student"),
@@ -2192,6 +2214,16 @@ def api_webapp_stats():
                  "6months":{"price":PREMIUM_6MONTHS_PRICE,"text":PREMIUM_6MONTHS_TEXT,"days":PREMIUM_6MONTHS_DAYS}}})
 
 
+@flask_app.route("/api/webapp/leaderboard", methods=["GET"])
+def api_webapp_leaderboard():
+    total_players = sum(1 for u in USER_DATA.values() if u.get("history"))
+    return jsonify({
+        "status": "success",
+        "leaders": get_leaderboard(limit=10),
+        "total_players": total_players,
+    })
+
+
 @flask_app.route("/api/webapp/user", methods=["GET", "OPTIONS"])
 def api_webapp_user():
     if request.method=="OPTIONS": return "",204
@@ -2214,7 +2246,7 @@ def api_webapp_user():
         "invite_code":invite_code,"invites":u.get("invites",0),
         "referral_required":REFERRAL_REQUIRED,
         "referral_reward_days":REFERRAL_REWARD_DAYS,
-        "referral_link":f"https://www.schoolsecure.com.ng/p/bot.html?ref={invite_code}",
+        "referral_link":f"{WEBAPP_URL}?ref={invite_code}",
         "referral_rewards_claimed":u.get("referral_rewards_claimed",0),
         "history":hist[-15:],"last_mock_failed":u.get("last_mock_failed",[]),
         "last_mock_subject":u.get("last_mock_subject"),
@@ -2546,10 +2578,9 @@ def api_admin_broadcast():
 
 
 # ============================================================
-# WHATSAPP META BUSINESS INTEGRATION
+# WHATSAPP META INTEGRATION
 # ============================================================
 def build_web_bot_link(wa_phone, name, subjects):
-    """Build personalized tracking link from WhatsApp user data."""
     clean_phone = re.sub(r"\D", "", str(wa_phone))
     subject_list = list(subjects) if subjects else []
     if "english" in subject_list:
@@ -2557,68 +2588,41 @@ def build_web_bot_link(wa_phone, name, subjects):
     subject_list.insert(0, "english")
     name_enc = quote(str(name).strip(), safe="")
     subs_enc = quote(",".join(subject_list), safe="")
-    return (
-        f"{WEBAPP_URL}"
-        f"?source=whatsapp"
-        f"&wa={clean_phone}"
-        f"&name={name_enc}"
-        f"&subjects={subs_enc}"
-    )
+    return (f"{WEBAPP_URL}?source=whatsapp&wa={clean_phone}"
+            f"&name={name_enc}&subjects={subs_enc}")
 
 
 def send_whatsapp_text(to_phone, message_body):
-    """Send a plain text message via Meta Cloud API."""
     if not WHATSAPP_TOKEN or not PHONE_NUMBER_ID:
-        print("[WA] ❌ Missing WHATSAPP_TOKEN or PHONE_NUMBER_ID")
         return False
     url = f"{WHATSAPP_GRAPH_URL}/{PHONE_NUMBER_ID}/messages"
     headers = {"Authorization": f"Bearer {WHATSAPP_TOKEN}",
                "Content-Type": "application/json"}
-    payload = {
-        "messaging_product": "whatsapp",
-        "recipient_type": "individual",
-        "to": to_phone,
-        "type": "text",
-        "text": {"body": message_body}
-    }
+    payload = {"messaging_product":"whatsapp","recipient_type":"individual",
+               "to":to_phone,"type":"text","text":{"body":message_body}}
     try:
         r = requests.post(url, headers=headers, json=payload, timeout=15)
-        if r.status_code == 200:
-            print(f"[WA] ✅ Sent to {to_phone}")
-            return True
-        print(f"[WA] ❌ Send failed {r.status_code}: {r.text[:200]}")
-        return False
-    except Exception as e:
-        print(f"[WA] ❌ Network error: {e}")
-        return False
+        return r.status_code == 200
+    except: return False
 
 
 def _wa_get_user_subjects(wa_phone):
-    """Return subject list for a WhatsApp phone from DB, or default combo."""
     uid = _find_user_by_phone(wa_phone)
     if uid:
         u = get_user(uid)
-        subs = u.get("subject_combination") or []
-        if subs:
-            return subs
-        plan = u.get("jamb_plan") or []
-        if plan:
-            return plan
-    # Fallback — most common Science combo
+        subs = u.get("subject_combination") or u.get("jamb_plan") or []
+        if subs: return subs
     return ["english", "mathematics", "physics", "chemistry"]
 
 
 def _wa_should_send_link(text):
-    """Decide whether an incoming message asks for the web bot."""
-    if not text:
-        return False
+    if not text: return False
     t = text.lower().strip()
-    triggers = ("web", "link", "open", "start", "hi", "hello", "menu", "practise", "practice")
+    triggers = ("web","link","open","start","hi","hello","menu","practise","practice")
     return any(kw in t for kw in triggers)
 
 
 def _wa_store_user(wa_phone, profile_name, subjects=None):
-    """Persist the WhatsApp user in the DB with source=whatsapp."""
     try:
         existing = _find_user_by_phone(wa_phone)
         if existing:
@@ -2630,8 +2634,7 @@ def _wa_store_user(wa_phone, profile_name, subjects=None):
                 u["subject_combination"] = subjects
                 if not u.get("plan_set") and len(subjects) >= 2:
                     ps = list(subjects)
-                    if "english" not in ps:
-                        ps = ["english"] + ps[:PLAN_SIZE-1]
+                    if "english" not in ps: ps = ["english"] + ps[:PLAN_SIZE-1]
                     u["jamb_plan"] = ps[:PLAN_SIZE]
                     u["plan_set"] = len(u["jamb_plan"]) == PLAN_SIZE
             if not u.get("source"): u["source"] = "whatsapp"
@@ -2644,16 +2647,13 @@ def _wa_store_user(wa_phone, profile_name, subjects=None):
             new_uid = "wa_" + normalized[-10:]
             u = get_user(new_uid, profile_name or "WhatsApp User")
             if profile_name: u["username"] = profile_name
-            u["phone"] = wa_phone
-            u["wa_phone"] = wa_phone
-            u["source"] = "whatsapp"
-            u["first_seen_platform"] = "whatsapp"
+            u["phone"] = wa_phone; u["wa_phone"] = wa_phone
+            u["source"] = "whatsapp"; u["first_seen_platform"] = "whatsapp"
             if subjects:
                 u["subject_combination"] = subjects
                 if len(subjects) >= 2:
                     ps = list(subjects)
-                    if "english" not in ps:
-                        ps = ["english"] + ps[:PLAN_SIZE-1]
+                    if "english" not in ps: ps = ["english"] + ps[:PLAN_SIZE-1]
                     u["jamb_plan"] = ps[:PLAN_SIZE]
                     u["plan_set"] = len(u["jamb_plan"]) == PLAN_SIZE
             USER_DATA[new_uid] = u
@@ -2665,18 +2665,14 @@ def _wa_store_user(wa_phone, profile_name, subjects=None):
 
 
 def handle_whatsapp_webhook(payload):
-    """Process an incoming WhatsApp webhook event."""
     try:
         entry = payload["entry"][0]
         changes = entry["changes"][0]
         value = changes["value"]
     except (KeyError, IndexError):
         return
-
-    # Ignore status updates (delivered/read)
     if "messages" not in value:
         return
-
     try:
         message = value["messages"][0]
         contact = value["contacts"][0]
@@ -2684,53 +2680,33 @@ def handle_whatsapp_webhook(payload):
         profile_name = (contact.get("profile") or {}).get("name", "") or "Student"
     except (KeyError, IndexError):
         return
-
-    # Extract user text
     user_text = ""
     if message.get("type") == "text":
         user_text = message["text"]["body"]
-
-    # Save the user record regardless of what they said
     subjects = _wa_get_user_subjects(wa_phone)
     _wa_store_user(wa_phone, profile_name, subjects)
-
-    # Only reply with the link if the message looks like a request
     if not _wa_should_send_link(user_text):
         return
-
     link = build_web_bot_link(wa_phone, profile_name, subjects)
-    reply = (
-        f"📚 *Free JAMB Prep — Open in your browser:*\n\n"
-        f"{link}\n\n"
-        f"_Your progress saves automatically._"
-    )
+    reply = (f"📚 *Free JAMB Prep — Open in your browser:*\n\n"
+             f"{link}\n\n_Your progress saves automatically._")
     send_whatsapp_text(wa_phone, reply)
 
 
 @flask_app.route("/webhook/whatsapp", methods=["GET", "POST", "OPTIONS"])
 def whatsapp_webhook():
-    # ── Meta verification (GET) ──
     if request.method == "GET":
         mode = request.args.get("hub.mode", "")
         token = request.args.get("hub.verify_token", "")
         challenge = request.args.get("hub.challenge", "")
         if mode == "subscribe" and token == WHATSAPP_VERIFY_TOKEN:
-            print("[WA] ✅ Webhook verified")
             return challenge, 200
-        print(f"[WA] ❌ Verify failed: mode={mode} token={token[:8]}...")
         return "Forbidden", 403
-
-    # ── CORS preflight (OPTIONS) ──
     if request.method == "OPTIONS":
         return "", 204
-
-    # ── Incoming message (POST) ──
     payload = request.get_json(silent=True) or {}
-    try:
-        handle_whatsapp_webhook(payload)
-    except Exception as e:
-        print(f"[WA] Webhook handler error: {e}")
-    # Always return 200 so Meta doesn't retry
+    try: handle_whatsapp_webhook(payload)
+    except Exception as e: print(f"[WA] Webhook error: {e}")
     return "EVENT_RECEIVED", 200
 
 
@@ -2777,162 +2753,113 @@ def api_payment_create_link():
     return jsonify({"status":"error","message":last_err or "payment unavailable"}),502
 
 
-UPGRADE_PAGE = r"""<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Upgrade — UTME Success Bot</title>
-<meta property="og:image" content="{{ logo_url }}"/>
-<link rel="icon" type="image/png" href="{{ logo_url }}"/>
-<style>
- *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
- body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-      background:linear-gradient(135deg,#1e1b4b 0%,#5b21b6 50%,#7c3aed 100%);
-      min-height:100vh;padding:20px;color:#0f172a;display:flex;align-items:flex-start;justify-content:center}
- .wrap{max-width:480px;width:100%;margin:0 auto}
- h1{color:#fff;text-align:center;font-size:26px;font-weight:900;letter-spacing:-.5px;margin-bottom:6px}
- p.sub{color:rgba(255,255,255,.85);text-align:center;font-size:14px;margin-bottom:22px;line-height:1.5}
- .card{background:#fff;border-radius:22px;padding:24px;margin-bottom:16px;
-       box-shadow:0 20px 50px -12px rgba(0,0,0,.4)}
- .plan{border:2px solid #e2e8f0;border-radius:18px;padding:22px;margin-bottom:14px;
-       transition:all .2s;position:relative;overflow:hidden}
- .plan.best{border-color:#f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7)}
- .plan-tag{position:absolute;top:0;right:0;background:linear-gradient(135deg,#f59e0b,#ea580c);
-           color:#fff;font-size:10.5px;font-weight:800;padding:6px 12px;
-           border-bottom-left-radius:14px;letter-spacing:.6px;text-transform:uppercase}
- .plan h3{font-size:19px;margin-bottom:6px;color:#0f172a}
- .plan .price{font-size:32px;font-weight:900;color:#1e1b4b;letter-spacing:-1px;margin:6px 0}
- .plan .price small{font-size:14px;font-weight:500;color:#64748b}
- .plan .desc{font-size:13px;color:#64748b;margin-bottom:14px;line-height:1.4}
- .plan .save{display:inline-block;background:#10b981;color:#fff;font-size:11px;font-weight:800;
-             padding:4px 10px;border-radius:100px;margin-bottom:10px;letter-spacing:.4px}
- .pay{width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:800;
-      color:#fff;background:linear-gradient(135deg,#7c3aed,#4c1d95);cursor:pointer;
-      transition:all .15s;box-shadow:0 8px 20px rgba(124,58,237,.35);
-      display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
- .pay:disabled{opacity:.55;cursor:not-allowed}
- .plan.best .pay{background:linear-gradient(135deg,#f59e0b,#ea580c)}
- .btn-alt{display:flex;align-items:center;justify-content:center;gap:8px;
-          padding:14px;border-radius:14px;
-          background:linear-gradient(135deg,#10b981,#059669);color:#fff;
-          text-decoration:none;font-weight:700;font-size:14.5px;margin-top:12px}
- .btn-copy{display:flex;align-items:center;justify-content:center;gap:8px;
-           padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;
-           color:#0f172a;font-weight:800;font-size:13px;cursor:pointer;margin-top:8px;
-           font-family:inherit;width:100%}
- .trust{display:flex;align-items:center;justify-content:center;gap:8px;
-        color:rgba(255,255,255,.85);font-size:12.5px;text-align:center;
-        padding:14px;margin-top:8px;line-height:1.5}
- .sp{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);
-     border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
- @keyframes sp{to{transform:rotate(360deg)}}
- .alert{background:#fef2f2;color:#991b1b;padding:14px;border-radius:12px;
-        font-size:13.5px;border-left:4px solid #dc2626;margin-bottom:16px;line-height:1.5}
- .ref-prog{display:flex;align-items:center;gap:10px;padding:12px;background:#f8fafc;
-           border-radius:10px;margin:12px 0;border:1px solid #e2e8f0}
- .ref-bar{flex:1;height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}
- .ref-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#16a34a,#22c55e);width:0%}
- .ref-txt{font-size:12px;font-weight:900;color:#16a34a;min-width:34px;text-align:right}
- .logo-top{display:block;width:80px;height:80px;margin:0 auto 14px;border-radius:18px;
-           box-shadow:0 12px 28px rgba(0,0,0,.35)}
-</style>
-</head>
-<body>
-<div class="wrap">
-<img src="{{ logo_url }}" alt="Logo" class="logo-top"/>
-<h1>👑 Upgrade to Premium</h1>
-<p class="sub">Unlock unlimited practice. Score higher in JAMB.</p>
-{% if not gateway_ready %}
-<div class="alert">⚠️ Payment is not fully configured. Contact support.</div>
-{% endif %}
-<div class="card" id="main-card">
-  <div class="plan best">
-    <div class="plan-tag">Best Value</div>
-    <h3>6 Months</h3>
-    <span class="save">SAVE (50% OFF)</span>
-    <div class="price">{{ six_months_text }} <small>/ {{ six_months_days }} days</small></div>
-    <div class="desc">Full access for 6 months.</div>
-    <button class="pay" id="pay-6m" onclick="payNow('6months')" {% if not gateway_ready %}disabled{% endif %}>
-      <span class="btn-label">💳 Pay {{ six_months_text }}</span>
-    </button>
-  </div>
-  <div class="plan">
-    <h3>Monthly</h3>
-    <div class="price">{{ monthly_price_text }} <small>/ {{ monthly_days }} days</small></div>
-    <div class="desc">Try Premium for one month.</div>
-    <button class="pay" id="pay-1m" onclick="payNow('monthly')" {% if not gateway_ready %}disabled{% endif %}>
-      <span class="btn-label">💳 Pay {{ monthly_price_text }}</span>
-    </button>
-  </div>
-</div>
-<div class="card">
-  <h3 style="font-size:17px;margin-bottom:6px;">🎁 Or earn it FREE</h3>
-  <p style="font-size:13px;color:#64748b;margin-bottom:12px;">Invite <b>{{ referral_required }} friends</b> → get <b>{{ referral_reward_days }} days free</b>.</p>
-  <div class="ref-prog">
-    <div class="ref-bar"><div class="ref-fill" id="ref-fill"></div></div>
-    <div class="ref-txt" id="ref-txt">0/{{ referral_required }}</div>
-  </div>
-  <button class="btn-copy" onclick="copyRef()">📋 Copy Referral Link</button>
-  <a class="btn-alt" href="{{ share_link }}" target="_blank" rel="noopener">📤 Share Link</a>
-</div>
-<div class="trust">🔒 Secured by Flutterwave</div>
-</div>
-<script>
-const UID="{{ uid }}";
-const API=window.location.origin;
-const REF_LINK="https://www.schoolsecure.com.ng/p/bot.html?ref={{ uid }}";
-async function payNow(planKey){
-  const btn=document.getElementById(planKey==='6months'?'pay-6m':'pay-1m');
-  const label=btn.querySelector('.btn-label'); const orig=label.textContent;
-  document.querySelectorAll('.pay').forEach(b=>b.disabled=true);
-  label.innerHTML='<span class="sp"></span> Creating…';
-  try{
-    const res=await fetch(API+'/api/payment/create_link',{method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({uid:UID,plan:planKey,return_url:window.location.href})});
-    const data=await res.json();
-    if(data.status==='success'&&data.link){window.location.href=data.link;return;}
-    label.textContent=orig;
-    document.querySelectorAll('.pay').forEach(b=>b.disabled=false);
-    showErr(data.message||'Failed.');
-  }catch(e){
-    label.textContent=orig;
-    document.querySelectorAll('.pay').forEach(b=>b.disabled=false);
-    showErr('Network error.');
-  }
-}
-function copyRef(){
-  try{navigator.clipboard.writeText(REF_LINK);toast('✅ Copied!');}
-  catch(e){const t=document.createElement('textarea');t.value=REF_LINK;
-    document.body.appendChild(t);t.select();document.execCommand('copy');
-    document.body.removeChild(t);toast('✅ Copied!');}
-}
-function toast(m){const t=document.createElement('div');t.textContent=m;
-  t.style.cssText='position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 20px;border-radius:999px;font-size:13px;font-weight:700;z-index:9999;';
-  document.body.appendChild(t);setTimeout(()=>t.remove(),2400);}
-function showErr(msg){const b=document.createElement('div');b.className='alert';
-  b.style.marginTop='14px';b.innerHTML='⚠️ '+msg+'<br><br>Contact: <b>@UTMESUCCESS</b>';
-  document.getElementById('main-card').appendChild(b);}
-</script>
-</body></html>"""
-
-
 @flask_app.route("/upgrade/<uid>")
 def upgrade_page(uid):
     monthly=_resolve_plan("monthly"); six=_resolve_plan("6months")
     savings=PREMIUM_PRICE*6-PREMIUM_6MONTHS_PRICE
     savings_text=f"\u20a6{savings}" if savings>0 else ""
-    invite_link=f"https://www.schoolsecure.com.ng/p/bot.html?ref={uid}"
+    invite_link=f"{WEBAPP_URL}?ref={uid}"
     share_link=f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot — free JAMB prep!')}"
     return_url=request.args.get("return",f"https://t.me/{BOT_USERNAME}")[:300]
-    return render_template_string(UPGRADE_PAGE,uid=uid,bot_username=BOT_USERNAME,
-        gateway_ready=bool(FLW_SECRET_KEY),
-        monthly_price=monthly["price"],monthly_price_text=monthly["price_text"],
-        monthly_days=monthly["days"],six_months_price=six["price"],
-        six_months_text=six["price_text"],six_months_days=six["days"],
-        savings_text=savings_text,referral_reward_days=REFERRAL_REWARD_DAYS,
-        referral_required=REFERRAL_REQUIRED,share_link=share_link,
-        return_url=return_url,logo_url=LOGO_URL)
+    html = f"""<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Upgrade — UTME Success Bot</title>
+<meta property="og:image" content="{LOGO_URL}"/>
+<link rel="icon" type="image/png" href="{LOGO_URL}"/>
+<style>
+*{{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}}
+body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#1e1b4b 0%,#5b21b6 50%,#7c3aed 100%);min-height:100vh;padding:20px;color:#0f172a;display:flex;align-items:flex-start;justify-content:center}}
+.wrap{{max-width:480px;width:100%;margin:0 auto}}
+h1{{color:#fff;text-align:center;font-size:26px;font-weight:900;letter-spacing:-.5px;margin-bottom:6px}}
+p.sub{{color:rgba(255,255,255,.85);text-align:center;font-size:14px;margin-bottom:22px;line-height:1.5}}
+.card{{background:#fff;border-radius:22px;padding:24px;margin-bottom:16px;box-shadow:0 20px 50px -12px rgba(0,0,0,.4)}}
+.plan{{border:2px solid #e2e8f0;border-radius:18px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden}}
+.plan.best{{border-color:#f59e0b;background:linear-gradient(135deg,#fffbeb,#fef3c7)}}
+.plan-tag{{position:absolute;top:0;right:0;background:linear-gradient(135deg,#f59e0b,#ea580c);color:#fff;font-size:10.5px;font-weight:800;padding:6px 12px;border-bottom-left-radius:14px;letter-spacing:.6px;text-transform:uppercase}}
+.plan h3{{font-size:19px;margin-bottom:6px}}
+.plan .price{{font-size:32px;font-weight:900;color:#1e1b4b;letter-spacing:-1px;margin:6px 0}}
+.plan .price small{{font-size:14px;font-weight:500;color:#64748b}}
+.plan .desc{{font-size:13px;color:#64748b;margin-bottom:14px}}
+.plan .save{{display:inline-block;background:#10b981;color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:100px;margin-bottom:10px}}
+.pay{{width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:800;color:#fff;background:linear-gradient(135deg,#7c3aed,#4c1d95);cursor:pointer;box-shadow:0 8px 20px rgba(124,58,237,.35);display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}}
+.pay:disabled{{opacity:.55;cursor:not-allowed}}
+.plan.best .pay{{background:linear-gradient(135deg,#f59e0b,#ea580c)}}
+.trust{{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.85);font-size:12.5px;padding:14px;line-height:1.5}}
+.alert{{background:#fef2f2;color:#991b1b;padding:14px;border-radius:12px;font-size:13.5px;border-left:4px solid #dc2626;margin-bottom:16px}}
+.ref-prog{{display:flex;align-items:center;gap:10px;padding:12px;background:#f8fafc;border-radius:10px;margin:12px 0;border:1px solid #e2e8f0}}
+.ref-bar{{flex:1;height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}}
+.ref-fill{{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);width:0%}}
+.ref-txt{{font-size:12px;font-weight:900;color:#16a34a;min-width:34px;text-align:right}}
+.logo-top{{display:block;width:80px;height:80px;margin:0 auto 14px;border-radius:18px;box-shadow:0 12px 28px rgba(0,0,0,.35)}}
+.btn-copy{{padding:12px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;color:#0f172a;font-weight:800;font-size:13px;cursor:pointer;width:100%;font-family:inherit;margin-top:8px}}
+.sp{{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}}
+@keyframes sp{{to{{transform:rotate(360deg)}}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<img src="{LOGO_URL}" alt="Logo" class="logo-top"/>
+<h1>👑 Upgrade to Premium</h1>
+<p class="sub">Unlock unlimited practice. Score higher in JAMB.</p>
+{'<div class="alert">⚠️ Payment not configured. Contact support.</div>' if not FLW_SECRET_KEY else ''}
+<div class="card" id="main-card">
+<div class="plan best">
+<div class="plan-tag">Best Value</div>
+<h3>6 Months</h3>
+<span class="save">SAVE 50% OFF</span>
+<div class="price">{six['price_text']} <small>/ {six['days']} days</small></div>
+<div class="desc">Full access for 6 months.</div>
+<button class="pay" id="pay-6m" onclick="payNow('6months')" {'disabled' if not FLW_SECRET_KEY else ''}>
+<span class="btn-label">💳 Pay {six['price_text']}</span>
+</button>
+</div>
+<div class="plan">
+<h3>Monthly</h3>
+<div class="price">{monthly['price_text']} <small>/ {monthly['days']} days</small></div>
+<div class="desc">Try Premium for one month.</div>
+<button class="pay" id="pay-1m" onclick="payNow('monthly')" {'disabled' if not FLW_SECRET_KEY else ''}>
+<span class="btn-label">💳 Pay {monthly['price_text']}</span>
+</button>
+</div>
+</div>
+<div class="card">
+<h3 style="font-size:17px;margin-bottom:6px;">🎁 Or earn it FREE</h3>
+<p style="font-size:13px;color:#64748b;margin-bottom:12px;">Invite <b>{REFERRAL_REQUIRED} friends</b> → get <b>{REFERRAL_REWARD_DAYS} days free</b>.</p>
+<div class="ref-prog">
+<div class="ref-bar"><div class="ref-fill"></div></div>
+<div class="ref-txt">0/{REFERRAL_REQUIRED}</div>
+</div>
+<button class="btn-copy" onclick="copyRef()">📋 Copy Referral Link</button>
+<a href="{share_link}" target="_blank" rel="noopener" style="display:block;text-align:center;padding:14px;border-radius:14px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-decoration:none;font-weight:700;font-size:14.5px;margin-top:12px;">📤 Share Link</a>
+</div>
+<div class="trust">🔒 Secured by Flutterwave</div>
+</div>
+<script>
+const UID="{uid}";
+const API=window.location.origin;
+const REF_LINK="{WEBAPP_URL}?ref={uid}";
+async function payNow(planKey){{
+const btn=document.getElementById(planKey==='6months'?'pay-6m':'pay-1m');
+const label=btn.querySelector('.btn-label'); const orig=label.textContent;
+document.querySelectorAll('.pay').forEach(b=>b.disabled=true);
+label.innerHTML='<span class="sp"></span> Creating…';
+try{{
+const res=await fetch(API+'/api/payment/create_link',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{uid:UID,plan:planKey,return_url:window.location.href}})}});
+const data=await res.json();
+if(data.status==='success'&&data.link){{window.location.href=data.link;return;}}
+label.textContent=orig;document.querySelectorAll('.pay').forEach(b=>b.disabled=false);
+alert('⚠️ '+(data.message||'Failed.'));
+}}catch(e){{label.textContent=orig;document.querySelectorAll('.pay').forEach(b=>b.disabled=false);alert('⚠️ Network error.');}}
+}}
+function copyRef(){{
+try{{navigator.clipboard.writeText(REF_LINK);alert('✅ Copied!');}}
+catch(e){{const t=document.createElement('textarea');t.value=REF_LINK;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);alert('✅ Copied!');}}
+}}
+</script>
+</body></html>"""
+    return html
 
 
 @flask_app.route("/payment/complete")
@@ -2953,29 +2880,14 @@ def payment_complete():
                     plan=_resolve_plan(plan_key)
                     add_premium(vuid,days=plan["days"],plan=plan["key"])
                     verified=True
-        except Exception as e:
-            print(f"[payment/complete] verify error: {e}")
+        except Exception as e: print(f"[payment/complete] {e}")
     if not return_url:
         return_url=WEBAPP_URL if uid.startswith("widget_") else f"https://t.me/{BOT_USERNAME}"
     icon="🎉" if verified else "⏳"
     title="Payment Successful!" if verified else "Verifying Payment…"
-    return f"""<!DOCTYPE html><html><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title}</title>
-<style>body{{margin:0;font-family:-apple-system,sans-serif;
- background:linear-gradient(135deg,{'#10b981,#059669' if verified else '#7c3aed,#4c1d95'});
- min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
- color:#fff;text-align:center}}.card{{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);
- border-radius:24px;padding:40px 28px;max-width:420px}}.icon{{font-size:72px}}
- h1{{font-size:26px;margin:10px 0}}.btn{{display:inline-block;margin-top:22px;padding:14px 28px;
- border-radius:12px;background:#fff;color:#0f172a;text-decoration:none;font-weight:800}}
-</style></head><body>
-<div class="card"><div class="icon">{icon}</div>
-<h1>{title}</h1>
-<p>{'Premium is now active.' if verified else 'Activation may take up to 60 seconds.'}</p>
-<a class="btn" href="{return_url}">Return →</a>
-{'<script>setTimeout(function(){window.location.href="'+return_url+'"},5000);</script>' if verified else ''}
-</div></body></html>"""
+    return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title>
+<style>body{{margin:0;font-family:-apple-system,sans-serif;background:linear-gradient(135deg,{'#10b981,#059669' if verified else '#7c3aed,#4c1d95'});min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;color:#fff;text-align:center}}.card{{background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border-radius:24px;padding:40px 28px;max-width:420px}}.icon{{font-size:72px}}h1{{font-size:26px;margin:10px 0}}.btn{{display:inline-block;margin-top:22px;padding:14px 28px;border-radius:12px;background:#fff;color:#0f172a;text-decoration:none;font-weight:800}}</style></head><body>
+<div class="card"><div class="icon">{icon}</div><h1>{title}</h1><p>{'Premium is now active.' if verified else 'Activation may take up to 60 seconds.'}</p><a class="btn" href="{return_url}">Return →</a></div></body></html>"""
 
 
 @flask_app.route("/verify/flutterwave", methods=["POST"])
@@ -2984,8 +2896,7 @@ def verify_flutterwave():
     tx_id=body.get("transaction_id")
     expected_uid=str(body.get("expected_uid") or "")
     plan_key=body.get("plan","monthly")
-    if not tx_id or not FLW_SECRET_KEY:
-        return jsonify({"status":"failed"}),400
+    if not tx_id or not FLW_SECRET_KEY: return jsonify({"status":"failed"}),400
     try:
         r=requests.get(f"https://api.flutterwave.com/v3/transactions/{tx_id}/verify",
             headers={"Authorization":f"Bearer {FLW_SECRET_KEY.strip()}"},timeout=15)
@@ -3041,9 +2952,7 @@ def _now_lagos():
 
 
 def _build_post(q, slot_name):
-    intro=random.choice(["🌅 *Morning JAMB Practice*","☀️ *Quick Challenge*","🌙 *Evening Study*"]) if slot_name=="morning" else \
-          (random.choice(["☀️ *Afternoon Quick Practice*","📚 *Midday JAMB Challenge*"]) if slot_name=="afternoon" else \
-           random.choice(["🌙 *Evening Study Session*","🌙 *End the Day Strong*"]))
+    intro=random.choice(["🌅 *Morning JAMB Practice*","☀️ *Quick Challenge*","🌙 *Evening Study*"])
     return (f"{intro}\n\n📚 *{md(q.get('subject','JAMB'))}* | {md(str(q.get('year','')))}\n\n"
             f"{md(q.get('question','')[:340])}\n\n"
             f"A) {md(q.get('option_a','')[:80])}\nB) {md(q.get('option_b','')[:80])}\n"
@@ -3058,16 +2967,13 @@ async def channel_post(app, slot_name="morning", slot_label="manual"):
     if not q: raise RuntimeError("No questions available")
     msg=_build_post(q,slot_name)
     await app.bot.send_message(chat_id=CHANNEL_ID,text=msg,parse_mode="Markdown")
-    print(f"[channel] ✅ Posted ({slot_name}) to {CHANNEL_ID}")
+    print(f"[channel] Posted ({slot_name}) to {CHANNEL_ID}")
     return True
 
 
 async def channel_posting_job(app):
-    print("[channel] ⏰ Job started")
-    if not CHANNEL_ID:
-        print("[channel] ❌ CHANNEL_ID missing"); return
-    try: await channel_post(app,slot_name="morning",slot_label="startup-test")
-    except Exception as e: print(f"[channel] ❌ Startup: {e}")
+    print("[channel] Job started")
+    if not CHANNEL_ID: return
     posted_slots=set()
     while True:
         try:
@@ -3080,12 +2986,11 @@ async def channel_posting_job(app):
                     try:
                         await channel_post(app,slot_name=slot_name,slot_label=f"{h:02d}:{m:02d}")
                         posted_slots.add(slot_key)
-                    except Exception as e:
-                        print(f"[channel] ❌ {slot_name}: {e}")
+                    except Exception as e: print(f"[channel] {slot_name}: {e}")
             posted_slots={k for k in posted_slots if k.startswith(today)}
             await asyncio.sleep(300)
         except Exception as e:
-            print(f"[channel] ❌ Loop: {e}"); await asyncio.sleep(600)
+            print(f"[channel] Loop: {e}"); await asyncio.sleep(600)
 
 
 async def post_init(app):
@@ -3097,13 +3002,12 @@ async def post_init(app):
                   BotCommand("premium","💎 Upgrade Premium"),BotCommand("help","❓ Help")]
         await app.bot.set_my_commands(commands)
         await app.bot.set_chat_menu_button(menu_button=MenuButtonCommands(text="📋 Menu"))
-        print("✅ Commands registered")
+        print("Commands registered")
         try:
             asyncio.create_task(channel_posting_job(app))
-            print("✅ Channel poster launched")
-        except Exception as e: print(f"⚠️ Channel poster: {e}")
-    except Exception as e:
-        print(f"Menu setup failed: {e}")
+            print("Channel poster launched")
+        except Exception as e: print(f"Channel poster: {e}")
+    except Exception as e: print(f"Menu setup failed: {e}")
 
 
 # ============================================================
@@ -3111,37 +3015,37 @@ async def post_init(app):
 # ============================================================
 def main():
     load_processed_tx()
-    print(f"🤖 Bot: @{BOT_USERNAME}")
-    print(f"👨‍🏫 Tutor: {TUTOR_NAME}")
-    print(f"🌐 WebApp: {WEBAPP_URL}")
-    print(f"🖼️ Logo: {LOGO_URL}")
-    print(f"📱 WhatsApp: {'✅ configured' if WHATSAPP_TOKEN and PHONE_NUMBER_ID else '❌ not set'}")
+    print(f"Bot: @{BOT_USERNAME}")
+    print(f"Tutor: {TUTOR_NAME}")
+    print(f"WebApp: {WEBAPP_URL}")
+    print(f"Logo: {LOGO_URL}")
+    print(f"WhatsApp: {'configured' if WHATSAPP_TOKEN and PHONE_NUMBER_ID else 'not set'}")
     if not DATABASE_URL:
-        print("❌ DATABASE_URL not set!")
+        print("DATABASE_URL not set!")
         while True: time.sleep(60)
     try:
         init_db(); load_data()
     except Exception as e:
-        print(f"❌ FATAL: DB init failed: {e}")
+        print(f"FATAL: DB init failed: {e}")
         traceback.print_exc()
         while True: time.sleep(60)
     widget_users=sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked=sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     wa_users=sum(1 for u in USER_DATA.values() if u.get("wa_phone"))
-    print(f"🧩 Widget: {widget_users} anonymous, {linked} linked, {wa_users} WhatsApp")
-    print(f"💾 PostgreSQL: {len(USER_DATA)} users")
-    if ADMIN_ID: print(f"⚙️  Admin: {ADMIN_ID}")
+    print(f"Widget: {widget_users} anonymous, {linked} linked, {wa_users} WhatsApp")
+    print(f"PostgreSQL: {len(USER_DATA)} users")
+    if ADMIN_ID: print(f"Admin: {ADMIN_ID}")
     if HAS_AI_TUTOR:
         try:
-            print(f"🧠 Building {TUTOR_NAME} KB…")
+            print(f"Building {TUTOR_NAME} KB…")
             _build_kb()
             ok,detail=_tutor_ping()
-            print(f"🧠 Tutor: {detail}")
-        except Exception as e: print(f"⚠️ Tutor init: {e}")
+            print(f"Tutor: {detail}")
+        except Exception as e: print(f"Tutor init: {e}")
     threading.Thread(target=run_flask,daemon=True).start()
-    print(f"🌐 Flask on port {PORT}")
+    print(f"Flask on port {PORT}")
     if not BOT_TOKEN or BOT_TOKEN=="YOUR_BOT_TOKEN_HERE" or len(BOT_TOKEN)<20:
-        print("❌ BOT_TOKEN not set!")
+        print("BOT_TOKEN not set!")
         while True: time.sleep(60)
     try:
         app=ApplicationBuilder().token(BOT_TOKEN).build()
@@ -3167,10 +3071,10 @@ def main():
                           "⚙️ Admin Panel)$"),handle_msg))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,handle_msg))
         app.post_init=post_init
-        print("✅ Bot running")
+        print("Bot running")
         app.run_polling()
     except Exception as e:
-        print(f"❌ Bot failed: {e}")
+        print(f"Bot failed: {e}")
         traceback.print_exc()
         while True: time.sleep(60)
 
