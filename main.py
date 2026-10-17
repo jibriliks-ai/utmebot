@@ -1,5 +1,6 @@
 """
-UTME Success Bot v47 — PostgreSQL + Admin + WhatsApp + Leaderboard
+UTME Success Bot v48 — PostgreSQL + Admin + WhatsApp + Leaderboard
+FIX: Flask starts FIRST so Render's port scan passes even if DB/bot fails.
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -1969,26 +1970,54 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     wa_count = sum(1 for u in USER_DATA.values() if u.get("source") == "whatsapp")
-    return (f"UTME Bot v47 · {len(ALL_QS)} Qs · Tutor: {TUTOR_NAME} · "
+    return (f"UTME Bot v48 · {len(ALL_QS)} Qs · Tutor: {TUTOR_NAME} · "
             f"Users: {len(USER_DATA)} (WhatsApp: {wa_count}) · "
             f"DB: {'PG' if DATABASE_URL else 'NONE'} · Running")
 
 
 @flask_app.route("/health")
 def health():
+    """Enhanced health check — explains WHY if something is off."""
     tutor_ok,_=_tutor_ping() if HAS_AI_TUTOR else (False,"n/a")
     widget=sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked=sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     wa=sum(1 for u in USER_DATA.values() if u.get("wa_phone"))
-    return jsonify({"status":"ok","version":"v47-leaderboard",
-        "bot_username":BOT_USERNAME,"tutor_name":TUTOR_NAME,
-        "total_questions":len(ALL_QS),"tutor_ok":tutor_ok,
-        "channel_configured":bool(CHANNEL_ID),
-        "webapp_url":WEBAPP_URL,"widget_users":widget,
-        "linked_to_telegram":linked,"whatsapp_users":wa,
-        "users":len(USER_DATA),"logo_url":LOGO_URL,
-        "whatsapp_configured":bool(WHATSAPP_TOKEN and PHONE_NUMBER_ID),
-        "database":"postgresql" if DATABASE_URL else "none"})
+    db_ok = False
+    try:
+        conn = _get_db_conn()
+        conn.close()
+        db_ok = True
+    except Exception:
+        db_ok = False
+    token_ok = bool(BOT_TOKEN and BOT_TOKEN != "YOUR_BOT_TOKEN_HERE" and len(BOT_TOKEN) >= 20)
+    return jsonify({
+        "status": "ok",
+        "version": "v48-leaderboard",
+        "bot_username": BOT_USERNAME,
+        "tutor_name": TUTOR_NAME,
+        "total_questions": len(ALL_QS),
+        "tutor_ok": tutor_ok,
+        "channel_configured": bool(CHANNEL_ID),
+        "webapp_url": WEBAPP_URL,
+        "widget_users": widget,
+        "linked_to_telegram": linked,
+        "whatsapp_users": wa,
+        "users": len(USER_DATA),
+        "logo_url": LOGO_URL,
+        "whatsapp_configured": bool(WHATSAPP_TOKEN and PHONE_NUMBER_ID),
+        "database": "postgresql" if DATABASE_URL else "none",
+        "database_connected": db_ok,
+        "bot_token_set": token_ok,
+        "flask_running": True,
+        "diagnostics": {
+            "DATABASE_URL_set": bool(DATABASE_URL),
+            "BOT_TOKEN_set": token_ok,
+            "ALL_QS_loaded": len(ALL_QS) > 0,
+            "USERS_loaded": len(USER_DATA) > 0,
+            "AI_TUTOR_available": HAS_AI_TUTOR,
+            "ENGINE_available": HAS_ENGINE,
+        }
+    })
 
 
 @flask_app.route("/debug/flw-key")
@@ -2757,7 +2786,6 @@ def api_payment_create_link():
 def upgrade_page(uid):
     monthly=_resolve_plan("monthly"); six=_resolve_plan("6months")
     savings=PREMIUM_PRICE*6-PREMIUM_6MONTHS_PRICE
-    savings_text=f"\u20a6{savings}" if savings>0 else ""
     invite_link=f"{WEBAPP_URL}?ref={uid}"
     share_link=f"https://t.me/share/url?url={quote(invite_link)}&text={quote('Join UTME Success Bot — free JAMB prep!')}"
     return_url=request.args.get("return",f"https://t.me/{BOT_USERNAME}")[:300]
@@ -3011,42 +3039,73 @@ async def post_init(app):
 
 
 # ============================================================
-# MAIN
+# MAIN — ⭐ FIXED: FLASK STARTS FIRST
 # ============================================================
 def main():
     load_processed_tx()
+    print("=" * 60)
     print(f"Bot: @{BOT_USERNAME}")
     print(f"Tutor: {TUTOR_NAME}")
     print(f"WebApp: {WEBAPP_URL}")
     print(f"Logo: {LOGO_URL}")
+    print(f"PORT: {PORT}")
+    print(f"DATABASE_URL: {'SET' if DATABASE_URL else '❌ NOT SET'}")
+    print(f"BOT_TOKEN: {'SET' if BOT_TOKEN and BOT_TOKEN != 'YOUR_BOT_TOKEN_HERE' and len(BOT_TOKEN) >= 20 else '❌ NOT SET'}")
     print(f"WhatsApp: {'configured' if WHATSAPP_TOKEN and PHONE_NUMBER_ID else 'not set'}")
-    if not DATABASE_URL:
-        print("DATABASE_URL not set!")
-        while True: time.sleep(60)
+    print(f"Channel: {'configured' if CHANNEL_ID else 'not set'}")
+    print(f"AI Tutor: {'available' if HAS_AI_TUTOR else 'unavailable'}")
+    print(f"Engine: {'available' if HAS_ENGINE else 'unavailable'}")
+    print("=" * 60)
+
+    # ⭐⭐⭐ CRITICAL FIX: Start Flask FIRST so Render's port scan passes
+    print(f"🚀 Starting Flask on 0.0.0.0:{PORT} FIRST (so Render port scan passes)...")
     try:
-        init_db(); load_data()
+        threading.Thread(target=run_flask, daemon=True).start()
+        time.sleep(3)  # Give Flask time to bind
+        print(f"✅ Flask is running on port {PORT}")
+        print(f"   → Health check: https://<your-render-url>/health")
     except Exception as e:
-        print(f"FATAL: DB init failed: {e}")
+        print(f"❌ Flask failed to start: {e}")
         traceback.print_exc()
+
+    # Now do DB setup — but errors here won't block the port anymore
+    if not DATABASE_URL:
+        print("❌ DATABASE_URL not set! Bot cannot connect to DB.")
+        print("   → Add DATABASE_URL in Render → Environment Variables")
+        print("   → /health will show database_connected: false")
         while True: time.sleep(60)
+
+    try:
+        init_db()
+        load_data()
+    except Exception as e:
+        print(f"❌ DB init failed: {e}")
+        traceback.print_exc()
+        print("   → /health will show database_connected: false")
+        print("   → Check DATABASE_URL format (postgres://user:pass@host/dbname)")
+        while True: time.sleep(60)
+
     widget_users=sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked=sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     wa_users=sum(1 for u in USER_DATA.values() if u.get("wa_phone"))
-    print(f"Widget: {widget_users} anonymous, {linked} linked, {wa_users} WhatsApp")
-    print(f"PostgreSQL: {len(USER_DATA)} users")
+    print(f"✅ DB ready: {len(USER_DATA)} users ({widget_users} widget, {linked} linked, {wa_users} WhatsApp)")
     if ADMIN_ID: print(f"Admin: {ADMIN_ID}")
+
     if HAS_AI_TUTOR:
         try:
             print(f"Building {TUTOR_NAME} KB…")
             _build_kb()
             ok,detail=_tutor_ping()
             print(f"Tutor: {detail}")
-        except Exception as e: print(f"Tutor init: {e}")
-    threading.Thread(target=run_flask,daemon=True).start()
-    print(f"Flask on port {PORT}")
+        except Exception as e:
+            print(f"Tutor init: {e}")
+
+    # Bot startup — errors here won't block Flask
     if not BOT_TOKEN or BOT_TOKEN=="YOUR_BOT_TOKEN_HERE" or len(BOT_TOKEN)<20:
-        print("BOT_TOKEN not set!")
+        print("❌ BOT_TOKEN not set! Bot will not start (Flask still running).")
+        print("   → Add BOT_TOKEN in Render → Environment Variables")
         while True: time.sleep(60)
+
     try:
         app=ApplicationBuilder().token(BOT_TOKEN).build()
         app.add_handler(CommandHandler("start",cmd_start))
@@ -3071,11 +3130,12 @@ def main():
                           "⚙️ Admin Panel)$"),handle_msg))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,handle_msg))
         app.post_init=post_init
-        print("Bot running")
+        print("✅ Bot polling started")
         app.run_polling()
     except Exception as e:
-        print(f"Bot failed: {e}")
+        print(f"❌ Bot failed: {e}")
         traceback.print_exc()
+        print("   → Flask is still running — /health endpoint works")
         while True: time.sleep(60)
 
 
