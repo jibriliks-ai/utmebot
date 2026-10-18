@@ -740,7 +740,7 @@ def consume_tutor(uid):
     save_data()
 
 
-def get_leaderboard(limit=10):
+def get_leaderboard(limit=3):
     """Return top scorers across all users, ranked by best mock percentage."""
     leaders = []
     for uid, u in USER_DATA.items():
@@ -2248,7 +2248,7 @@ def api_webapp_leaderboard():
     total_players = sum(1 for u in USER_DATA.values() if u.get("history"))
     return jsonify({
         "status": "success",
-        "leaders": get_leaderboard(limit=10),
+        "leaders": get_leaderboard(limit=3),
         "total_players": total_players,
     })
 
