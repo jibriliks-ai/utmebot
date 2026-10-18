@@ -1,5 +1,6 @@
 """
-UTME Success Bot v48 — PostgreSQL + Admin + WhatsApp + Leaderboard (Top 3)
+UTME Success Bot v49 — PostgreSQL + Admin + WhatsApp + Top-3 Leaderboard
+FIX: Flask starts FIRST + init_db() auto-migrates missing columns.
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -387,10 +388,14 @@ def _get_db_conn():
     return psycopg2.connect(DATABASE_URL, sslmode="require" if is_ext else "prefer")
 
 
+# ⭐ FIXED: init_db now auto-migrates missing columns ⭐
 def init_db():
-    conn=_get_db_conn()
+    """Create table if missing + auto-migrate any missing columns."""
+    conn = _get_db_conn()
     try:
-        cur=conn.cursor()
+        cur = conn.cursor()
+
+        # 1. Base table (safe on fresh DBs)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 uid TEXT PRIMARY KEY,
@@ -422,16 +427,67 @@ def init_db():
                 wa_phone TEXT,
                 subject_combination JSONB DEFAULT '[]'::jsonb,
                 first_seen_platform TEXT
-            );
-            CREATE INDEX IF NOT EXISTS idx_users_phone ON users (phone);
-            CREATE INDEX IF NOT EXISTS idx_users_invite_code ON users (invite_code);
-            CREATE INDEX IF NOT EXISTS idx_users_source ON users (source);
-            CREATE INDEX IF NOT EXISTS idx_users_wa_phone ON users (wa_phone);
+            )
         """)
-        conn.commit(); cur.close()
-        print("[db] Table 'users' ready")
+        conn.commit()
+
+        # 2. Auto-migrate: add any missing columns to an existing table
+        cols = [
+            ("username", "TEXT DEFAULT 'Student'"),
+            ("phone", "TEXT"),
+            ("invite_code", "TEXT"),
+            ("invited_by", "TEXT"),
+            ("invites", "INTEGER DEFAULT 0"),
+            ("invited_users", "JSONB DEFAULT '[]'::jsonb"),
+            ("referral_rewards_claimed", "INTEGER DEFAULT 0"),
+            ("is_premium", "BOOLEAN DEFAULT FALSE"),
+            ("premium_until", "TEXT"),
+            ("premium_plan", "TEXT"),
+            ("jamb_plan", "JSONB DEFAULT '[\"english\"]'::jsonb"),
+            ("plan_set", "BOOLEAN DEFAULT FALSE"),
+            ("free_english_used", "BOOLEAN DEFAULT FALSE"),
+            ("tutor_counts", "JSONB DEFAULT '{}'::jsonb"),
+            ("ai_why_counts", "JSONB DEFAULT '{}'::jsonb"),
+            ("history", "JSONB DEFAULT '[]'::jsonb"),
+            ("last_mock_failed", "JSONB DEFAULT '[]'::jsonb"),
+            ("last_mock_subject", "TEXT"),
+            ("last_mock_total", "INTEGER DEFAULT 40"),
+            ("used_ids", "JSONB DEFAULT '[]'::jsonb"),
+            ("linked_widget_uid", "TEXT"),
+            ("linked_tg_uid", "TEXT"),
+            ("linked_device_id", "TEXT"),
+            ("joined", "TEXT DEFAULT CURRENT_DATE::text"),
+            ("source", "TEXT"),
+            ("wa_phone", "TEXT"),
+            ("subject_combination", "JSONB DEFAULT '[]'::jsonb"),
+            ("first_seen_platform", "TEXT"),
+        ]
+        added = 0
+        for name, ctype in cols:
+            try:
+                cur.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {name} {ctype}")
+                added += 1
+            except Exception as e:
+                print(f"[db] ⚠️ Could not add column {name}: {e}")
+
+        # 3. Indexes (safe, idempotent)
+        for stmt in [
+            "CREATE INDEX IF NOT EXISTS idx_users_phone ON users (phone)",
+            "CREATE INDEX IF NOT EXISTS idx_users_invite_code ON users (invite_code)",
+            "CREATE INDEX IF NOT EXISTS idx_users_source ON users (source)",
+            "CREATE INDEX IF NOT EXISTS idx_users_wa_phone ON users (wa_phone)",
+        ]:
+            try:
+                cur.execute(stmt)
+            except Exception as e:
+                print(f"[db] ⚠️ Index skipped: {e}")
+
+        conn.commit()
+        cur.close()
+        print(f"[db] ✅ Table ready · {added} columns verified")
     finally:
         conn.close()
+# ⭐ END OF FIXED init_db ⭐
 
 
 USER_DATA = {}
@@ -739,9 +795,9 @@ def consume_tutor(uid):
     save_data()
 
 
-# ⭐ FIX #1 — TOP 3 ONLY ⭐
+# ⭐ TOP 3 LEADERBOARD ⭐
 def get_leaderboard(limit=3):
-    """Return top 3 scorers across all users, ranked by best mock percentage."""
+    """Return top scorers across all users, ranked by best mock percentage."""
     leaders = []
     for uid, u in USER_DATA.items():
         hist = u.get("history", []) or []
@@ -1970,7 +2026,7 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     wa_count = sum(1 for u in USER_DATA.values() if u.get("source") == "whatsapp")
-    return (f"UTME Bot v48 · {len(ALL_QS)} Qs · Tutor: {TUTOR_NAME} · "
+    return (f"UTME Bot v49 · {len(ALL_QS)} Qs · Tutor: {TUTOR_NAME} · "
             f"Users: {len(USER_DATA)} (WhatsApp: {wa_count}) · "
             f"DB: {'PG' if DATABASE_URL else 'NONE'} · Running")
 
@@ -1991,7 +2047,7 @@ def health():
     token_ok = bool(BOT_TOKEN and BOT_TOKEN != "YOUR_BOT_TOKEN_HERE" and len(BOT_TOKEN) >= 20)
     return jsonify({
         "status": "ok",
-        "version": "v48-leaderboard-top3",
+        "version": "v49-leaderboard-top3-migration",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2132,33 +2188,37 @@ def api_widget_register():
     final_phone=phone or wa_phone
     existing_uid=_find_user_by_phone(final_phone) if final_phone else None
     reused=False
-    if existing_uid:
-        uid=existing_uid
-        u=get_user(uid)
-        if final_name and (not u.get("username") or u.get("username","").startswith("User")):
-            u["username"]=final_name
-        if final_phone and not u.get("phone"): u["phone"]=final_phone
-        if source and not u.get("source"): u["source"]=source
-        if source and not u.get("first_seen_platform"): u["first_seen_platform"]=source
-        if wa_phone and not u.get("wa_phone"): u["wa_phone"]=wa_phone
-        if subjects and not u.get("subject_combination"): u["subject_combination"]=subjects
-        u["linked_device_id"]=device_id
-        USER_DATA[uid]=u
-        save_data()
-        reused=True
-    else:
-        uid="widget_"+device_id[2:]
-        u=get_user(uid, final_name)
-        if final_name: u["username"]=final_name
-        if final_phone: u["phone"]=final_phone
-        u["linked_device_id"]=device_id
-        if source:
-            u["source"]=source; u["first_seen_platform"]=source
-        if wa_phone: u["wa_phone"]=wa_phone
-        if subjects: u["subject_combination"]=subjects
-        USER_DATA[uid]=u
-        save_data()
-        if ref_code: _apply_referral_code(uid,ref_code)
+    try:
+        if existing_uid:
+            uid=existing_uid
+            u=get_user(uid)
+            if final_name and (not u.get("username") or u.get("username","").startswith("User")):
+                u["username"]=final_name
+            if final_phone and not u.get("phone"): u["phone"]=final_phone
+            if source and not u.get("source"): u["source"]=source
+            if source and not u.get("first_seen_platform"): u["first_seen_platform"]=source
+            if wa_phone and not u.get("wa_phone"): u["wa_phone"]=wa_phone
+            if subjects and not u.get("subject_combination"): u["subject_combination"]=subjects
+            u["linked_device_id"]=device_id
+            USER_DATA[uid]=u
+            save_data()
+            reused=True
+        else:
+            uid="widget_"+device_id[2:]
+            u=get_user(uid, final_name)
+            if final_name: u["username"]=final_name
+            if final_phone: u["phone"]=final_phone
+            u["linked_device_id"]=device_id
+            if source:
+                u["source"]=source; u["first_seen_platform"]=source
+            if wa_phone: u["wa_phone"]=wa_phone
+            if subjects: u["subject_combination"]=subjects
+            USER_DATA[uid]=u
+            save_data()
+            if ref_code: _apply_referral_code(uid,ref_code)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"status":"error","message":f"Database error: {str(e)[:200]}"}),500
     return jsonify({"status":"success","token":_make_session(uid),"uid":uid,
         "reused":reused,
         "user":{"username":u.get("username","Student"),
@@ -2243,7 +2303,7 @@ def api_webapp_stats():
                  "6months":{"price":PREMIUM_6MONTHS_PRICE,"text":PREMIUM_6MONTHS_TEXT,"days":PREMIUM_6MONTHS_DAYS}}})
 
 
-# ⭐ FIX #2 — TOP 3 ONLY ⭐
+# ⭐ TOP 3 LEADERBOARD ENDPOINT ⭐
 @flask_app.route("/api/webapp/leaderboard", methods=["GET"])
 def api_webapp_leaderboard():
     total_players = sum(1 for u in USER_DATA.values() if u.get("history"))
@@ -3059,6 +3119,7 @@ def main():
     print(f"Leaderboard: TOP 3 ONLY")
     print("=" * 60)
 
+    # Start Flask FIRST so Render port scan passes
     print(f"Starting Flask on 0.0.0.0:{PORT} FIRST (so Render port scan passes)...")
     try:
         threading.Thread(target=run_flask, daemon=True).start()
