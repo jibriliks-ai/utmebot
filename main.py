@@ -1,6 +1,5 @@
 """
-UTME Success Bot v48 — PostgreSQL + Admin + WhatsApp + Leaderboard
-FIX: Flask starts FIRST so Render's port scan passes even if DB/bot fails.
+UTME Success Bot v48 — PostgreSQL + Admin + WhatsApp + Leaderboard (Top 3)
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -740,8 +739,9 @@ def consume_tutor(uid):
     save_data()
 
 
+# ⭐ FIX #1 — TOP 3 ONLY ⭐
 def get_leaderboard(limit=3):
-    """Return top scorers across all users, ranked by best mock percentage."""
+    """Return top 3 scorers across all users, ranked by best mock percentage."""
     leaders = []
     for uid, u in USER_DATA.items():
         hist = u.get("history", []) or []
@@ -1977,7 +1977,6 @@ def home():
 
 @flask_app.route("/health")
 def health():
-    """Enhanced health check — explains WHY if something is off."""
     tutor_ok,_=_tutor_ping() if HAS_AI_TUTOR else (False,"n/a")
     widget=sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked=sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
@@ -1992,7 +1991,7 @@ def health():
     token_ok = bool(BOT_TOKEN and BOT_TOKEN != "YOUR_BOT_TOKEN_HERE" and len(BOT_TOKEN) >= 20)
     return jsonify({
         "status": "ok",
-        "version": "v48-leaderboard",
+        "version": "v48-leaderboard-top3",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2009,6 +2008,7 @@ def health():
         "database_connected": db_ok,
         "bot_token_set": token_ok,
         "flask_running": True,
+        "leaderboard_limit": 3,
         "diagnostics": {
             "DATABASE_URL_set": bool(DATABASE_URL),
             "BOT_TOKEN_set": token_ok,
@@ -2243,6 +2243,7 @@ def api_webapp_stats():
                  "6months":{"price":PREMIUM_6MONTHS_PRICE,"text":PREMIUM_6MONTHS_TEXT,"days":PREMIUM_6MONTHS_DAYS}}})
 
 
+# ⭐ FIX #2 — TOP 3 ONLY ⭐
 @flask_app.route("/api/webapp/leaderboard", methods=["GET"])
 def api_webapp_leaderboard():
     total_players = sum(1 for u in USER_DATA.values() if u.get("history"))
@@ -3039,7 +3040,7 @@ async def post_init(app):
 
 
 # ============================================================
-# MAIN — ⭐ FIXED: FLASK STARTS FIRST
+# MAIN
 # ============================================================
 def main():
     load_processed_tx()
@@ -3049,46 +3050,40 @@ def main():
     print(f"WebApp: {WEBAPP_URL}")
     print(f"Logo: {LOGO_URL}")
     print(f"PORT: {PORT}")
-    print(f"DATABASE_URL: {'SET' if DATABASE_URL else '❌ NOT SET'}")
-    print(f"BOT_TOKEN: {'SET' if BOT_TOKEN and BOT_TOKEN != 'YOUR_BOT_TOKEN_HERE' and len(BOT_TOKEN) >= 20 else '❌ NOT SET'}")
+    print(f"DATABASE_URL: {'SET' if DATABASE_URL else 'NOT SET'}")
+    print(f"BOT_TOKEN: {'SET' if BOT_TOKEN and BOT_TOKEN != 'YOUR_BOT_TOKEN_HERE' and len(BOT_TOKEN) >= 20 else 'NOT SET'}")
     print(f"WhatsApp: {'configured' if WHATSAPP_TOKEN and PHONE_NUMBER_ID else 'not set'}")
     print(f"Channel: {'configured' if CHANNEL_ID else 'not set'}")
     print(f"AI Tutor: {'available' if HAS_AI_TUTOR else 'unavailable'}")
     print(f"Engine: {'available' if HAS_ENGINE else 'unavailable'}")
+    print(f"Leaderboard: TOP 3 ONLY")
     print("=" * 60)
 
-    # ⭐⭐⭐ CRITICAL FIX: Start Flask FIRST so Render's port scan passes
-    print(f"🚀 Starting Flask on 0.0.0.0:{PORT} FIRST (so Render port scan passes)...")
+    print(f"Starting Flask on 0.0.0.0:{PORT} FIRST (so Render port scan passes)...")
     try:
         threading.Thread(target=run_flask, daemon=True).start()
-        time.sleep(3)  # Give Flask time to bind
-        print(f"✅ Flask is running on port {PORT}")
-        print(f"   → Health check: https://<your-render-url>/health")
+        time.sleep(3)
+        print(f"Flask is running on port {PORT}")
     except Exception as e:
-        print(f"❌ Flask failed to start: {e}")
+        print(f"Flask failed to start: {e}")
         traceback.print_exc()
 
-    # Now do DB setup — but errors here won't block the port anymore
     if not DATABASE_URL:
-        print("❌ DATABASE_URL not set! Bot cannot connect to DB.")
-        print("   → Add DATABASE_URL in Render → Environment Variables")
-        print("   → /health will show database_connected: false")
+        print("DATABASE_URL not set! Bot cannot connect to DB.")
         while True: time.sleep(60)
 
     try:
         init_db()
         load_data()
     except Exception as e:
-        print(f"❌ DB init failed: {e}")
+        print(f"DB init failed: {e}")
         traceback.print_exc()
-        print("   → /health will show database_connected: false")
-        print("   → Check DATABASE_URL format (postgres://user:pass@host/dbname)")
         while True: time.sleep(60)
 
     widget_users=sum(1 for k in USER_DATA.keys() if k.startswith("widget_"))
     linked=sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     wa_users=sum(1 for u in USER_DATA.values() if u.get("wa_phone"))
-    print(f"✅ DB ready: {len(USER_DATA)} users ({widget_users} widget, {linked} linked, {wa_users} WhatsApp)")
+    print(f"DB ready: {len(USER_DATA)} users ({widget_users} widget, {linked} linked, {wa_users} WhatsApp)")
     if ADMIN_ID: print(f"Admin: {ADMIN_ID}")
 
     if HAS_AI_TUTOR:
@@ -3100,10 +3095,8 @@ def main():
         except Exception as e:
             print(f"Tutor init: {e}")
 
-    # Bot startup — errors here won't block Flask
     if not BOT_TOKEN or BOT_TOKEN=="YOUR_BOT_TOKEN_HERE" or len(BOT_TOKEN)<20:
-        print("❌ BOT_TOKEN not set! Bot will not start (Flask still running).")
-        print("   → Add BOT_TOKEN in Render → Environment Variables")
+        print("BOT_TOKEN not set! Bot will not start (Flask still running).")
         while True: time.sleep(60)
 
     try:
@@ -3130,12 +3123,12 @@ def main():
                           "⚙️ Admin Panel)$"),handle_msg))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,handle_msg))
         app.post_init=post_init
-        print("✅ Bot polling started")
+        print("Bot polling started")
         app.run_polling()
     except Exception as e:
-        print(f"❌ Bot failed: {e}")
+        print(f"Bot failed: {e}")
         traceback.print_exc()
-        print("   → Flask is still running — /health endpoint works")
+        print("Flask is still running — /health endpoint works")
         while True: time.sleep(60)
 
 
