@@ -842,6 +842,86 @@ def get_leading():
     return best_name,int(best_score)
 
 
+
+def revoke_premium(uid):
+    """Remove premium status from a user."""
+    uid = str(uid)
+    u = get_user(uid)
+    u["is_premium"] = False
+    u["premium_until"] = None
+    u["premium_plan"] = None
+    save_data()
+    print(f"[premium] ❌ revoked -> uid={uid}")
+    return True
+
+
+def _find_user_by_phone_or_uid(query):
+    """Find a user by UID (exact), phone (normalized), or partial UID.
+    Returns matching UID string or None."""
+    if not query:
+        return None
+    q = str(query).strip()
+    # 1. Exact UID match
+    if q in USER_DATA:
+        return q
+    # 2. Phone number match (handles +234/0 prefix variants)
+    try:
+        phone_uid = _find_user_by_phone(q)
+        if phone_uid:
+            return phone_uid
+    except Exception:
+        pass
+    # 3. Partial UID (suffix match)
+    for uid_k in USER_DATA:
+        if uid_k.endswith(q) or q in uid_k:
+            return uid_k
+    # 4. Name match (exact, case-insensitive) — returns first match
+    q_lower = q.lower()
+    for uid_k, u in USER_DATA.items():
+        name = (u.get("username") or "").strip().lower()
+        if name and name == q_lower:
+            return uid_k
+    return None
+
+
+def _list_user_activities(uid):
+    """Return a clean summary of a user's activity for admin viewing."""
+    u = get_user(uid)
+    hist = u.get("history", []) or []
+    total_mocks = len(hist)
+    best = 0
+    avg_pct = 0
+    if hist:
+        best = max((h.get("percent", 0) for h in hist), default=0)
+        avg_pct = int(sum(h.get("percent", 0) for h in hist) / total_mocks)
+    return {
+        "uid": uid,
+        "username": u.get("username") or "Student",
+        "phone": u.get("phone") or u.get("wa_phone") or "",
+        "invite_code": u.get("invite_code", ""),
+        "invites": u.get("invites", 0),
+        "is_premium": bool(u.get("is_premium")),
+        "is_admin": (str(uid) == str(ADMIN_ID)) if ADMIN_ID else False,
+        "premium_until": u.get("premium_until"),
+        "premium_plan": u.get("premium_plan"),
+        "jamb_plan": u.get("jamb_plan", []),
+        "plan_set": bool(u.get("plan_set")),
+        "joined": u.get("joined", ""),
+        "source": u.get("source") or "unknown",
+        "first_seen_platform": u.get("first_seen_platform"),
+        "is_widget": str(uid).startswith("widget_"),
+        "is_whatsapp": str(uid).startswith("wa_"),
+        "mocks_taken": total_mocks,
+        "best_percent": best,
+        "avg_percent": avg_pct,
+        "free_english_used": bool(u.get("free_english_used")),
+        "recent_history": hist[-10:],
+        "last_mock_subject": u.get("last_mock_subject"),
+        "last_mock_total": u.get("last_mock_total", 40),
+        "last_mock_failed_count": len(u.get("last_mock_failed") or []),
+        "subject_combination": u.get("subject_combination", []),
+    }    
+
 def add_premium(uid, days=None, plan="monthly"):
     uid=str(uid); days=days or PREMIUM_DAYS
     u=get_user(uid); now=datetime.now(); base=now
@@ -2619,23 +2699,123 @@ def api_admin_grant_premium():
     if not _admin_required():
         return jsonify({"status":"error","message":"admin only"}),403
     body=request.get_json(silent=True) or {}
-    target_uid=str(body.get("uid","")).strip()
+    query=str(body.get("uid","") or body.get("query","") or body.get("phone","")).strip()
     try: days=int(body.get("days",30))
     except: days=30
-    if not target_uid:
-        return jsonify({"status":"error","message":"missing uid"}),400
+    if not query:
+        return jsonify({"status":"error","message":"missing uid, phone, or name"}),400
     if days<1 or days>3650:
         return jsonify({"status":"error","message":"days out of range"}),400
-    if target_uid not in USER_DATA:
-        try: get_user(target_uid)
-        except: pass
-        if target_uid not in USER_DATA:
-            return jsonify({"status":"error","message":"uid not found"}),404
+    target_uid = _find_user_by_phone_or_uid(query)
+    if not target_uid:
+        return jsonify({"status":"error","message":"user not found by uid, phone, or name"}),404
     add_premium(target_uid,days=days,plan="admin-grant")
-    return jsonify({"status":"success","uid":target_uid,"days":days})
+    u = get_user(target_uid)
+    return jsonify({
+        "status":"success",
+        "uid":target_uid,
+        "username":u.get("username",""),
+        "days":days,
+        "premium_until":u.get("premium_until"),
+    })
 
 
 @flask_app.route("/api/webapp/admin/broadcast", methods=["POST", "OPTIONS"])
+
+
+@flask_app.route("/api/webapp/admin/revoke_premium", methods=["POST", "OPTIONS"])
+def api_admin_revoke_premium():
+    if request.method=="OPTIONS": return "",204
+    if not _admin_required():
+        return jsonify({"status":"error","message":"admin only"}),403
+    body=request.get_json(silent=True) or {}
+    query=str(body.get("uid","") or body.get("query","") or body.get("phone","")).strip()
+    if not query:
+        return jsonify({"status":"error","message":"missing uid, phone, or name"}),400
+    target_uid = _find_user_by_phone_or_uid(query)
+    if not target_uid:
+        return jsonify({"status":"error","message":"user not found"}),404
+    revoke_premium(target_uid)
+    u = get_user(target_uid)
+    return jsonify({
+        "status":"success",
+        "uid":target_uid,
+        "username":u.get("username",""),
+        "is_premium":bool(u.get("is_premium")),
+    })
+
+
+@flask_app.route("/api/webapp/admin/all_users", methods=["GET", "OPTIONS"])
+def api_admin_all_users():
+    if request.method=="OPTIONS": return "",204
+    if not _admin_required():
+        return jsonify({"status":"error","message":"admin only"}),403
+
+    try: page = max(1, int(request.args.get("page", 1)))
+    except: page = 1
+    try: per_page = min(200, max(10, int(request.args.get("per_page", 50))))
+    except: per_page = 50
+    query = request.args.get("q", "").strip().lower()
+
+    rows = []
+    for uid, u in USER_DATA.items():
+        if query:
+            name = (u.get("username") or "").lower()
+            phone = ((u.get("phone") or "") + (u.get("wa_phone") or "")).lower()
+            if query not in name and query not in phone and query not in uid.lower():
+                continue
+        hist = u.get("history", []) or []
+        rows.append({
+            "uid": uid,
+            "username": u.get("username") or "Student",
+            "phone": u.get("phone") or u.get("wa_phone") or "",
+            "is_premium": bool(u.get("is_premium")),
+            "is_admin": (str(uid) == str(ADMIN_ID)) if ADMIN_ID else False,
+            "premium_until": u.get("premium_until"),
+            "premium_plan": u.get("premium_plan"),
+            "joined": u.get("joined", ""),
+            "source": u.get("source") or "unknown",
+            "mocks_taken": len(hist),
+            "best_percent": max((h.get("percent", 0) for h in hist), default=0),
+            "plan_set": bool(u.get("plan_set")),
+            "is_widget": str(uid).startswith("widget_"),
+            "is_whatsapp": str(uid).startswith("wa_"),
+        })
+
+    # Sort: newest first (by joined date), admin/premium at top of equal dates
+    rows.sort(key=lambda x: (x["joined"] or "", int(x["is_premium"]), x["mocks_taken"]), reverse=True)
+
+    total = len(rows)
+    start = (page - 1) * per_page
+    end = start + per_page
+    return jsonify({
+        "status": "success",
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "pages": (total + per_page - 1) // per_page,
+        "users": rows[start:end],
+    })
+
+
+@flask_app.route("/api/webapp/admin/user_detail", methods=["GET", "OPTIONS"])
+def api_admin_user_detail():
+    if request.method=="OPTIONS": return "",204
+    if not _admin_required():
+        return jsonify({"status":"error","message":"admin only"}),403
+    query = request.args.get("uid", "").strip()
+    if not query:
+        return jsonify({"status":"error","message":"missing uid"}),400
+    target_uid = _find_user_by_phone_or_uid(query)
+    if not target_uid:
+        return jsonify({"status":"error","message":"user not found"}),404
+    detail = _list_user_activities(target_uid)
+    # Add detailed failure info
+    u = get_user(target_uid)
+    detail["last_mock_failed"] = (u.get("last_mock_failed") or [])[:20]
+    detail["tutor_counts"] = u.get("tutor_counts", {})
+    detail["ai_why_counts"] = u.get("ai_why_counts", {})
+    return jsonify({"status":"success", "user": detail})
 def api_admin_broadcast():
     if request.method=="OPTIONS": return "",204
     if not _admin_required():
