@@ -1,6 +1,6 @@
 """
-UTME Success Bot v49 — PostgreSQL + Admin + WhatsApp + Top-3 Leaderboard
-FIX: Flask starts FIRST + init_db() auto-migrates missing columns.
+UTME Success Bot v50 — PostgreSQL + Admin + WhatsApp + Top-3 Leaderboard
+FIX: Admin recognized across widget/telegram via linked_tg_uid + ADMIN_PHONE.
 """
 import os, json, random, time, threading, hashlib, asyncio, re, hmac, traceback
 from datetime import date, datetime, timedelta, timezone
@@ -388,14 +388,11 @@ def _get_db_conn():
     return psycopg2.connect(DATABASE_URL, sslmode="require" if is_ext else "prefer")
 
 
-# ⭐ FIXED: init_db now auto-migrates missing columns ⭐
 def init_db():
     """Create table if missing + auto-migrate any missing columns."""
     conn = _get_db_conn()
     try:
         cur = conn.cursor()
-
-        # 1. Base table (safe on fresh DBs)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 uid TEXT PRIMARY KEY,
@@ -431,7 +428,6 @@ def init_db():
         """)
         conn.commit()
 
-        # 2. Auto-migrate: add any missing columns to an existing table
         cols = [
             ("username", "TEXT DEFAULT 'Student'"),
             ("phone", "TEXT"),
@@ -470,7 +466,6 @@ def init_db():
             except Exception as e:
                 print(f"[db] ⚠️ Could not add column {name}: {e}")
 
-        # 3. Indexes (safe, idempotent)
         for stmt in [
             "CREATE INDEX IF NOT EXISTS idx_users_phone ON users (phone)",
             "CREATE INDEX IF NOT EXISTS idx_users_invite_code ON users (invite_code)",
@@ -487,7 +482,6 @@ def init_db():
         print(f"[db] ✅ Table ready · {added} columns verified")
     finally:
         conn.close()
-# ⭐ END OF FIXED init_db ⭐
 
 
 USER_DATA = {}
@@ -762,6 +756,7 @@ def _get_referral_status(uid):
             "referral_rewards_claimed":u.get("referral_rewards_claimed",0)}
 
 
+# ⭐ FIX: Universal admin check (TG ID + linked_tg_uid + ADMIN_PHONE)
 def _is_admin_uid(uid):
     """True if uid is the admin — by Telegram ID, linked_tg_uid, or ADMIN_PHONE."""
     if not ADMIN_ID:
@@ -771,7 +766,6 @@ def _is_admin_uid(uid):
         return True
     u = USER_DATA.get(uid)
     if u is None:
-        # Peek DB without creating a new user
         try:
             conn = _get_db_conn()
             cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -785,10 +779,8 @@ def _is_admin_uid(uid):
             pass
     if not u:
         return False
-    # Widget account linked to the admin's Telegram
     if str(u.get("linked_tg_uid") or "") == str(ADMIN_ID):
         return True
-    # Optional: ADMIN_PHONE env var override
     admin_phone = os.getenv("ADMIN_PHONE", "").strip()
     if admin_phone:
         user_phone = re.sub(r'\D', '', str(u.get("phone") or u.get("wa_phone") or ""))
@@ -879,6 +871,21 @@ def get_leading():
     return best_name,int(best_score)
 
 
+def add_premium(uid, days=None, plan="monthly"):
+    uid=str(uid); days=days or PREMIUM_DAYS
+    u=get_user(uid); now=datetime.now(); base=now
+    if u.get("premium_until"):
+        try:
+            ex=datetime.fromisoformat(u["premium_until"])
+            if ex>now: base=ex
+        except: pass
+    u["is_premium"]=True
+    u["premium_until"]=(base+timedelta(days=days)).isoformat()
+    u["premium_plan"]=plan
+    save_data()
+    print(f"[premium] {plan} ({days}d) -> uid={uid}")
+    return True
+
 
 def revoke_premium(uid):
     """Remove premium status from a user."""
@@ -893,26 +900,21 @@ def revoke_premium(uid):
 
 
 def _find_user_by_phone_or_uid(query):
-    """Find a user by UID (exact), phone (normalized), or partial UID.
-    Returns matching UID string or None."""
+    """Find a user by UID (exact), phone (normalized), partial UID, or exact name."""
     if not query:
         return None
     q = str(query).strip()
-    # 1. Exact UID match
     if q in USER_DATA:
         return q
-    # 2. Phone number match (handles +234/0 prefix variants)
     try:
         phone_uid = _find_user_by_phone(q)
         if phone_uid:
             return phone_uid
     except Exception:
         pass
-    # 3. Partial UID (suffix match)
     for uid_k in USER_DATA:
         if uid_k.endswith(q) or q in uid_k:
             return uid_k
-    # 4. Name match (exact, case-insensitive) — returns first match
     q_lower = q.lower()
     for uid_k, u in USER_DATA.items():
         name = (u.get("username") or "").strip().lower()
@@ -938,7 +940,7 @@ def _list_user_activities(uid):
         "invite_code": u.get("invite_code", ""),
         "invites": u.get("invites", 0),
         "is_premium": bool(u.get("is_premium")),
-        "is_admin": (str(uid) == str(ADMIN_ID)) if ADMIN_ID else False,
+        "is_admin": _is_admin_uid(uid),
         "premium_until": u.get("premium_until"),
         "premium_plan": u.get("premium_plan"),
         "jamb_plan": u.get("jamb_plan", []),
@@ -957,22 +959,7 @@ def _list_user_activities(uid):
         "last_mock_total": u.get("last_mock_total", 40),
         "last_mock_failed_count": len(u.get("last_mock_failed") or []),
         "subject_combination": u.get("subject_combination", []),
-    }    
-
-def add_premium(uid, days=None, plan="monthly"):
-    uid=str(uid); days=days or PREMIUM_DAYS
-    u=get_user(uid); now=datetime.now(); base=now
-    if u.get("premium_until"):
-        try:
-            ex=datetime.fromisoformat(u["premium_until"])
-            if ex>now: base=ex
-        except: pass
-    u["is_premium"]=True
-    u["premium_until"]=(base+timedelta(days=days)).isoformat()
-    u["premium_plan"]=plan
-    save_data()
-    print(f"[premium] {plan} ({days}d) -> uid={uid}")
-    return True
+    }
 
 
 PLANS = {"monthly":{"key":"monthly","label":"Monthly","price":PREMIUM_PRICE,
@@ -1079,7 +1066,7 @@ def main_menu_text_kb(uid):
         [InlineKeyboardButton("💎  Upgrade to Premium",callback_data="premium_info"),
          InlineKeyboardButton("❓  Help",callback_data="help_menu")],
         [InlineKeyboardButton("✏️  Change My Plan",callback_data="plan_builder")]]
-    if ADMIN_ID and str(uid)==str(ADMIN_ID):
+    if _is_admin_uid(uid):
         kb.append([InlineKeyboardButton("⚙️  Admin Panel",callback_data="admin_panel")])
     return text, InlineKeyboardMarkup(kb)
 
@@ -1222,6 +1209,7 @@ def _mock_menu_text(uid):
     return "📝 *Mock Exam Menu*\n\n🛑 *You've used your free English mock.*\n\n🔒 *Upgrade to Premium:*"
 
 
+# ⭐ FIX: _admin_only now uses _is_admin_uid
 def _admin_only(uid):
     return _is_admin_uid(uid)
 
@@ -2144,7 +2132,7 @@ flask_app = Flask(__name__)
 @flask_app.route("/")
 def home():
     wa_count = sum(1 for u in USER_DATA.values() if u.get("source") == "whatsapp")
-    return (f"UTME Bot v49 · {len(ALL_QS)} Qs · Tutor: {TUTOR_NAME} · "
+    return (f"UTME Bot v50 · {len(ALL_QS)} Qs · Tutor: {TUTOR_NAME} · "
             f"Users: {len(USER_DATA)} (WhatsApp: {wa_count}) · "
             f"DB: {'PG' if DATABASE_URL else 'NONE'} · Running")
 
@@ -2156,16 +2144,19 @@ def health():
     linked=sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     wa=sum(1 for u in USER_DATA.values() if u.get("wa_phone"))
     db_ok = False
+    db_err = None
     try:
         conn = _get_db_conn()
         conn.close()
         db_ok = True
-    except Exception:
+    except Exception as e:
         db_ok = False
+        db_err = f"{type(e).__name__}: {str(e)[:200]}"
     token_ok = bool(BOT_TOKEN and BOT_TOKEN != "YOUR_BOT_TOKEN_HERE" and len(BOT_TOKEN) >= 20)
+    admin_phone_set = bool(os.getenv("ADMIN_PHONE","").strip())
     return jsonify({
         "status": "ok",
-        "version": "v49-leaderboard-top3-migration",
+        "version": "v50-admin-cross-platform",
         "bot_username": BOT_USERNAME,
         "tutor_name": TUTOR_NAME,
         "total_questions": len(ALL_QS),
@@ -2180,12 +2171,16 @@ def health():
         "whatsapp_configured": bool(WHATSAPP_TOKEN and PHONE_NUMBER_ID),
         "database": "postgresql" if DATABASE_URL else "none",
         "database_connected": db_ok,
+        "db_error": db_err,
         "bot_token_set": token_ok,
+        "admin_phone_set": admin_phone_set,
         "flask_running": True,
         "leaderboard_limit": 3,
         "diagnostics": {
             "DATABASE_URL_set": bool(DATABASE_URL),
             "BOT_TOKEN_set": token_ok,
+            "ADMIN_ID_set": bool(ADMIN_ID),
+            "ADMIN_PHONE_set": admin_phone_set,
             "ALL_QS_loaded": len(ALL_QS) > 0,
             "USERS_loaded": len(USER_DATA) > 0,
             "AI_TUTOR_available": HAS_AI_TUTOR,
@@ -2230,6 +2225,7 @@ def _require_session():
     return _read_session(auth[7:])
 
 
+# ⭐ FIX: _admin_required now uses _is_admin_uid
 def _admin_required():
     uid=_require_session()
     if not uid: return None
@@ -2279,7 +2275,7 @@ def api_webapp_auth():
     return jsonify({"status":"success","token":_make_session(uid),"uid":uid,
         "user":{"username":u.get("username",""),
                 "is_premium":is_premium(uid),
-                "is_admin":(str(uid)==str(ADMIN_ID)) if ADMIN_ID else False,
+                "is_admin":_is_admin_uid(uid),
                 "premium_until":u.get("premium_until"),
                 "plan":u.get("jamb_plan",["english"]),
                 "plan_set":u.get("plan_set",False),
@@ -2337,13 +2333,14 @@ def api_widget_register():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status":"error","message":f"Database error: {str(e)[:200]}"}),500
-        print(f"[widget] registered uid={uid} is_admin={_is_admin_uid(uid)} linked_tg={u.get('linked_tg_uid')}")
-        return jsonify({"status":"success","token":_make_session(uid),"uid":uid,
+    # ⭐ DEBUG log
+    print(f"[widget] registered uid={uid} is_admin={_is_admin_uid(uid)} linked_tg={u.get('linked_tg_uid')}")
+    return jsonify({"status":"success","token":_make_session(uid),"uid":uid,
         "reused":reused,
         "user":{"username":u.get("username","Student"),
                 "phone":u.get("phone",""),
                 "is_premium":is_premium(uid),
-                "is_admin":(str(uid)==str(ADMIN_ID)) if ADMIN_ID else False,
+                "is_admin":_is_admin_uid(uid),
                 "premium_until":u.get("premium_until"),
                 "plan":u.get("jamb_plan",["english"]),
                 "plan_set":u.get("plan_set",False),
@@ -2422,7 +2419,6 @@ def api_webapp_stats():
                  "6months":{"price":PREMIUM_6MONTHS_PRICE,"text":PREMIUM_6MONTHS_TEXT,"days":PREMIUM_6MONTHS_DAYS}}})
 
 
-# ⭐ TOP 3 LEADERBOARD ENDPOINT ⭐
 @flask_app.route("/api/webapp/leaderboard", methods=["GET"])
 def api_webapp_leaderboard():
     total_players = sum(1 for u in USER_DATA.values() if u.get("history"))
@@ -2444,6 +2440,7 @@ def api_webapp_user():
     used_tutor=u.get("tutor_counts",{}).get(str(date.today()),0)
     _,ai_why_rem=can_use_ai_why(uid)
     invite_code=u.get("invite_code","")
+    # ⭐ FIX: uses _is_admin_uid for cross-platform recognition
     is_admin=_is_admin_uid(uid)
     return jsonify({"status":"success","uid":uid,
         "username":u.get("username",""),"phone":u.get("phone",""),
@@ -2463,6 +2460,8 @@ def api_webapp_user():
         "tutor_remaining":-1 if premium else max(0,FREE_TUTOR_PER_DAY-used_tutor),
         "ai_why_remaining":-1 if premium else ai_why_rem,
         "source":u.get("source"),
+        "linked_tg_uid":u.get("linked_tg_uid"),
+        "linked_widget_uid":u.get("linked_widget_uid"),
         "subject_combination":u.get("subject_combination",[])})
 
 
@@ -2703,6 +2702,9 @@ def api_webapp_premium_checkout():
     return jsonify({"status":"success","checkout_url":checkout})
 
 
+# ============================================================
+# ADMIN API ENDPOINTS
+# ============================================================
 @flask_app.route("/api/webapp/admin/stats", methods=["GET", "OPTIONS"])
 def api_admin_stats():
     if request.method=="OPTIONS": return "",204
@@ -2732,6 +2734,74 @@ def api_admin_stats():
         "source_breakdown":source_counts,"recent_users":recent})
 
 
+@flask_app.route("/api/webapp/admin/all_users", methods=["GET", "OPTIONS"])
+def api_admin_all_users():
+    if request.method=="OPTIONS": return "",204
+    if not _admin_required():
+        return jsonify({"status":"error","message":"admin only"}),403
+    try: page = max(1, int(request.args.get("page", 1)))
+    except: page = 1
+    try: per_page = min(200, max(10, int(request.args.get("per_page", 50))))
+    except: per_page = 50
+    query = request.args.get("q", "").strip().lower()
+
+    rows = []
+    for uid, u in USER_DATA.items():
+        if query:
+            name = (u.get("username") or "").lower()
+            phone = ((u.get("phone") or "") + (u.get("wa_phone") or "")).lower()
+            if query not in name and query not in phone and query not in uid.lower():
+                continue
+        hist = u.get("history", []) or []
+        rows.append({
+            "uid": uid,
+            "username": u.get("username") or "Student",
+            "phone": u.get("phone") or u.get("wa_phone") or "",
+            "is_premium": bool(u.get("is_premium")),
+            "is_admin": _is_admin_uid(uid),
+            "premium_until": u.get("premium_until"),
+            "premium_plan": u.get("premium_plan"),
+            "joined": u.get("joined", ""),
+            "source": u.get("source") or "unknown",
+            "mocks_taken": len(hist),
+            "best_percent": max((h.get("percent", 0) for h in hist), default=0),
+            "plan_set": bool(u.get("plan_set")),
+            "is_widget": str(uid).startswith("widget_"),
+            "is_whatsapp": str(uid).startswith("wa_"),
+        })
+    rows.sort(key=lambda x: (x["joined"] or "", int(x["is_premium"]), x["mocks_taken"]), reverse=True)
+    total = len(rows)
+    start = (page - 1) * per_page
+    end = start + per_page
+    return jsonify({
+        "status": "success",
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "pages": (total + per_page - 1) // per_page,
+        "users": rows[start:end],
+    })
+
+
+@flask_app.route("/api/webapp/admin/user_detail", methods=["GET", "OPTIONS"])
+def api_admin_user_detail():
+    if request.method=="OPTIONS": return "",204
+    if not _admin_required():
+        return jsonify({"status":"error","message":"admin only"}),403
+    query = request.args.get("uid", "").strip()
+    if not query:
+        return jsonify({"status":"error","message":"missing uid"}),400
+    target_uid = _find_user_by_phone_or_uid(query)
+    if not target_uid:
+        return jsonify({"status":"error","message":"user not found"}),404
+    detail = _list_user_activities(target_uid)
+    u = get_user(target_uid)
+    detail["last_mock_failed"] = (u.get("last_mock_failed") or [])[:20]
+    detail["tutor_counts"] = u.get("tutor_counts", {})
+    detail["ai_why_counts"] = u.get("ai_why_counts", {})
+    return jsonify({"status":"success", "user": detail})
+
+
 @flask_app.route("/api/webapp/admin/grant_premium", methods=["POST", "OPTIONS"])
 def api_admin_grant_premium():
     if request.method=="OPTIONS": return "",204
@@ -2759,9 +2829,6 @@ def api_admin_grant_premium():
     })
 
 
-@flask_app.route("/api/webapp/admin/broadcast", methods=["POST", "OPTIONS"])
-
-
 @flask_app.route("/api/webapp/admin/revoke_premium", methods=["POST", "OPTIONS"])
 def api_admin_revoke_premium():
     if request.method=="OPTIONS": return "",204
@@ -2784,77 +2851,7 @@ def api_admin_revoke_premium():
     })
 
 
-@flask_app.route("/api/webapp/admin/all_users", methods=["GET", "OPTIONS"])
-def api_admin_all_users():
-    if request.method=="OPTIONS": return "",204
-    if not _admin_required():
-        return jsonify({"status":"error","message":"admin only"}),403
-
-    try: page = max(1, int(request.args.get("page", 1)))
-    except: page = 1
-    try: per_page = min(200, max(10, int(request.args.get("per_page", 50))))
-    except: per_page = 50
-    query = request.args.get("q", "").strip().lower()
-
-    rows = []
-    for uid, u in USER_DATA.items():
-        if query:
-            name = (u.get("username") or "").lower()
-            phone = ((u.get("phone") or "") + (u.get("wa_phone") or "")).lower()
-            if query not in name and query not in phone and query not in uid.lower():
-                continue
-        hist = u.get("history", []) or []
-        rows.append({
-            "uid": uid,
-            "username": u.get("username") or "Student",
-            "phone": u.get("phone") or u.get("wa_phone") or "",
-            "is_premium": bool(u.get("is_premium")),
-            "is_admin": (str(uid) == str(ADMIN_ID)) if ADMIN_ID else False,
-            "premium_until": u.get("premium_until"),
-            "premium_plan": u.get("premium_plan"),
-            "joined": u.get("joined", ""),
-            "source": u.get("source") or "unknown",
-            "mocks_taken": len(hist),
-            "best_percent": max((h.get("percent", 0) for h in hist), default=0),
-            "plan_set": bool(u.get("plan_set")),
-            "is_widget": str(uid).startswith("widget_"),
-            "is_whatsapp": str(uid).startswith("wa_"),
-        })
-
-    # Sort: newest first (by joined date), admin/premium at top of equal dates
-    rows.sort(key=lambda x: (x["joined"] or "", int(x["is_premium"]), x["mocks_taken"]), reverse=True)
-
-    total = len(rows)
-    start = (page - 1) * per_page
-    end = start + per_page
-    return jsonify({
-        "status": "success",
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "pages": (total + per_page - 1) // per_page,
-        "users": rows[start:end],
-    })
-
-
-@flask_app.route("/api/webapp/admin/user_detail", methods=["GET", "OPTIONS"])
-def api_admin_user_detail():
-    if request.method=="OPTIONS": return "",204
-    if not _admin_required():
-        return jsonify({"status":"error","message":"admin only"}),403
-    query = request.args.get("uid", "").strip()
-    if not query:
-        return jsonify({"status":"error","message":"missing uid"}),400
-    target_uid = _find_user_by_phone_or_uid(query)
-    if not target_uid:
-        return jsonify({"status":"error","message":"user not found"}),404
-    detail = _list_user_activities(target_uid)
-    # Add detailed failure info
-    u = get_user(target_uid)
-    detail["last_mock_failed"] = (u.get("last_mock_failed") or [])[:20]
-    detail["tutor_counts"] = u.get("tutor_counts", {})
-    detail["ai_why_counts"] = u.get("ai_why_counts", {})
-    return jsonify({"status":"success", "user": detail})
+@flask_app.route("/api/webapp/admin/broadcast", methods=["POST", "OPTIONS"])
 def api_admin_broadcast():
     if request.method=="OPTIONS": return "",204
     if not _admin_required():
@@ -3331,6 +3328,8 @@ def main():
     print(f"PORT: {PORT}")
     print(f"DATABASE_URL: {'SET' if DATABASE_URL else 'NOT SET'}")
     print(f"BOT_TOKEN: {'SET' if BOT_TOKEN and BOT_TOKEN != 'YOUR_BOT_TOKEN_HERE' and len(BOT_TOKEN) >= 20 else 'NOT SET'}")
+    print(f"ADMIN_ID: {'SET' if ADMIN_ID else 'NOT SET'}")
+    print(f"ADMIN_PHONE: {'SET' if os.getenv('ADMIN_PHONE','').strip() else 'not set'}")
     print(f"WhatsApp: {'configured' if WHATSAPP_TOKEN and PHONE_NUMBER_ID else 'not set'}")
     print(f"Channel: {'configured' if CHANNEL_ID else 'not set'}")
     print(f"AI Tutor: {'available' if HAS_AI_TUTOR else 'unavailable'}")
@@ -3338,8 +3337,7 @@ def main():
     print(f"Leaderboard: TOP 3 ONLY")
     print("=" * 60)
 
-    # Start Flask FIRST so Render port scan passes
-    print(f"Starting Flask on 0.0.0.0:{PORT} FIRST (so Render port scan passes)...")
+    print(f"Starting Flask on 0.0.0.0:{PORT} FIRST...")
     try:
         threading.Thread(target=run_flask, daemon=True).start()
         time.sleep(3)
@@ -3364,7 +3362,7 @@ def main():
     linked=sum(1 for u in USER_DATA.values() if u.get("linked_widget_uid"))
     wa_users=sum(1 for u in USER_DATA.values() if u.get("wa_phone"))
     print(f"DB ready: {len(USER_DATA)} users ({widget_users} widget, {linked} linked, {wa_users} WhatsApp)")
-    if ADMIN_ID: print(f"Admin: {ADMIN_ID}")
+    if ADMIN_ID: print(f"Admin ID: {ADMIN_ID}")
 
     if HAS_AI_TUTOR:
         try:
