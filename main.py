@@ -762,9 +762,46 @@ def _get_referral_status(uid):
             "referral_rewards_claimed":u.get("referral_rewards_claimed",0)}
 
 
+def _is_admin_uid(uid):
+    """True if uid is the admin — by Telegram ID, linked_tg_uid, or ADMIN_PHONE."""
+    if not ADMIN_ID:
+        return False
+    uid = str(uid)
+    if uid == str(ADMIN_ID):
+        return True
+    u = USER_DATA.get(uid)
+    if u is None:
+        # Peek DB without creating a new user
+        try:
+            conn = _get_db_conn()
+            cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur.execute("SELECT * FROM users WHERE uid=%s", (uid,))
+            row = cur.fetchone()
+            cur.close(); conn.close()
+            if row:
+                u = _coerce_jsonb(dict(row))
+                USER_DATA[uid] = u
+        except Exception:
+            pass
+    if not u:
+        return False
+    # Widget account linked to the admin's Telegram
+    if str(u.get("linked_tg_uid") or "") == str(ADMIN_ID):
+        return True
+    # Optional: ADMIN_PHONE env var override
+    admin_phone = os.getenv("ADMIN_PHONE", "").strip()
+    if admin_phone:
+        user_phone = re.sub(r'\D', '', str(u.get("phone") or u.get("wa_phone") or ""))
+        norm_admin = re.sub(r'\D', '', admin_phone)
+        if user_phone and norm_admin and user_phone == norm_admin:
+            return True
+    return False
+
+
 def is_premium(uid):
+    if _is_admin_uid(uid):
+        return True
     u=get_user(uid)
-    if ADMIN_ID and str(uid)==str(ADMIN_ID): return True
     return bool(u.get("is_premium",False))
 
 
@@ -1185,7 +1222,8 @@ def _mock_menu_text(uid):
     return "📝 *Mock Exam Menu*\n\n🛑 *You've used your free English mock.*\n\n🔒 *Upgrade to Premium:*"
 
 
-def _admin_only(uid): return ADMIN_ID and str(uid)==str(ADMIN_ID)
+def _admin_only(uid):
+    return _is_admin_uid(uid)
 
 
 def _admin_menu_text():
@@ -2195,7 +2233,7 @@ def _require_session():
 def _admin_required():
     uid=_require_session()
     if not uid: return None
-    if not ADMIN_ID or str(uid)!=str(ADMIN_ID): return None
+    if not _is_admin_uid(uid): return None
     return uid
 
 
@@ -2299,7 +2337,8 @@ def api_widget_register():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status":"error","message":f"Database error: {str(e)[:200]}"}),500
-    return jsonify({"status":"success","token":_make_session(uid),"uid":uid,
+        print(f"[widget] registered uid={uid} is_admin={_is_admin_uid(uid)} linked_tg={u.get('linked_tg_uid')}")
+        return jsonify({"status":"success","token":_make_session(uid),"uid":uid,
         "reused":reused,
         "user":{"username":u.get("username","Student"),
                 "phone":u.get("phone",""),
@@ -2405,7 +2444,7 @@ def api_webapp_user():
     used_tutor=u.get("tutor_counts",{}).get(str(date.today()),0)
     _,ai_why_rem=can_use_ai_why(uid)
     invite_code=u.get("invite_code","")
-    is_admin=(str(uid)==str(ADMIN_ID)) if ADMIN_ID else False
+    is_admin=_is_admin_uid(uid)
     return jsonify({"status":"success","uid":uid,
         "username":u.get("username",""),"phone":u.get("phone",""),
         "is_premium":premium,"is_admin":is_admin,
